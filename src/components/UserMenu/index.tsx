@@ -49,6 +49,13 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.yellow.dark,
     borderRadius: 50,
+    flexDirection: "row",
+    position: "absolute",
+    gap: 20,
+    height: 40,
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'center' 
   },
   overlay: {
     flex: 1,

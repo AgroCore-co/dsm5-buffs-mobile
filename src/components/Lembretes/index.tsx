@@ -1,12 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native";
+
 import { colors } from "../../styles/colors";
-import YellowButton from "../Button";
-import TextTitle from "../TextTitle";
 import CalendarIcon from "../../icons/calendar";
 import { Tabs } from "../Tabs";
 import { Modal } from "../Modal";
-import { getAlertasPorPropriedade, Alerta as AlertaApi, Filtro, marcarAlertaVisto } from "../../services/alertaService";
+
+import {
+  getAlertasPorPropriedade,
+  Alerta as AlertaApi,
+  Filtro,
+  marcarAlertaVisto,
+} from "../../services/alertaService";
+
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NavigatorScreenParams } from "@react-navigation/native";
@@ -19,338 +33,269 @@ type MainTabParamList = {
   Piquetes: undefined;
 };
 
-type Alerta = AlertaApi;
 type RootStackParamList = {
   MainTab: NavigatorScreenParams<MainTabParamList>;
   AnimalDetail: { id: string };
 };
-const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-export default function AlertasPendentes({ idPropriedade }: { idPropriedade: string | null }) {
+type Alerta = AlertaApi;
 
-  function formatarDataSimples(dataISO: string) {
-    if (!dataISO) return "-";
-    const soData = dataISO.split("T")[0];
-    const [ano, mes, dia] = soData.split("-");
-    return `${dia}/${mes}/${ano}`;
-  }
-  const [filtro, setFiltro] = useState<Filtro>("PENDENTES"); 
+export default function AlertasPendentes({
+  idPropriedade,
+}: {
+  idPropriedade: string;
+}) {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const [filtro, setFiltro] = useState<Filtro>("PENDENTES");
   const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [paginaAtual, setPaginaAtual] = useState(1);
+  const [pagina, setPagina] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
+
   const [loading, setLoading] = useState(false);
-  const [totalAlertas, setTotalAlertas] = useState(0);
-  const [alertaSelecionado, setAlertaSelecionado] = useState<Alerta | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [alertaSelecionado, setAlertaSelecionado] =
+    useState<Alerta | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const formatarData = (iso: string) => {
+    const [ano, mes, dia] = iso.split("T")[0].split("-");
+    return `${dia}/${mes}/${ano}`;
+  };
 
-  const fetchAlertas = async (page = 1) => {
+  const carregarAlertas = async (page = 1, reset = false) => {
+    if (loading) return;
+
     try {
       setLoading(true);
 
-      const response = await getAlertasPorPropriedade(
+      const res = await getAlertasPorPropriedade(
         idPropriedade,
         filtro,
         page,
-        3
+        10
       );
 
-      setAlertas(response.alertas);
-      setTotalPaginas(response.meta.totalPages);
-      setPaginaAtual(response.meta.page);
-      setTotalAlertas(response.meta.total);
+      setTotalPaginas(res.meta.totalPages);
+      setPagina(res.meta.page);
 
-    } catch (error) {
-      console.error("Erro ao buscar alertas:", error);
+      setAlertas((prev) => {
+        const mapa = new Map<string, Alerta>();
+
+        [...(reset ? [] : prev), ...res.alertas].forEach((a) => {
+          mapa.set(a.id_alerta, a);
+        });
+
+        return Array.from(mapa.values());
+      });
+    } catch (err) {
+      console.error("Erro ao buscar alertas:", err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // ⬇️ dispara busca quando propriedade ou filtro mudam
+  useEffect(() => {
+    setAlertas([]);
+    setPagina(1);
+    carregarAlertas(1, true);
+  }, [filtro, idPropriedade]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setPagina(1);
+    carregarAlertas(1, true);
+  };
+
+  const onEndReached = () => {
+    if (pagina < totalPaginas && !loading) {
+      carregarAlertas(pagina + 1);
     }
   };
 
   const confirmarVisto = async () => {
     if (!alertaSelecionado) return;
+
     try {
       await marcarAlertaVisto(alertaSelecionado.id_alerta);
       setAlertas((prev) =>
         prev.map((a) =>
-          a.id_alerta === alertaSelecionado.id_alerta ? { ...a, visto: true } : a
+          a.id_alerta === alertaSelecionado.id_alerta
+            ? { ...a, visto: true }
+            : a
         )
       );
-    } catch (err) {
-      console.error("Erro ao marcar como visto:", err);
     } finally {
       setModalVisible(false);
       setAlertaSelecionado(null);
     }
   };
 
-
-  // Resetar pagina ao mudar filtro
-  useEffect(() => {
-    setPaginaAtual(1);
-  }, [filtro]);
-
-  useEffect(() => {
-    if (!idPropriedade) return;
-    fetchAlertas(paginaAtual);
-  }, [idPropriedade, paginaAtual, filtro]);
-
   const renderItem = ({ item }: { item: Alerta }) => (
-  <TouchableOpacity
-    style={styles.card}
-    onPress={() => {
-
-      // Vai para o prontuário se tiver animal
-      if (item.nicho === "SANITARIO" || item.nicho === "CLINICO") {
-        if (item.animal_id) {
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => {
+        if (
+          (item.nicho === "SANITARIO" || item.nicho === "CLINICO") &&
+          item.animal_id
+        ) {
           navigation.navigate("AnimalDetail", { id: item.animal_id });
         }
-        return;
-      }
 
-      // Vai para aba Reproduções (Tab)
-      if (item.nicho === "REPRODUCAO") {
-        navigation.navigate("MainTab", {
-          screen: "Reprodução",
-        });
-        return;
-      }
+        if (item.nicho === "REPRODUCAO") {
+          navigation.navigate("MainTab", { screen: "Reprodução" });
+        }
 
-      // Vai para aba Piquetes (Tab)
-      if (item.nicho === "MANEJO") {
-        navigation.navigate("MainTab", {
-          screen: "Piquetes",
-        });
-        return;
-      }
-
-      console.warn("⚠️ Nicho não mapeado:", item.nicho);
-    }}
-  >
+        if (item.nicho === "MANEJO") {
+          navigation.navigate("MainTab", { screen: "Piquetes" });
+        }
+      }}
+    >
       <View
         style={[
-          styles.priorityBar,
-          item.prioridade === "ALTA"
-            ? { backgroundColor: colors.red.base }
-            : { backgroundColor: colors.yellow.warning }
+          styles.priority,
+          {
+            backgroundColor:
+              item.prioridade === "ALTA"
+                ? colors.red.inactive
+                : colors.yellow.warning,
+          },
         ]}
       />
 
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.motivo}</Text>
-        <Text style={styles.cardDescription}>{item.observacao}</Text>
+        <Text style={styles.title}>{item.motivo}</Text>
+        <Text style={styles.desc}>{item.observacao}</Text>
 
-        <View style={styles.cardFooter}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{item.nicho}</Text>
-          </View>
+        <View style={styles.footer}>
+          <Text style={styles.tag}>{item.nicho}</Text>
 
-          <View style={styles.dateRow}>
-            <CalendarIcon fill={colors.brown.base} size={14} />
-            <Text style={styles.dateText}>
-              {formatarDataSimples(item.data_alerta)}
-            </Text>
+          <View style={styles.date}>
+            <CalendarIcon size={14} fill={colors.brown.base} />
+            <Text>{formatarData(item.data_alerta)}</Text>
           </View>
         </View>
 
-        <View style={styles.resolveRow}>
+        {!item.visto && (
           <TouchableOpacity
-            style={[
-              styles.resolveButton,
-              item.visto && { backgroundColor: colors.gray.base },
-            ]}
+            style={styles.resolve}
             onPress={() => {
-              if (!item.visto) {
-                setAlertaSelecionado(item);
-                setModalVisible(true);
-              }
+              setAlertaSelecionado(item);
+              setModalVisible(true);
             }}
-            disabled={item.visto}
           >
-            <Text style={styles.resolveButtonText}>
-              {item.visto ? "Já visto" : "Marcar como visto"}
-            </Text>
+            <Text style={styles.resolveText}>Marcar como visto</Text>
           </TouchableOpacity>
-        </View>
+        )}
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-
+    <View style={{ flex: 1 }}>
       <Modal visible={modalVisible} onClose={() => setModalVisible(false)}>
-        <View style={{
-          backgroundColor: "white",
-          padding: 20,
-          borderRadius: 14,
-          gap: 20
-        }}>
-          <Text style={{ fontSize: 16, fontWeight: "600", textAlign: "center" }}>
-            Confirmar resolução do alerta?
-          </Text>
-
-          <Text style={{ textAlign: "center", color: colors.gray.base }}>
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>Resolver alerta?</Text>
+          <Text style={styles.modalDesc}>
             {alertaSelecionado?.motivo}
           </Text>
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={{ padding: 10 }}
-            >
-              <Text style={{ fontWeight: "600" }}>Cancelar</Text>
+          <View style={styles.modalActions}>
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Text>Cancelar</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={confirmarVisto}
-              style={{ backgroundColor: colors.yellow.base, padding: 10, borderRadius: 8 }}
-            >
-              <Text style={{ fontWeight: "700", color: colors.brown.base }}>Confirmar</Text>
+            <TouchableOpacity onPress={confirmarVisto}>
+              <Text style={{ fontWeight: "700" }}>Confirmar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <View style={styles.header}>
-        <TextTitle>Alertas ({totalAlertas})</TextTitle>
-      <Tabs
-        tabs={[
-          { key: "TODOS", label: "Todas" },
-          { key: "PENDENTES", label: "Não vistas" },
-        ]}
-        activeTab={filtro}
-        onChange={(key) => setFiltro(key as Filtro)}
+      <View style={styles.tabs}>
+        <Tabs
+          tabs={[
+            { key: "TODOS", label: "Todas" },
+            { key: "PENDENTES", label: "Não vistas" },
+          ]}
+          activeTab={filtro}
+          onChange={(k) => setFiltro(k as Filtro)}
+        />
+      </View>
+
+      <FlatList
+        data={alertas}
+        keyExtractor={(item) => item.id_alerta}
+        renderItem={renderItem}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.4}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListFooterComponent={
+          loading ? (
+            <ActivityIndicator
+              size="large"
+              color={colors.yellow.base}
+              style={{ marginVertical: 20 }}
+            />
+          ) : null
+        }
       />
-      </View>
-
-      {loading ? (
-        <View style={styles.loading}>
-          <Text>Carregando Alertas...</Text>
-          <ActivityIndicator color={colors.yellow.base} size="large" />
-        </View>
-      ) : (
-        <FlatList
-          data={alertas}
-          keyExtractor={(item) => item.id_alerta}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          scrollEnabled={false}
-        />
-      )}
-
-      <View style={styles.pagination}>
-        <YellowButton
-          title="Anterior"
-          onPress={() => setPaginaAtual((p) => Math.max(p - 1, 1))}
-          disabled={paginaAtual === 1}
-        />
-        <Text style={styles.pageInfo}>Página {paginaAtual} de {totalPaginas}</Text>
-        <YellowButton
-          title="Próxima"
-          onPress={() => setPaginaAtual((p) => Math.min(p + 1, totalPaginas))}
-          disabled={paginaAtual >= totalPaginas}
-        />
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // (seus estilos continuam IGUAIS)
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: colors.white.base,
-    marginBottom: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.gray.disabled,
-    elevation: 2,
-  },
-  scrollContent: { paddingBottom: 8 },
-  header: { marginBottom: 16 },
   card: {
     flexDirection: "row",
     backgroundColor: colors.white.base,
     borderRadius: 14,
-    marginBottom: 14,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: colors.gray.disabled,
     overflow: "hidden",
-    elevation: 1,
   },
-  priorityBar: { 
-    width: 5 
-  },
-  cardContent: { 
-    flex: 1, 
-    padding: 14 
-  },
-  cardTitle: { 
-    fontSize: 15, 
-    fontWeight: "700", 
-    color: colors.black.base, 
-    marginBottom: 6 
-  },
-  cardDescription: { 
-    fontSize: 13, 
-    color: colors.gray.base 
-  },
-  cardFooter: { 
-    marginTop: 12, 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center" 
+  priority: { width: 6 },
+  cardContent: { flex: 1, padding: 14 },
+  title: { fontSize: 15, fontWeight: "700" },
+  desc: { fontSize: 13, color: colors.gray.base },
+  footer: {
+    marginTop: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   tag: {
     backgroundColor: colors.yellow.base,
-    paddingVertical: 4, 
-    paddingHorizontal: 10, 
-    borderRadius: 10 
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    fontSize: 11,
+    fontWeight: "600",
   },
-  tagText: { 
-    fontSize: 11, 
-    fontWeight: "600", 
-    color: colors.brown.base 
-  },
-  dateRow: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    gap: 4 
-  },
-  dateText: { 
-    fontSize: 12, 
-    color: colors.brown.base 
-  },
-  resolveRow: { 
-    marginTop: 12, 
-    flexDirection: "row", 
-    justifyContent: "flex-end" 
-  },
-  resolveButton: { 
-    backgroundColor: "#22c55e", 
-    paddingVertical: 6, 
-    paddingHorizontal: 14,
-    borderRadius: 8 
-  },
-  resolveButtonText: { 
-    color: "white", 
-    fontWeight: "600", 
-    fontSize: 13 
-  },
-  pagination: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    marginTop: 12 
-  },
-  pageInfo: { 
-    fontWeight: "600" 
-  },
-  loading: {
+  date: { flexDirection: "row", alignItems: "center", gap: 4 },
+  resolve: {
+    marginTop: 14,
+    backgroundColor: "#22c55e",
+    paddingVertical: 8,
+    borderRadius: 10,
     alignItems: "center",
-    justifyContent: "center",
-  }
+  },
+  resolveText: { color: "white", fontWeight: "600" },
+  modal: { backgroundColor: "white", padding: 20, borderRadius: 16 },
+  modalTitle: { fontSize: 16, fontWeight: "700", textAlign: "center" },
+  modalDesc: { textAlign: "center", color: colors.gray.base },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  tabs: {
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray.disabled,
+  },
 });

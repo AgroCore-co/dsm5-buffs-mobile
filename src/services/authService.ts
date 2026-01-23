@@ -1,4 +1,3 @@
-// services/authService.ts
 import { apiFetch } from "../lib/apiClient";
 
 // Login
@@ -9,27 +8,19 @@ export const login = async (email: string, password: string) => {
   });
 };
 
-// Cria o perfil do usuário (primeiro login)
-export const createProfile = async (
-  token: string,
-  profileData: { nome: string; cargo: string; telefone: string }
-) => {
-  return apiFetch("/usuarios/perfil", {
+// Refresh token
+export const refreshToken = async (refresh_token: string) => {
+  return apiFetch("/auth/refresh", {
     method: "POST",
-    body: profileData, // email NÃO deve ser incluído
+    body: { refresh_token },
   });
 };
 
-// Verifica se o usuário já tem perfil criado
+// Perfil do usuário
 export const checkProfile = async (token: string) => {
-  return apiFetch("/usuarios/perfil", {
-    method: "GET",
-  });
+  return apiFetch("/usuarios/perfil", { method: "GET" });
 };
 
-// Retorna os dados do usuário logado (valida o token)
 export const getMe = async (token: string) => {
-  return apiFetch("/usuarios/me", {
-    method: "GET",
-  });
+  return apiFetch("/usuarios/me", { method: "GET" });
 };

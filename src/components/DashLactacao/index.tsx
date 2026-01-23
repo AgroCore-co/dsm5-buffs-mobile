@@ -43,17 +43,22 @@ export default function DashLactation({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white.base,
+    flex: 1, 
+    padding: 16, 
+    backgroundColor: "#fff",
     borderRadius: 20,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 16,
-    shadowColor: "#000",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.gray.disabled,
+    shadowColor: colors.black.base,
     shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 3,
-    justifyContent: "center",
+    shadowOffset: { 
+      width: 0, 
+      height: 2 
+    },
+    shadowRadius: 4,
+    elevation: 2, 
+    zIndex: 1000
   },
   title: {
     fontSize: 16,

@@ -23,13 +23,16 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
+    justifyContent: "center", // mudar de "center" para "flex-end"
     alignItems: "center",
   },
   container: {
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    width: "90%",
+    width: "90%", // ocupar toda a largura da tela
+    borderTopLeftRadius: 16, // deixar arredondado somente no topo
+    borderTopRightRadius: 16,
   },
 });
+

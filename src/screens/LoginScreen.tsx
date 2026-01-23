@@ -1,17 +1,17 @@
-// screens/LoginScreen.tsx
 import React, { useState } from "react";
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { colors } from "../styles/colors";
 import BuffsLogo from "../../assets/images/logoBuffs.svg";
 import YellowButton from "../components/Button";
 import { useAuth } from "../context/AuthContext";
+import BuffaloLoader from "../components/BufaloLoader";
 
 export const LoginScreen = () => {
-  const { login } = useAuth(); // 🔑 pegar login do contexto
+  const { login, authenticating } = useAuth(); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false); // loader local
 
   const handleLogin = async () => {
     setError(null);
@@ -21,12 +21,12 @@ export const LoginScreen = () => {
     }
 
     try {
-      setLoading(true);
+      setLocalLoading(true);
       await login(email, password);   
     } catch (err: any) {
       setError(err.message || "Erro ao tentar entrar.");
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
@@ -46,7 +46,6 @@ export const LoginScreen = () => {
         keyboardType="email-address"
         autoCapitalize="none"
       />
-
       <TextInput
         style={styles.input}
         placeholder="Senha"
@@ -58,13 +57,17 @@ export const LoginScreen = () => {
       {error && <Text style={styles.error}>{error}</Text>}
 
       <YellowButton
-        title={loading ? "Entrando..." : "Entrar"}
+        title={authenticating ? "Entrando..." : "Entrar"}
         onPress={handleLogin}
-        loading={loading}
+        loading={authenticating}
       />
+
+
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20 },

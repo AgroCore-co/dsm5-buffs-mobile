@@ -46,19 +46,21 @@ export default function DashReproduction({
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: colors.white.base,
+    padding: 16, 
+    backgroundColor: "#fff",
     borderRadius: 20,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.gray.disabled,
     shadowColor: colors.black.base,
     shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { 
+      width: 0, 
+      height: 2 
+    },
     shadowRadius: 4,
-    elevation: 1,
-    zIndex: 1,
+    elevation: 2, 
+    zIndex: 1000
   },
   header: {
     marginBottom: 16,

@@ -5,15 +5,19 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../components/Button'; 
 import { colors } from '../styles/colors'; 
+import bufaloService from '../services/bufaloService';
+import { usePropriedade } from '../context/PropriedadeContext';
+
 
 type RootStackParamList = {
-  RebanhoScreen: { lidas?: string[] };
   NfcScannerScreen: undefined;
+  AnimalDetail: { id: string };
 };
 
 export const NfcScannerScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    
+    const { propriedadeSelecionada } = usePropriedade();
+
     const [lidas, setLidas] = useState<string[]>([]);
     const [statusText, setStatusText] = useState("Iniciando o scanner...");
     
@@ -21,7 +25,6 @@ export const NfcScannerScreen = () => {
 
     const finalizarScanner = () => {
         isScanningRef.current = false;
-        
         try {
             NfcManager.cancelTechnologyRequest();
         } catch (e) {
@@ -40,11 +43,31 @@ export const NfcScannerScreen = () => {
             const tag = await NfcManager.getTag();
             
             if (tag?.id) {
-                const tagId = tag.id.toUpperCase();
-                console.log(`✅ TAG CAPTURADA: ${tagId}`);
+                const microchip = tag.id.toUpperCase();
+                console.log(`✅ TAG CAPTURADA: ${microchip}`);
+                setStatusText(`Microchip ${microchip} lido. Pesquisando animal...`);
+                try {
+                    const bufalo = await bufaloService.getBufaloPorMicrochip(microchip);
+
+                    await NfcManager.cancelTechnologyRequest();
+                    isScanningRef.current = false; 
+                    
+                    if (bufalo && bufalo.id_bufalo) {
+                        setStatusText(`Búfalo encontrado! Redirecionando...`);
+                        
+                        navigation.replace("AnimalDetail", { id: bufalo.id_bufalo });
+                        return; 
+                    } else {
+                        setStatusText(`Microchip ${microchip} não encontrado. Continue lendo...`);
+                    }
+                } catch (searchError) {
+                    console.error("Erro ao pesquisar búfalo após leitura:", searchError);
+                    setStatusText(`Erro ao buscar o animal. Continue lendo...`);
+                }
+                
                 setLidas((prev) => {
-                    if (!prev.includes(tagId)) {
-                        return [...prev, tagId];
+                    if (!prev.includes(microchip)) {
+                        return [...prev, microchip];
                     }
                     return prev;
                 });
@@ -53,7 +76,6 @@ export const NfcScannerScreen = () => {
             if (isScanningRef.current) {
                  lerProximaTag(); 
             }
-
         } catch (ex) {
             const errorString = (ex as any).toString();
             
@@ -66,8 +88,6 @@ export const NfcScannerScreen = () => {
                 }
                 return;
             }
-
-            console.error("❌ Erro fatal na leitura de tag:", ex);
             setStatusText("Erro crítico no NFC. Parando.");
             isScanningRef.current = false;
         }
@@ -118,19 +138,6 @@ export const NfcScannerScreen = () => {
                 {lidas.length === 0 && isScanningRef.current && (
                     <ActivityIndicator size="large" color={colors.yellow.static} style={{ marginVertical: 20 }} />
                 )}
-
-                <View style={styles.tagListContainer}>
-                    <Text style={styles.listTitle}>Microchips Lidos ({lidas.length}):</Text>
-                    <ScrollView style={styles.tagList} contentContainerStyle={{ paddingBottom: 10 }}>
-                        {lidas.length === 0 && isScanningRef.current ? (
-                            <Text style={styles.emptyText}>Aproxime a primeira tag...</Text>
-                        ) : (
-                            lidas.map((id, index) => (
-                                <Text key={id || index} style={styles.tagText}>{id}</Text>
-                            ))
-                        )}
-                    </ScrollView>
-                </View>
 
                 <Button 
                     title="Finalizar e Voltar" 

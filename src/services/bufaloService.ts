@@ -1,8 +1,8 @@
 import { apiFetch } from "../lib/apiClient";
+import { grupoService, Grupo } from "./grupoService"; // Importe o seu grupoService
 
 export const getBufalos = async (propriedadeId: number, page = 1, limit = 10) => {
   try {
-    // Chamada paginada da nova API
     const result = await apiFetch(`/bufalos/propriedade/${propriedadeId}?page=${page}&limit=${limit}`);
 
     const bufalos = result.data.map((b: any) => ({
@@ -154,7 +154,50 @@ export const getBufaloPorMicrochip = async (microchip: string) => {
   }
 };
 
+export const getBufaloByBrincoAndSexo = async (
+  propriedadeId: number,
+  brinco: string,
+  sexo: "M" | "F"
+) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("brinco", brinco);
+    params.append("sexo", sexo);
+    params.append("limit", "1");
+    params.append("page", "1");
 
+    const result = await apiFetch(
+      `/bufalos/filtro/propriedade/${propriedadeId}/avancado?${params.toString()}`
+    );
+    const dataList = result.data || result.bufalos || result;
+    return dataList && dataList.length > 0 ? dataList[0] : null;
+  } catch (error) {
+    console.error(`Erro ao buscar búfalo (Brinco: ${brinco}, Sexo: ${sexo}):`, error);
+    return null; 
+  }
+};
 
+export const getGrupos = async (idPropriedade: number): Promise<Grupo[]> => {
+    return grupoService.getAllByPropriedade(idPropriedade);
+}
 
-export default { getBufalos, getBufaloDetalhes, createBufalo, updateBufalo, deleteBufalo, getRacas, filtrarBufalos, getBufaloPorMicrochip };
+// Nova função para mover o búfalo de grupo
+export const moverBufaloDeGrupo = async (idBufalo: string, idNovoGrupo: string) => {
+
+    const payload = {
+        ids_bufalos: [idBufalo],
+        id_novo_grupo: idNovoGrupo,
+        motivo: "Mudança manual de grupo via tela de animal",
+    };
+
+    // Rota: /bufalos/grupo/mover (método PATCH)
+    await apiFetch("/bufalos/grupo/mover", {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+}
+
+export default { getGrupos, moverBufaloDeGrupo, getBufalos, getBufaloDetalhes, createBufalo, updateBufalo, deleteBufalo, getRacas, filtrarBufalos, getBufaloPorMicrochip, getBufaloByBrincoAndSexo };

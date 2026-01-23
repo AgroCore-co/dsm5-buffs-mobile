@@ -43,6 +43,33 @@ export interface Industria {
   contato?: string;
 }
 
+export interface LactacaoRegistroPayload {
+  id_bufala: string;
+  id_propriedade: number;
+  id_ciclo_lactacao: string; 
+  qt_ordenha: number;
+  periodo: string; 
+  ocorrencia?: string;
+  dt_ordenha: string; 
+}
+
+export interface ColetaRegistroPayload {
+  id_industria: string;
+  id_propriedade: string; 
+  resultado_teste: boolean;
+  observacao?: string;
+  quantidade: number;
+  dt_coleta: string; 
+}
+
+export interface EstoqueRegistroPayload {
+  id_propriedade: string | number; // Se for UUID, use string
+  id_usuario: string; // OBRIGATÓRIO no payload da API
+  quantidade: number;
+  dt_registro: string; // ISOString (ex: "2025-08-18T18:00:00.000Z")
+  observacao?: string;
+}
+
 export const getCiclosLactacao = async (propriedadeId: number) => {
   try {
     if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
@@ -74,6 +101,7 @@ export const getCiclosLactacao = async (propriedadeId: number) => {
       status: c.ciclo_atual.status,
       producaoTotal: c.producao_atual.total_produzido,
       mediaDiaria: c.producao_atual.media_diaria,
+      idCicloLactacao: c.ciclo_atual.id_ciclo_lactacao,
       ultimaOrdenha: c.producao_atual.ultima_ordenha
         ? {
             data: new Date(c.producao_atual.ultima_ordenha.data).toLocaleDateString("pt-BR"),
@@ -105,14 +133,72 @@ export const getIndustriasPorPropriedade = async (propriedadeId: number) => {
   try {
     if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
 
-    const response: { data: Industria[] } = await apiFetch(
+    const response: Industria[] = await apiFetch(
       `/industrias/propriedade/${propriedadeId}`
     );
-    console.log("Indústrias retornadas pela API:", response);
     return response || [];
     
   } catch (error: any) {
     console.error("Erro ao buscar indústrias da propriedade:", error);
     return [];
+  }
+};
+
+
+export const registrarLactacaoApi = async (payload: LactacaoRegistroPayload) => {
+  try {
+    const response = await apiFetch("/lactacao", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro ao registrar lactação na API:", error);
+    throw new Error("Falha ao registrar lactação.");
+  }
+};
+
+export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {
+  try {
+    const response = await apiFetch("/coletas", { 
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro ao registrar coleta na API:", error);
+    throw new Error("Falha ao registrar coleta.");
+  }
+};
+
+export const registrarEstoqueApi = async (payload: EstoqueRegistroPayload) => {
+  try {
+    const response = await apiFetch("/estoque-leite", { 
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro ao registrar estoque na API:", error);
+    throw new Error("Falha ao registrar estoque.");
+  }
+};
+
+export const encerrarLactacao = async (idCiclo: string | number) => {
+  try {
+    if (!idCiclo) throw new Error("ID do ciclo é obrigatório.");
+
+    const hoje = new Date().toISOString().split("T")[0];
+
+    return await apiFetch(`/ciclos-lactacao/${idCiclo}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        dt_secagem_real: hoje,
+        observacao: "Seca",
+      }),
+    });
+  } catch (error) {
+    console.error("Erro ao encerrar lactação:", error);
+    throw new Error("Falha ao encerrar lactação.");
   }
 };

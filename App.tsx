@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext'
 
 // App.tsx
 import React, { useEffect } from 'react';
-import { Platform, StatusBar, useColorScheme } from 'react-native';
+import { Platform, StatusBar, useColorScheme, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -24,6 +24,7 @@ import { PiquetesScreen } from './src/screens/PiquetesScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { PropriedadeProvider } from './src/context/PropriedadeContext';
 import { AnimalDetailScreen } from './src/screens/AnimalDetailScreen';
+import { NotificacoesScreen } from './src/screens/Notificacoes';
 
 // Icons SVG
 import BuffsLogo from './assets/images/logoBuffs.svg'; 
@@ -33,6 +34,7 @@ import Lactation from './src/icons/lactation';
 import GlobeIcon from './src/icons/sex';
 import Fance from './src/icons/fance';
 import { NfcScannerScreen } from './src/screens/NfcScannerScreen';
+import BuffaloLoader from './src/components/BufaloLoader';
 
 
 export type RootStackParamList = {
@@ -42,6 +44,7 @@ export type RootStackParamList = {
   MainTab: undefined;
   CompleteProfile: undefined;
   NfcScannerScreen: undefined;
+  Notificacoes: undefined;
 };
 
 const Tab = createBottomTabNavigator();
@@ -155,21 +158,27 @@ function MainTab() {
 
 // App.tsx (parte relevante)
 function AppContent() {
-  const { userToken } = useAuth();
+  const { userToken, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <BuffaloLoader />
+      </View>
+    );
+  }
+
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!userToken ? (
-        <>
           <Stack.Screen name="Login" component={LoginScreen} />
-        </>
       ) : (
         <>
         <Stack.Screen name="MainTab" component={MainTab} />
         <Stack.Screen name="AnimalDetail" component={AnimalDetailScreen} />
-        <Stack.Screen name="NfcScannerScreen" component={NfcScannerScreen} 
-  options={{ title: 'Scanner NFC' }} // Opcional: define um título
-/>
+        <Stack.Screen name="NfcScannerScreen" component={NfcScannerScreen} options={{ title: 'Scanner NFC' }} />
+        <Stack.Screen name="Notificacoes" component={NotificacoesScreen} options={{ title: 'Notificações' }} />
         </>
       )}
     </Stack.Navigator>
@@ -186,9 +195,9 @@ export default function App() {
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
             <AuthProvider>
               <PropriedadeProvider>
-                <NavigationContainer>
-                  <AppContent />
-                </NavigationContainer>
+                  <NavigationContainer>
+                    <AppContent />
+                  </NavigationContainer>
               </PropriedadeProvider>
             </AuthProvider>
       </SafeAreaProvider>

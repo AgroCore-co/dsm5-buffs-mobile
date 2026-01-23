@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from "react-native";
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { colors } from "../../styles/colors";
-import Pen from "../../../assets/images/pen.svg";
+import { ConfirmarExclusaoModal } from "../ModalAlertaDelete";
 
 interface ZootecnicoItem {
     id_zootec: string;
@@ -13,23 +13,22 @@ interface ZootecnicoItem {
     cor_pelagem?: string;
     formato_chifre?: string;
     porte_corporal?: string;
-    retorno?: boolean;
-    dt_retorno?: string;
 }
 
 interface ZootecnicoBottomSheetProps {
     item: ZootecnicoItem;
     onEditSave: (data: ZootecnicoItem) => void;
+    onDelete: (id_zootec: string) => void;
     onClose: () => void;
 }
 
-export const ZootecnicoBottomSheet: React.FC<ZootecnicoBottomSheetProps> = ({ item, onEditSave, onClose }) => {
+export const ZootecnicoBottomSheet: React.FC<ZootecnicoBottomSheetProps> = ({ item, onEditSave, onDelete, onClose }) => {
 
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ["70%", "90%"], []);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<ZootecnicoItem>({ ...item });
-
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
 
     const handleSheetChange = useCallback((index: number) => {
@@ -44,22 +43,47 @@ export const ZootecnicoBottomSheet: React.FC<ZootecnicoBottomSheetProps> = ({ it
 
     const toggleEdit = () => {
         if (isEditing) {
-            console.log("Salvar alterações:", formData);
-            onEditSave(formData); 
+            const peso = formData.peso;
+            const condicao_corporal = formData.condicao_corporal;
+            const cor_pelagem = formData.cor_pelagem;
+            const formato_chifre = formData.formato_chifre;
+            const porte_corporal = formData.porte_corporal;
+
+            const payloadApi = {
+                peso: peso  || 0,
+                condicao_corporal: condicao_corporal || 0,              
+                cor_pelagem: cor_pelagem || null,
+                formato_chifre: formato_chifre || null,
+                porte_corporal: porte_corporal || null,
+            };
+            
+            const cleanedPayload = Object.fromEntries(
+                Object.entries(payloadApi).filter(([_, value]) => value !== null && value !== undefined)
+            );
+            
+            console.log("PAYLOAD ZOOTÉCNICO LIMPO PARA API:", cleanedPayload);
+            onEditSave({ id_zootec: formData.id_zootec, ...cleanedPayload }); 
         }
         setIsEditing(!isEditing);
     };
     
     const handleDelete = () => {
-        console.log("Excluir registro:", item.id_zootec);
- 
+        setIsDeleteModalVisible(true);
     };
+
+    const handleConfirmDelete = () => {
+        setIsDeleteModalVisible(false); 
+        onDelete(item.id_zootec); 
+        onClose();
+    }
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return "Nda";
         const parts = dateString.split("T")[0].split("-").reverse();
         return parts.join("/");
     };
+
+  
 
 return (
   <BottomSheet
@@ -83,21 +107,18 @@ return (
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ width: 40 }} />
         <Text style={styles.headerTitle}>Detalhes do Evento</Text>
       </View>
 
       {/* Card Principal */}
       <View style={styles.mainCard}>
         <View style={styles.cardRow}>
-          <View>
             <Text style={styles.cardTitle}>
               Registro {String(formData.tipo_pesagem ?? "")}
             </Text>
             <Text style={styles.cardSubtitle}>
               Data do Registro: {formatDate(formData?.dt_registro)}
             </Text>
-          </View>
         </View>
       </View>
 
@@ -110,14 +131,13 @@ return (
     
     {/* Peso */}
     <View style={styles.listItem}>
-      <Text style={styles.listIcon}>⚖️</Text>
       <Text style={styles.listLabel}>Peso</Text>
 
       {!isEditing ? (
         <Text style={styles.listValue}>{String(formData.peso ?? "-")}</Text>
       ) : (
         <TextInput
-          style={[styles.listValue, styles.inputEditable]}
+          style={styles.inputFull}
           keyboardType="numeric"
           value={String(formData.peso ?? "")}
           onChangeText={(t) => handleChange("peso", t)}
@@ -125,10 +145,8 @@ return (
       )}
     </View>
 
-    {/* Condição Corporal (ECC) — RADIO BOX */}
     <View style={styles.listItem}>
-      <Text style={styles.listIcon}>🙂</Text>
-      <Text style={styles.listLabel}>Condição Corporal (ECC)</Text>
+      <Text style={styles.listLabel}>Condição Corporal (CC)</Text>
 
       {!isEditing ? (
         <Text style={styles.listValue}>
@@ -156,14 +174,13 @@ return (
 
     {/* Pelagem */}
     <View style={styles.listItem}>
-      <Text style={styles.listIcon}>🎨</Text>
       <Text style={styles.listLabel}>Pelagem</Text>
 
       {!isEditing ? (
         <Text style={styles.listValue}>{formData.cor_pelagem ?? "-"}</Text>
       ) : (
         <TextInput
-          style={[styles.listValue, styles.inputEditable]}
+          style={styles.inputFull}
           value={formData.cor_pelagem ?? ""}
           onChangeText={(t) => handleChange("cor_pelagem", t)}
         />
@@ -172,14 +189,13 @@ return (
 
     {/* Formato Chifre */}
     <View style={styles.listItem}>
-      <Text style={styles.listIcon}>🐮</Text>
       <Text style={styles.listLabel}>Chifre</Text>
 
       {!isEditing ? (
         <Text style={styles.listValue}>{formData.formato_chifre ?? "-"}</Text>
       ) : (
         <TextInput
-          style={[styles.listValue, styles.inputEditable]}
+          style={styles.inputFull}
           value={formData.formato_chifre ?? ""}
           onChangeText={(t) => handleChange("formato_chifre", t)}
         />
@@ -188,14 +204,13 @@ return (
 
     {/* Porte Corporal */}
     <View style={[styles.listItem, styles.listItemLast]}>
-      <Text style={styles.listIcon}>📏</Text>
       <Text style={styles.listLabel}>Porte</Text>
 
       {!isEditing ? (
         <Text style={styles.listValue}>{formData.porte_corporal ?? "-"}</Text>
       ) : (
         <TextInput
-          style={[styles.listValue, styles.inputEditable]}
+          style={styles.inputFull}
           value={formData.porte_corporal ?? ""}
           onChangeText={(t) => handleChange("porte_corporal", t)}
         />
@@ -203,16 +218,6 @@ return (
     </View>
 </View>
 
-
-      {/* Campo Destaque: Data de retorno */}
-      {Boolean(formData.retorno) && (
-        <View style={styles.highlightBox}>
-          <Text style={styles.highlightTitle}>Data de Retorno</Text>
-          <Text style={styles.highlightValue}>
-            {String(formData.dt_retorno ?? "-")}
-          </Text>
-        </View>
-      )}
 
       {/* Footer */}
       <View style={styles.footer}>
@@ -235,6 +240,13 @@ return (
         </TouchableOpacity>
       </View>
     </BottomSheetScrollView>
+    <ConfirmarExclusaoModal
+        visible={isDeleteModalVisible}
+        onClose={() => setIsDeleteModalVisible(false)}
+        onConfirm={handleConfirmDelete}
+        title="Excluir Registro Zootécnico"
+        message={`Tem certeza que deseja excluir o registro da data ${formatDate(item.dt_registro)}? Esta ação é irreversível.`}
+      />
   </BottomSheet>
 )};
 
@@ -258,7 +270,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingBottom: 8,
+    paddingBottom: 16,
   },
   headerTitle: {
     flex: 1,
@@ -281,7 +293,7 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   cardRow: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     gap: 12,
   },
@@ -307,14 +319,14 @@ const styles = StyleSheet.create({
   listContainer: {
     backgroundColor: "#FFF",
     borderRadius: 16,
-    marginHorizontal: 16,
+    marginHorizontal: 20,
     overflow: "hidden",
   },
   listItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
     borderTopWidth: 1,
     borderColor: "#E5E7EB",
   },
@@ -329,6 +341,7 @@ const styles = StyleSheet.create({
   listLabel: {
     flex: 1,
     fontSize: 14,
+    marginStart: 16,
     color: "#6B7280",
   },
   listValue: {
@@ -339,9 +352,7 @@ const styles = StyleSheet.create({
   },
 
   inputEditable: {
-    borderBottomWidth: 1,
-    borderColor: "#FAC638",
-    paddingBottom: 2,
+
   },
 
   highlightBox: {
@@ -354,7 +365,7 @@ const styles = StyleSheet.create({
   highlightTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#A16207",
+    color: "#e71a1aff",
   },
   highlightValue: {
     fontSize: 14,
@@ -390,34 +401,40 @@ const styles = StyleSheet.create({
   },
   editText: {
     fontWeight: "700",
+    color: colors.brown.base,
+  },
+  radioItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.gray.base,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 6,
+  },
+  radioSelected: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#FAC638",
+  },
+  radioLabel: {
+    fontSize: 14,
     color: "#111827",
   },
-radioItem: {
-  flexDirection: "row",
-  alignItems: "center",
-},
-
-radioCircle: {
-  width: 20,
-  height: 20,
-  borderRadius: 10,
-  borderWidth: 2,
-  borderColor: "#FAC638",
-  alignItems: "center",
-  justifyContent: "center",
-  marginRight: 6,
-},
-
-radioSelected: {
-  width: 10,
-  height: 10,
-  borderRadius: 5,
-  backgroundColor: "#FAC638",
-},
-
-radioLabel: {
-  fontSize: 14,
-  color: "#111827",
-},
+  inputFull: { 
+    width: "40%", 
+    borderWidth: 1, 
+    borderColor: colors.gray.base, 
+    borderRadius: 6, 
+    marginBottom: 12,
+    backgroundColor: colors.white.base,
+    justifyContent: 'center',
+  },
 
 });

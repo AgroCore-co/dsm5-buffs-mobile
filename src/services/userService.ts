@@ -1,8 +1,10 @@
 import { apiFetch } from "../lib/apiClient";
 
-export const checkUserProfile = async (token?: string) => {
+export const checkUserProfile = async () => {
   try {
-    const profile = await apiFetch("/usuarios/me", { token });
+    const profile = await apiFetch("/usuarios/me", {  
+      method: "GET",
+    });
     return { hasProfile: true, profile };
   } catch (error: any) {
     if (error.status === 404 || error.message.includes("Nenhum perfil")) {
@@ -12,23 +14,8 @@ export const checkUserProfile = async (token?: string) => {
   }
 };
 
-// Nova função para criar perfil
-export const createProfile = async (token: string, data: any) => {
-  try {
-    const profile = await apiFetch("/usuarios/perfil", {
-      method: "POST",
-      body: data, // 👈 aqui troca para body
-      token,
-    });
-    return { success: true, profile };
-  } catch (error: any) {
-    return { success: false, error: error.message || "Erro ao criar perfil" };
-  }
-};
-
 const userService = {
   checkUserProfile,
-  createProfile,
 };
 
 export default userService;

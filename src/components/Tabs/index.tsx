@@ -1,4 +1,3 @@
-// components/Tabs.tsx
 import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { colors } from "../../styles/colors";
@@ -45,8 +44,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderTopStartRadius: 10,
     borderTopEndRadius: 10,
-    backgroundColor: colors.gray.claro,
-    marginTop: 10,
+    backgroundColor: colors.white.base,
   },
   tabButton: {
     flex: 1,

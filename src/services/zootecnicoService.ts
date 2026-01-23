@@ -10,7 +10,7 @@ export const zootecService = {
       throw err;
     }
   },
-  add: async (id_bufalo: number, payload: any) => {
+  add: async (id_bufalo: string, payload: any) => {
     try {
       return await apiFetch(`/dados-zootecnicos/bufalo/${id_bufalo}`, { method: 'POST', body: payload });
     } catch (err) {
@@ -25,6 +25,17 @@ export const zootecService = {
       });
     } catch (err) {
       console.error("Erro ao excluir histórico zootécnico:", err);
+      throw err;
+    }
+  },
+  update: async (id_zootec: number, payload: any) => {
+    try {
+      return await apiFetch(`/dados-zootecnicos/${id_zootec}`, {
+        method: "PATCH",
+        body: payload
+      });
+    } catch (err) {
+      console.error("Erro ao atualizar histórico zootécnico:", err);
       throw err;
     }
   },

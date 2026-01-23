@@ -9,7 +9,6 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
-import { useDimensions } from "../utils/useDimensions";
 import { colors } from "../styles/colors";
 import DashLactation from "../components/DashLactacao";
 import { MainLayout } from "../layouts/MainLayout";
@@ -17,15 +16,19 @@ import Bucket from "../../assets/images/bucket.svg";
 import Truck from "../../assets/images/truck-side.svg";
 import { getCiclosLactacao } from "../services/lactacaoService";
 import { Modal as CustomModal } from "../components/Modal";
-import { FormColeta } from "../components/FormColeta";
-import { FormEstoque } from "../components/FormEstoque";
-import { FormLactacao } from "../components/FormLactacao";
+import { ColetaAddBottomSheet } from "../components/FormColeta";
 import { CardLactacao } from "../components/CardBufaloLactacao";
 import { usePropriedade } from "../context/PropriedadeContext";
 import { getIndustriasPorPropriedade } from "../services/lactacaoService";
+import Plus from '../../assets/images/plus.svg';
+import Scanner from '../../assets/images/qr-scan.svg';
 
 import Button from "../components/Button";
 import AgroCore from "../icons/agroCore";
+import { LactacaoAddBottomSheet } from "../components/FormLactacao";
+import { FloatingAction } from "react-native-floating-action";
+import { EstoqueAddBottomSheet } from "../components/FormEstoque";
+import BuffaloLoader from "../components/BufaloLoader";
 
 export interface AnimalLac {
   id: string;
@@ -38,11 +41,12 @@ export interface AnimalLac {
   mediaDiaria?: number;
   status: string;
   raca?: string;
+  idCicloLactacao?: string;
 }
+
 
 export const LactacaoScreen = () => {
   const { propriedadeSelecionada } = usePropriedade();
-  const [refreshing, setRefreshing] = useState(false);
   const [animais, setAnimais] = useState<AnimalLac[]>([]);
   const [totalLactando, setTotalLactando] = useState<number>(0);
   const [dataFormatada, setDataFormatada] = useState<string | null>(null);
@@ -50,17 +54,22 @@ export const LactacaoScreen = () => {
   const [modalVisible1, setModalVisible1] = useState(false);
   const [modalVisible2, setModalVisible2] = useState(false);
   const [industrias, setIndustrias] = useState<any[]>([]);
-  const [modalLactacaoVisible, setModalLactacaoVisible] = useState(false);
   const [selectedBufala, setSelectedBufala] = useState<AnimalLac | null>(null);
-  const [loading, setLoading] = useState(true);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
   const itensPorPagina = 10;
+  const [isAddingLactacao, setIsAddingLactacao] = useState(false);
+  const [isAddingColeta, setIsAddingColeta] = useState(false);
+  const [isAddingEstoque, setIsAddingEstoque] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+
 
   const fetchCiclos = async () => {
     if (!propriedadeSelecionada) return;
-    setLoading(true);
-    setRefreshing(true);
+
     try {
       const { ciclos, totalLactando, dataFormatada, quantidadeAtual } =
         await getCiclosLactacao(propriedadeSelecionada);
@@ -76,6 +85,7 @@ export const LactacaoScreen = () => {
         mediaDiaria: c.mediaDiaria || 0,
         status: c.status || "Inativo",
         raca: c.raca || "—",
+        idCicloLactacao: c.idCicloLactacao,
       }));
 
       setAnimais(animaisFormatados);
@@ -87,24 +97,49 @@ export const LactacaoScreen = () => {
       console.error("Erro ao buscar ciclos de lactação:", error);
       setAnimais([]);
       setTotalPaginas(1);
-    } finally {
-      setRefreshing(false);
+
     }
+  };
+
+  const fetchIndustrias = async () => {
+      if (!propriedadeSelecionada) return;
+      try {
+        const response = await getIndustriasPorPropriedade(propriedadeSelecionada);
+        // Sua função getIndustriasPorPropriedade retorna response ou um array?
+        // Pela definição do service, ela retorna um objeto com { data: Industria[] }
+        setIndustrias(response); 
+      } catch (error) {
+        console.error("Erro ao buscar indústrias:", error);
+        setIndustrias([]);
+      }
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      if (propriedadeSelecionada){
+      setInitialLoading(true);
+      if (propriedadeSelecionada) {
         await fetchCiclos();
+        await fetchIndustrias();
       }
-      setLoading(false);
+      setInitialLoading(false);
     };
+
     fetchData();
   }, [propriedadeSelecionada]);
 
+
+
   const onRefresh = async () => {
-    await fetchCiclos();
+      if (!propriedadeSelecionada) return;
+      setRefreshing(true); // Ativa o RefreshControl
+      try {
+          await fetchCiclos();
+          await fetchIndustrias();
+      } catch (error) {
+          console.error("Erro no refresh:", error);
+      } finally {
+          setRefreshing(false); // ✅ Desativa o RefreshControl (garantido)
+      }
   };
 
   const animaisPaginados = animais.slice(
@@ -112,15 +147,50 @@ export const LactacaoScreen = () => {
     paginaAtual * itensPorPagina
   );
 
-  if (loading) {
+  const actions = [
+    {
+      text: "Atualizar Estoque",
+      icon: <Bucket width={18} height={18} style={{ margin: 4 }} />, 
+      name: "estqoue",
+      position: 1,
+      color: colors.yellow.base,
+    },
+    {
+      text: "Registrar Coleta",
+      icon: <Truck width={15} height={15} style={{ margin: 6 }} />, 
+      name: "coleta",
+      position: 2,
+      color: colors.yellow.base,
+    },
+  ];
+  const handleActionPress = (name: string | undefined) => {
+    if (name === "estqoue") {
+      setIsAddingEstoque(true)
+    } else if (name === "coleta") {
+      setIsAddingColeta(true);
+    }
+  };
+
+  const handleChangePage = (novaPagina: number) => {
+    setListLoading(true);
+    setPaginaAtual(novaPagina);
+
+    setTimeout(() => {
+      setListLoading(false);
+    }, 300);
+  };
+
+
+
+  if (initialLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <AgroCore width={200} height={200} />
-        <Text>Carregando lactações...</Text>
-        <ActivityIndicator size="large" color={colors.yellow.static} />
+        <BuffaloLoader />
       </View>
     );
   }
+
+
 
   return (
     <View style={styles.container}>
@@ -128,109 +198,124 @@ export const LactacaoScreen = () => {
         <View style={{ alignItems: "center" }}>
           <Text style={styles.header1Text}>Lactação</Text>
         </View>
-
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            onPress={() => setModalVisible1(true)}
-            style={styles.button}
-          >
-            <Bucket width={18} height={18} style={{ margin: 4 }} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setModalVisible2(true)}
-            style={styles.button}
-          >
-            <Truck width={15} height={15} style={{ margin: 6 }} />
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Scroll geral */}
       <MainLayout>
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Dashboard */}
-          <DashLactation
-            totalArmazenado={quantidadeAtual || 0}
-            vacasLactando={totalLactando}
-            dataAtualizacao={dataFormatada || "N/D"}
-          />
-
           {/* Lista paginada */}
           <FlatList
-            data={animaisPaginados}
+            data={listLoading ? [] : animaisPaginados}
             keyExtractor={(item) => item.id}
-            scrollEnabled={false} 
-            nestedScrollEnabled={true}
             renderItem={({ item }) => (
-                <CardLactacao animal={item} onPress={() => {
-                  setSelectedBufala(item);
-                  setModalLactacaoVisible(true);
-                }}/>
+              <CardLactacao
+                animal={item}
+                onPress={() => setSelectedBufala(item)}
+              />
             )}
-            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[colors.yellow.base]}
+                tintColor={colors.yellow.base}
+              />
+            }
+            ListHeaderComponent={
+              <>
+                <DashLactation
+                  totalArmazenado={quantidadeAtual || 0}
+                  vacasLactando={totalLactando}
+                  dataAtualizacao={dataFormatada || "N/D"}
+                />
+              </>
+            }
+            ListEmptyComponent={
+              listLoading ? (
+                <View style={styles.inlineLoader}>
+                  <ActivityIndicator size="large" color={colors.yellow.base} />
+                  <Text style={{ marginTop: 8 }}>Atualizando rebanho...</Text>
+                </View>
+              ) : (
+                <Text style={{ textAlign: "center", marginTop: 20 }}>
+                  Nenhum animal encontrado
+                </Text>
+              )
+            }
             ListFooterComponent={
-              totalPaginas > 1 ? (
+              totalPaginas > 1 && !listLoading ? (
                 <View style={styles.pagination}>
                   <Button
                     title="Anterior"
-                    onPress={() => {
-                      if (paginaAtual > 1) setPaginaAtual(paginaAtual - 1);
-                    }}
+                    onPress={() => paginaAtual > 1 && handleChangePage(paginaAtual - 1)}
                     disabled={paginaAtual === 1}
                   />
+
                   <Text style={styles.pageInfo}>
                     Página {paginaAtual} de {totalPaginas}
                   </Text>
+
                   <Button
                     title="Próxima"
-                    onPress={() => {
-                      if (paginaAtual < totalPaginas)
-                        setPaginaAtual(paginaAtual + 1);
-                    }}
+                    onPress={() =>
+                      paginaAtual < totalPaginas && handleChangePage(paginaAtual + 1)
+                    }
                     disabled={paginaAtual === totalPaginas}
                   />
                 </View>
               ) : null
             }
           />
-        </ScrollView>
       </MainLayout>
+      <FloatingAction
+        visible={!listLoading}
+        actions={actions}
+        onPressItem={handleActionPress}
+        buttonSize={60}
+        color={colors.yellow.dark} 
+        floatingIcon={<Plus width={24} height={24} fill={'black'} />} 
+        position="right" 
+      />
 
-      {/* Modais */}
-      <CustomModal visible={modalVisible1} onClose={() => setModalVisible1(false)}>
-        <FormEstoque onSuccess={() => setModalVisible1(false)} />
-      </CustomModal>
-
-      <CustomModal visible={modalVisible2} onClose={() => setModalVisible2(false)}>
-        <FormColeta
-          industrias={industrias}
-          onSuccess={() => setModalVisible2(false)}
+    {isAddingEstoque && (
+        <EstoqueAddBottomSheet
+            propriedadeId={propriedadeSelecionada!}
+            onClose={() => setIsAddingEstoque(false)}
+            onSuccess={() => {
+                setIsAddingEstoque(false);
+                // Atualiza o DashLactation com a nova quantidade
+                fetchCiclos(); 
+            }}
         />
-      </CustomModal>
+    )}
 
-      <CustomModal
-        visible={modalLactacaoVisible}
-        onClose={() => setModalLactacaoVisible(false)}
-      >
-        {selectedBufala && (
-          <FormLactacao
+      {isAddingColeta && (
+        <ColetaAddBottomSheet
+            industrias={industrias}
+            propriedadeId={propriedadeSelecionada!}
+            onClose={() => setIsAddingColeta(false)}
+            onSuccess={() => {
+                setIsAddingColeta(false);
+            }}
+        />
+      )}
+
+      {!!selectedBufala && (
+        <LactacaoAddBottomSheet
             animais={[
               {
                 id_bufala: selectedBufala.id,
                 brinco: selectedBufala.brinco,
+                id_ciclo_lactacao: selectedBufala.idCicloLactacao || '',
               },
             ]}
-            onSuccess={() => setModalLactacaoVisible(false)}
-          />
-        )}
-      </CustomModal>
+            propriedadeId={propriedadeSelecionada!}
+            onClose={() => setSelectedBufala(null)} // Fecha ao limpar o estado
+            onSuccess={() => {
+                setSelectedBufala(null); // Fecha
+            }}
+        />
+      )}
     </View>
   );
 };
@@ -261,16 +346,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.yellow.dark,
     borderRadius: 50,
   },
-  content: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingTop: 16,
-    paddingBottom: 16,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    marginBottom: 50,
-    borderColor: colors.gray.disabled,
-  },
   pagination: {
     flexDirection: "row",
     alignItems: "center",
@@ -288,5 +363,10 @@ const styles = StyleSheet.create({
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center" 
+  },
+  inlineLoader: {
+    paddingVertical: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

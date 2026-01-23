@@ -11,7 +11,6 @@ import {
   Alert,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import bufaloService from "../../services/bufaloService";
 import { usePropriedade } from "../../context/PropriedadeContext";
 import YellowButton from "../Button";
@@ -177,17 +176,7 @@ export function FormBufalo({ onSuccess }: FormBufaloProps) {
             : "Selecione a Data"}
         </Text>
       </TouchableOpacity>
-      {showDatePicker && (
-        <DateTimePicker
-          value={dtNascimento || new Date()}
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(event, date) => {
-            if (date) setDtNascimento(date);
-            setShowDatePicker(Platform.OS === "ios");
-          }}
-        />
-      )}
+
 
       <Text style={styles.sectionTitle}>Raça</Text>
       <DropDownPicker

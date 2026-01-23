@@ -1,137 +1,192 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  RefreshControl,
+  TouchableOpacity,
+  ActivityIndicator,
+  FlatList,
+} from 'react-native';
+
 import { MainLayout } from '../layouts/MainLayout';
 import { colors } from '../styles/colors';
 import Plus from '../../assets/images/plus.svg';
-import { getReproducoes } from '../services/reproducaoService';
-import { Modal } from '../components/Modal';
-import { FormReproducaoAtt } from '../components/FormReproductionAtt';
-import { FormReproducaoAdd } from '../components/FormReproductionAdd';
+import {
+  getReproducaoDashboardStats,
+  getReproducoes,
+  ReproducaoDashboardStats,
+} from '../services/reproducaoService';
 import DashReproduction from '../components/DashReproducao';
 import { CardReproducao } from '../components/CardBufaloReproduction';
 import Button from '../components/Button';
-import AgroCore from '../icons/agroCore';
 import { usePropriedade } from '../context/PropriedadeContext';
+import { ReproducaoAddBottomSheet } from '../components/FormReproductionAdd';
+import { ReproducaoAttBottomSheet } from '../components/FormReproductionAtt';
+import BuffaloLoader from '../components/BufaloLoader';
 
 export const ReproducaoScreen = () => {
   const { propriedadeSelecionada } = usePropriedade();
+
   const [refreshing, setRefreshing] = useState(false);
-  const [reproducoes, setReproducoes] = useState<any[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [reproducaoSelecionada, setReproducaoSelecionada] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
+
+  const [reproducoes, setReproducoes] = useState<any[]>([]);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
+
+  const [reproducaoSelecionada, setReproducaoSelecionada] = useState<any>(null);
+  const [isAddBottomSheetVisible, setIsAddBottomSheetVisible] = useState(false);
+  const [isAttBottomSheetVisible, setIsAttBottomSheetVisible] = useState(false);
+
   const itensPorPagina = 10;
 
-  const fetchReproducoes = async () => {
+  const [dashboardStats, setDashboardStats] =
+    useState<ReproducaoDashboardStats>({
+      totalEmAndamento: 0,
+      totalConfirmada: 0,
+      totalFalha: 0,
+      ultimaDataReproducao: '-',
+    });
+
+  const fetchReproducoes = async (
+    pagina: number,
+    isInitial = false
+  ) => {
     if (!propriedadeSelecionada) return;
-    setLoading(true);
-    setRefreshing(true);
+
     try {
-      const data = await getReproducoes(propriedadeSelecionada);
-      setReproducoes(data);
-      setTotalPaginas(Math.ceil(data.length / itensPorPagina));
-      setPaginaAtual(1); 
+      if (isInitial) setLoading(true);
+      else setListLoading(true);
+
+      const [stats, dadosLista] = await Promise.all([
+        getReproducaoDashboardStats(propriedadeSelecionada),
+        getReproducoes(propriedadeSelecionada, pagina, itensPorPagina),
+      ]);
+
+      setDashboardStats(stats);
+      setReproducoes(dadosLista.reproducoes);
+      setTotalPaginas(dadosLista.meta.totalPages);
+      setPaginaAtual(pagina);
     } catch (error) {
       console.error(error);
       setReproducoes([]);
-      setTotalPaginas(1);
       setPaginaAtual(1);
+      setTotalPaginas(1);
+    } finally {
+      setLoading(false);
+      setListLoading(false);
     }
-    setRefreshing(false);
   };
 
   const onRefresh = async () => {
-    await fetchReproducoes();
+    setRefreshing(true);
+    await fetchReproducoes(1);
+    setRefreshing(false);
+  };
+
+  const handlePageChange = async (novaPagina: number) => {
+    if (novaPagina < 1 || novaPagina > totalPaginas) return;
+    await fetchReproducoes(novaPagina);
   };
 
   const handleCardPress = (reproducao: any) => {
     setReproducaoSelecionada(reproducao);
-    setModalVisible(true);
+    setIsAttBottomSheetVisible(true);
   };
 
-  const reproducoesPaginadas = reproducoes.slice(
-    (paginaAtual - 1) * itensPorPagina,
-    paginaAtual * itensPorPagina
-  );
-
   useEffect(() => {
-      const fetchData = async () => {
-        setLoading(true);
-        await fetchReproducoes();
-        setLoading(false);
-      }
-      fetchData();
-  }, []);
-
+    if (propriedadeSelecionada) {
+      fetchReproducoes(1, true);
+    }
+  }, [propriedadeSelecionada]);
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <AgroCore width={200} height={200} />
-        <Text>Carregando reproduções...</Text>
-        <ActivityIndicator size="large" color={colors.yellow.static} />
+        <BuffaloLoader />
       </View>
     );
   }
-  
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ alignItems: 'center' }}>
-          <Text style={styles.header1Text}>Reprodução</Text>
-        </View>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            onPress={() => {
-              setReproducaoSelecionada(null);
-              setModalVisible(true);
-            }}
-            style={styles.button}
-          >
-            <Plus width={15} height={15} style={{ margin: 6 }} />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.header1Text}>Reprodução</Text>
       </View>
 
       <MainLayout>
-        <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-          <DashReproduction
-            emProcesso={reproducoes.length > 0 ? reproducoes.filter(r => r.status === 'Em andamento').length : 0}
-            confirmadas={reproducoes.length > 0 ? reproducoes.filter(r => r.status === 'Confirmada').length : 0}
-            falhas={reproducoes.length > 0 ? reproducoes.filter(r => r.status === 'Falha').length : 0}
-            ultimaData={reproducoes.length > 0 ? reproducoes[0].dt_evento : "-"}
-          />
+        <FlatList
+          data={listLoading ? [] : reproducoes}
+          keyExtractor={(item) => String(item.id)}
+          showsVerticalScrollIndicator={false}
 
-          <View style={styles.content}>
-            {reproducoesPaginadas.map(reproducao => (
-              <CardReproducao
-                key={reproducao.id}
-                reproducao={{
-                  brincoBufala: reproducao.brincoVaca,
-                  brincoTouro: reproducao.brincoTouro,
-                  tipoReproducao: reproducao.tipoInseminacao,
-                  concluida: reproducao.tipoParto,
-                  dataCruzamento: reproducao.dt_evento,
-                  previsaoParto: reproducao.previsaoParto,
-                  status: reproducao.status,
-                  tipo_parto: reproducao.tipoParto,
-                  tipo_inseminacao: reproducao.tipoInseminacao,
-                  id_semen: reproducao.id_semen,
-                }}
-                onPress={() => handleCardPress(reproducao)}
-              />
-            ))}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.yellow.base]}
+              tintColor={colors.yellow.base}
+            />
+          }
 
-            {totalPaginas > 1 && (
+          ListHeaderComponent={
+            <DashReproduction
+              emProcesso={dashboardStats.totalEmAndamento}
+              confirmadas={dashboardStats.totalConfirmada}
+              falhas={dashboardStats.totalFalha}
+              ultimaData={
+                dashboardStats.ultimaDataReproducao === '-'
+                  ? '-'
+                  : dashboardStats.ultimaDataReproducao
+              }
+            />
+          }
+
+          renderItem={({ item }) => (
+            <CardReproducao
+              reproducao={{
+                brincoBufala: item.brincoVaca,
+                brincoTouro: item.brincoTouro,
+                tipoReproducao: item.tipoInseminacao,
+                concluida: item.tipoParto,
+                dataCruzamento: item.dt_evento,
+                previsaoParto: item.previsaoParto,
+                status: item.status,
+                tipo_parto: item.tipoParto,
+                tipo_inseminacao: item.tipoInseminacao,
+                id_semen: item.id_semen,
+              }}
+              onPress={() => handleCardPress(item)}
+            />
+          )}
+
+          ListEmptyComponent={
+            listLoading ? (
+              <View style={styles.inlineLoader}>
+                <ActivityIndicator
+                  size="large"
+                  color={colors.yellow.base}
+                />
+                <Text style={{ marginTop: 8 }}>
+                  Atualizando reproduções...
+                </Text>
+              </View>
+            ) : (
+              <Text style={{ textAlign: 'center', marginTop: 20 }}>
+                Nenhum registro encontrado
+              </Text>
+            )
+          }
+
+          ListFooterComponent={
+            totalPaginas > 1 && !listLoading ? (
               <View style={styles.pagination}>
                 <Button
                   title="Anterior"
-                  onPress={() => paginaAtual > 1 && setPaginaAtual(paginaAtual - 1)}
+                  onPress={() => handlePageChange(paginaAtual - 1)}
                   disabled={paginaAtual === 1}
                 />
                 <Text style={styles.pageInfo}>
@@ -139,85 +194,106 @@ export const ReproducaoScreen = () => {
                 </Text>
                 <Button
                   title="Próxima"
-                  onPress={() => paginaAtual < totalPaginas && setPaginaAtual(paginaAtual + 1)}
+                  onPress={() => handlePageChange(paginaAtual + 1)}
                   disabled={paginaAtual === totalPaginas}
                 />
               </View>
-            )}
-          </View>
-        </ScrollView>
+            ) : null
+          }
+        />
       </MainLayout>
 
-      <Modal visible={modalVisible} onClose={() => setModalVisible(false)}>
-        {reproducaoSelecionada ? (
-          <FormReproducaoAtt
-            initialData={reproducaoSelecionada}
-            onClose={() => setModalVisible(false)}
-            onSuccess={fetchReproducoes}
-          />
-        ) : (
-          <FormReproducaoAdd
-            onClose={() => setModalVisible(false)}
-            onSuccess={fetchReproducoes}
-          />
-        )}
-      </Modal>
+      {/* FAB */}
+      <TouchableOpacity
+        onPress={() => {
+          setReproducaoSelecionada(null);
+          setIsAddBottomSheetVisible(true);
+        }}
+        style={styles.fabButtonContainer}
+      >
+        <Plus width={24} height={24} color="#FFF" />
+      </TouchableOpacity>
+
+      {isAddBottomSheetVisible && (
+        <ReproducaoAddBottomSheet
+          onClose={() => setIsAddBottomSheetVisible(false)}
+          onSuccess={() => {
+            setIsAddBottomSheetVisible(false);
+            fetchReproducoes(1);
+          }}
+        />
+      )}
+
+      {isAttBottomSheetVisible && reproducaoSelecionada && (
+        <ReproducaoAttBottomSheet
+          initialData={reproducaoSelecionada}
+          onClose={() => {
+            setIsAttBottomSheetVisible(false);
+            setReproducaoSelecionada(null);
+          }}
+          onSuccess={() => {
+            setIsAttBottomSheetVisible(false);
+            fetchReproducoes(paginaAtual);
+          }}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
   header: {
     height: 80,
     backgroundColor: colors.yellow.base,
     justifyContent: 'center',
-    paddingLeft: 16,
   },
-  button: {
-    backgroundColor: colors.yellow.dark,
-    borderRadius: 50,
-  },
+
   header1Text: {
     fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    textAlign: 'center',
     marginTop: 30,
-    color: colors.brown.base
+    color: colors.brown.base,
   },
-  headerButtons: {
-    marginTop: 25,
-    flexDirection: "row",
-    position: "absolute",
-    right: 20,
-    gap: 20
-  },
-  content: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingTop: 16,
-    paddingBottom: 16,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    marginBottom: 50,
-    borderColor: colors.gray.disabled
-  },
+
   pagination: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 12,
     gap: 8,
   },
+
   pageInfo: {
     marginHorizontal: 12,
-    fontWeight: "600",
-    color: "#374151",
-    textAlign: "center",
+    fontWeight: '600',
+    color: '#374151',
   },
-  loadingContainer: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+
+  fabButtonContainer: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.yellow.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  inlineLoader: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

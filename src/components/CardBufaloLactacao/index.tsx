@@ -1,16 +1,42 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Switch } from "react-native";
 import { colors } from "../../styles/colors";
+import { ConfirmModal } from "../ModalDeleteConfirm";
+import { encerrarLactacao } from "../../services/lactacaoService";
+
 
 export type CardLactacaoProps = {
   animal: any;
   onPress?: () => void;
+  onStatusChanged?: () => void;
 };
 
-export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress }) => {
+export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress, onStatusChanged }) => {
   const isLactando = animal.status === "Em Lactação";
+  const [isEnabled, setIsEnabled] = useState(isLactando);
+  const [modalVisible, setModalVisible] = useState(false);
 
+  const toggleSwitch = () => {
+    setModalVisible(true);
+  };
+
+  const confirmarSecagem = async () => {
+    try {
+      await encerrarLactacao(animal.idCicloLactacao);
+
+      setIsEnabled(false);
+
+      if (onStatusChanged) onStatusChanged();
+
+    } catch (err) {
+      console.log("Erro ao encerrar lactação:", err);
+    } finally {
+      setModalVisible(false);
+    }
+  };
+  
   return (
+    <>
     <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
       <View
         style={[
@@ -21,9 +47,25 @@ export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress }) =
       <View style={styles.content}>
         {/* Cabeçalho */}
         <View style={styles.header}>
+        <View>
           <Text style={styles.nome}>{animal.nome || "Sem nome"}</Text>
           <Text style={styles.brinco}>Brinco: Nº {animal.brinco}</Text>
         </View>
+        <View style={[styles.statusBadge, { backgroundColor: isEnabled ? colors.green.active : colors.red.inactive }, ]}>
+          <View style={[ styles.statusDot, { backgroundColor: isEnabled ? colors.green.extra : colors.red.extra, }, ]} />
+          <Text style={[ styles.statusText, { color: isEnabled ? colors.green.text : colors.red.text, },]}>
+            {isEnabled ? "Em Lactação" : "Seca"}
+          </Text>
+          <Switch
+            value={isEnabled}
+            onValueChange={toggleSwitch}
+            trackColor={{ false: colors.gray.claro, true: colors.gray.claro }}
+            thumbColor={isEnabled ? colors.green.extra : colors.red.extra}
+          />
+        </View>
+        </View>
+
+
         <View style={styles.chipRow}>
           <View style={styles.chip}>
             <Text style={styles.chipLabel}>Raça:</Text>
@@ -40,6 +82,17 @@ export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress }) =
         </View>
       </View>
     </TouchableOpacity>
+
+    <ConfirmModal
+        visible={modalVisible}
+        title="Confirmar Secagem"
+        message={`Deseja marcar a vaca ${animal.nome} como seca?`}
+        confirmText="Sim, Secar"
+        cancelText="Cancelar"
+        onCancel={() => setModalVisible(false)}
+        onConfirm={confirmarSecagem}
+    />
+    </>
   );
 };
 
@@ -73,6 +126,8 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   nome: {
     fontSize: 17,
@@ -88,7 +143,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginTop: 6,
     marginBottom: 6,
-    gap: 8,
+    gap: 5,
   },
   chip: {
     flexDirection: "row",
@@ -120,5 +175,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: colors.yellow.base,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+    width: '40%',
+    height: 40,
+
+  },
+  statusDot: { 
+    width: 8, 
+    height: 8, 
+    borderRadius: 4, 
+    marginRight: 4 
+  },
+  statusText: { 
+    fontSize: 12, 
+    fontWeight: '500' 
   },
 });

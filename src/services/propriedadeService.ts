@@ -25,7 +25,7 @@ export const getDashboardPropriedade = async (idPropriedade: string | number, to
     const dashboard = {
       machos: result.qtd_macho_ativos,
       femeas: result.qtd_femeas_ativas,
-      bufalosAtivos: result.qtd_bufalos_registradas,
+      bufalosAtivos: result.qtd_macho_ativos+result.qtd_femeas_ativas,
       bezerros: result.qtd_bufalos_bezerro,
       novilhas: result.qtd_bufalos_novilha,
       vacas: result.qtd_bufalos_vaca,

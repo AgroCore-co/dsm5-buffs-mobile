@@ -217,9 +217,22 @@ export default function FiltroRebanho({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: colors.white.base,
-    padding: 16,
+    flex: 1, 
+    padding: 16, 
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.gray.disabled,
+    shadowColor: colors.black.base,
+    shadowOpacity: 0.05,
+    shadowOffset: { 
+      width: 0, 
+      height: 2 
+    },
+    shadowRadius: 4,
+    elevation: 2, 
+    zIndex: 1000
   },
   header: {
     flexDirection: "row",
