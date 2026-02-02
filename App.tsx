@@ -1,6 +1,7 @@
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from './src/context/AuthContext'
+import { PortalProvider } from '@gorhom/portal';
 
 // App.tsx
 import React, { useEffect } from 'react';
@@ -193,13 +194,17 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-            <AuthProvider>
-              <PropriedadeProvider>
-                  <NavigationContainer>
-                    <AppContent />
-                  </NavigationContainer>
-              </PropriedadeProvider>
-            </AuthProvider>
+
+        <AuthProvider>
+          <PropriedadeProvider>
+            <PortalProvider>
+              <NavigationContainer>
+                <AppContent />
+              </NavigationContainer>
+            </PortalProvider>
+          </PropriedadeProvider>
+        </AuthProvider>
+
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

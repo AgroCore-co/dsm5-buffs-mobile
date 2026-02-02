@@ -1,4 +1,5 @@
 import { apiFetch } from "../lib/apiClient";
+import { formatarDataBR } from "../utils/date";
 
 export interface ReproducaoDashboardStats {
   totalEmAndamento: number;
@@ -48,7 +49,7 @@ const fetchNomeSemenOuOvulo = async (id: string) => {
   return `${id.slice(0, 5)}`;
 };
 
-export const getReproducaoDashboardStats = async (propriedadeId: number): Promise<ReproducaoDashboardStats> => {
+export const getReproducaoDashboardStats = async (propriedadeId: string): Promise<ReproducaoDashboardStats> => {
   if (!propriedadeId) {
     return {
       totalEmAndamento: 0,
@@ -78,62 +79,83 @@ export const getReproducaoDashboardStats = async (propriedadeId: number): Promis
 };
 
 export const getReproducoes = async (
-  propriedadeId: number, 
-  page: number = 1, 
+  propriedadeId: string,
+  page: number = 1,
   limit: number = 10
-): Promise<{ reproducoes: any[], meta: any }> => {
-  if (!propriedadeId) return { reproducoes: [], meta: { totalPages: 1 } };
+): Promise<{ reproducoes: any[]; meta: any }> => {
+  if (!propriedadeId) {
+    return {
+      reproducoes: [],
+      meta: {
+        page: 1,
+        limit,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    };
+  }
 
   try {
-    // ⚠️ Removido o loop 'while (hasNextPage)'
     const response: ReproducoesResponse = await apiFetch(
       `/cobertura/propriedade/${propriedadeId}?page=${page}&limit=${limit}`
     );
 
-    const reproducoes: any[] = response.data || [];
-    const meta = response.meta || { totalPages: 1 };
-
-    const reproducoesFormatadas = reproducoes.map((r) => {
-      // Usando os campos já retornados pela API (nome_femea, brinco_femea, etc.)
-      const brincoVaca = r.brinco_femea || r.id_bufala || "-";
-      let brincoMacho;
-      if (r.brinco_macho) {
-        brincoMacho = r.brinco_macho;
-      } else if (r.id_semen) {
-        brincoMacho = r.id_semen.slice(0, 5); 
-      } else if (r.id_ovulo) {
-        brincoMacho = r.id_ovulo.slice(0, 5);
-      } else {
-        brincoMacho = "-";
-      }
+    const reproducoesFormatadas = (response.data || []).map((r: any) => {
+      const femea = r.bufalo_idBufala;
+      const macho = r.bufalo_idBufalo;
 
       return {
-        id: r.id_reproducao,
+        id: r.idReproducao,
         status: r.status,
-        dt_evento: new Date(r.dt_evento).toLocaleDateString("pt-BR"),
+
         tipoInseminacao:
-          r.tipo_inseminacao === "Inseminação Artificial"
+          r.tipoInseminacao === "Inseminação Artificial"
             ? "IA"
-            : r.tipo_inseminacao === "Monta Natural"
+            : r.tipoInseminacao === "Monta Natural"
             ? "Natural"
             : "-",
-        tipoParto: r.tipo_parto || "-",
-        brincoVaca: brincoVaca,
-        brincoTouro: brincoMacho, 
-        primeiraCria: r.primeira_cria || false,
-        id_bufala: r.id_bufala,
-        id_bufalo: r.id_bufalo,
-        id_semen: r.id_semen, 
+
+        tipoParto: r.tipoParto ?? "-",
+        dtEvento: formatarDataBR(r.dtEvento),
+        ocorrencia: r.ocorrencia ?? "-",
+
+        // Fêmea
+        idBufala: r.idBufala,
+        nomeFemea: femea?.nome ?? "Não informado",
+        brincoFemea: femea?.brinco ?? "-",
+
+        // Macho / sêmen / óvulo
+        idBufalo: r.idBufalo,
+        nomeMacho: macho?.nome ?? (r.idSemen ? "Sêmen" : "-"),
+        brincoMacho: macho?.brinco ?? (r.idSemen || r.idOvulo ? (r.idSemen || r.idOvulo).slice(0, 5) : "-"),
+
+        // IDs brutos (mantidos para edição)
+        idSemen: r.idSemen,
+        idOvulo: r.idOvulo,
         previsaoParto: r.previsaoParto,
-        // Adicionar campos brutos necessários para atualização aqui
+        primeiraCria: r.primeiraCria ?? false,
       };
     });
 
-    return { reproducoes: reproducoesFormatadas, meta };
-
-  } catch (error: any) {
+    return {
+      reproducoes: reproducoesFormatadas,
+      meta: response.meta,
+    };
+  } catch (error) {
     console.error("Erro ao buscar reproduções:", error);
-    return { reproducoes: [], meta: { totalPages: 1 } };
+    return {
+      reproducoes: [],
+      meta: {
+        page: 1,
+        limit,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    };
   }
 };
 

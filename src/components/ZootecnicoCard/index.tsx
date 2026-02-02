@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { colors } from "../../styles/colors"; 
 import Zootec from "../../../assets/images/statistics.svg"
+import { formatarDataBR } from "../../utils/date";
 
   // Função auxiliar para formatar
   function formatarDataSimples(dataISO: string) {
@@ -27,11 +28,11 @@ export const ZootecnicoCard = ({ item, onDelete, onPress }: any) => (
 
     {/* Bloco de Texto Principal */}
     <View style={styles.textContainer}>
-      <Text style={styles.textData}>{item?.dt_registro ? item.dt_registro.split('T')[0].split('-').reverse().join('/') : '-'}</Text>
-      <Text style={styles.textInfoPrincipal} numberOfLines={1}>{item.peso} kg | CC: {item.condicao_corporal}</Text>
+      <Text style={styles.textData}>{formatarDataBR(item?.dtRegistro)}</Text>
+      <Text style={styles.textInfoPrincipal} numberOfLines={1}>{item.peso} kg | CC: {item.condicaoCorporal}</Text>
       
       <Text style={styles.textInfoSecundaria} numberOfLines={1}>
-        Pelagem: {item.cor_pelagem} | Porte: {item.porte_corporal} | Tipo: {item.tipo_pesagem}
+        Pelagem: {item.corPelagem} | Porte: {item.porteCorporal} | Tipo: {item.tipoPesagem}
       </Text>
     </View>
   </TouchableOpacity>

@@ -18,13 +18,14 @@ export default function Propriedades({ dropdownOpen, setDropdownOpen, prop }: Pr
 
   useEffect(() => {
     if (prop && prop.length > 0) {
-      const mapped = prop.map((p: any) => ({
-        label: p.nome,
-        value: p.id,
-      }));
+    const mapped = prop.map((p: any, index: number) => ({
+      key: `${p.id}`,
+      label: p.nome,
+      value: p.id,
+    }));
+    console.log(mapped);
       setItems(mapped);
 
-      // se não tiver nada selecionado ainda, define a primeira
       if (!propriedadeSelecionada) {
         setPropriedadeSelecionada(mapped[0].value);
       }
@@ -53,7 +54,7 @@ export default function Propriedades({ dropdownOpen, setDropdownOpen, prop }: Pr
             typeof callback === "function"
             ? callback(propriedadeSelecionada)
             : callback; 
-            setPropriedadeSelecionada(newValue as number | null);
+            setPropriedadeSelecionada(newValue as string | null);
               
           }}
           setItems={setItems}

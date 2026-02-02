@@ -1,4 +1,9 @@
 import { apiFetch } from "../lib/apiClient";
+import { formatarDataBR } from "../utils/date";
+
+/* =========================
+   INTERFACES
+========================= */
 
 export interface CicloLactacao {
   id_bufalo: string;
@@ -46,112 +51,136 @@ export interface Industria {
 export interface LactacaoRegistroPayload {
   id_bufala: string;
   id_propriedade: number;
-  id_ciclo_lactacao: string; 
+  id_ciclo_lactacao: string;
   qt_ordenha: number;
-  periodo: string; 
+  periodo: string;
   ocorrencia?: string;
-  dt_ordenha: string; 
+  dt_ordenha: string;
 }
 
 export interface ColetaRegistroPayload {
   id_industria: string;
-  id_propriedade: string; 
+  id_propriedade: string;
   resultado_teste: boolean;
   observacao?: string;
   quantidade: number;
-  dt_coleta: string; 
+  dt_coleta: string;
 }
 
 export interface EstoqueRegistroPayload {
-  id_propriedade: string | number; // Se for UUID, use string
-  id_usuario: string; // OBRIGATÓRIO no payload da API
+  id_propriedade: string | number;
+  id_usuario: string;
   quantidade: number;
-  dt_registro: string; // ISOString (ex: "2025-08-18T18:00:00.000Z")
+  dt_registro: string;
   observacao?: string;
 }
 
-export const getCiclosLactacao = async (propriedadeId: number) => {
+/* =========================
+   GET — CICLOS DE LACTAÇÃO
+========================= */
+
+export const getCiclosLactacao = async (
+  propriedadeId: string,
+  page = 1,
+  limit = 10
+) => {
   try {
-    if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
+    if (!propriedadeId) {
+      throw new Error("ID da propriedade é obrigatório.");
+    }
 
-    const ciclos: CicloLactacao[] = await apiFetch(
-      `/lactacao/femeas/em-lactacao/${propriedadeId}`
+    const response: {
+      data: any[];
+      meta: {
+        page: number;
+        totalPages: number;
+        totalItems: number;
+      };
+    } = await apiFetch(
+      `/lactacao/propriedade/${propriedadeId}?page=${page}&limit=${limit}`
     );
 
-    const estoqueResponse: { data: EstoqueLeite[] } = await apiFetch(
-      `/estoque-leite/propriedade/${propriedadeId}`
-    );
-
-    const estoqueAtual = estoqueResponse?.data?.[0] || null;
-
-    const totalLactando = ciclos.length;
-    const quantidadeAtual = estoqueAtual?.quantidade || 0;
-    const dataFormatada = estoqueAtual?.dt_registro
-      ? new Date(estoqueAtual.dt_registro).toLocaleDateString("pt-BR")
-      : "N/D";
+    const ciclos = response?.data ?? [];
 
     const ciclosFormatados = ciclos.map((c) => ({
-      id: c.id_bufalo,
-      nome: c.nome,
-      brinco: c.brinco,
-      raca: c.raca,
-      idadeMeses: c.idade_meses,
-      numeroCiclo: c.ciclo_atual.numero_ciclo,
-      diasEmLactacao: c.ciclo_atual.dias_em_lactacao,
-      status: c.ciclo_atual.status,
-      producaoTotal: c.producao_atual.total_produzido,
-      mediaDiaria: c.producao_atual.media_diaria,
-      idCicloLactacao: c.ciclo_atual.id_ciclo_lactacao,
-      ultimaOrdenha: c.producao_atual.ultima_ordenha
-        ? {
-            data: new Date(c.producao_atual.ultima_ordenha.data).toLocaleDateString("pt-BR"),
-            quantidade: c.producao_atual.ultima_ordenha.quantidade,
-            periodo: c.producao_atual.ultima_ordenha.periodo,
-          }
-        : null,
+      idCicloLactacao: c.idCicloLactacao,
+      idBufala: c.idBufala,
+      nome: c.bufalo?.nome ?? "Não informado",
+      brinco: c.bufalo?.brinco ?? "-",
+      status: c.status,
+      dtSecagemPrevista: c.dtSecagemPrevista
+        ? formatarDataBR(c.dtSecagemPrevista)
+        : "—",
     }));
 
     return {
       ciclos: ciclosFormatados,
-      totalLactando,
-      quantidadeAtual,
-      dataFormatada,
+      meta: response.meta,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro ao buscar ciclos de lactação:", error);
     return {
       ciclos: [],
-      totalLactando: 0,
-      quantidadeAtual: 0,
-      dataFormatada: "N/D",
+      meta: { page: 1, totalPages: 1, totalItems: 0 },
     };
   }
 };
 
+/* =========================
+   GET — ESTATÍSTICAS
+========================= */
 
-export const getIndustriasPorPropriedade = async (propriedadeId: number) => {
+export const getEstatisticasLactacao = async (propriedadeId: string) => {
+  try {
+    if (!propriedadeId) {
+      throw new Error("ID da propriedade é obrigatório.");
+    }
+
+    return await apiFetch(
+      `/lactacao/propriedade/${propriedadeId}/estatistica`
+    );
+  } catch (error) {
+    console.error("Erro ao buscar estatísticas de lactação:", error);
+    return {
+      total_ciclos: 0,
+      ciclos_ativos: 0,
+      ciclos_secos: 0,
+      media_dias_lactacao: 0,
+      ciclos_proximos_secagem: 0,
+      ciclos_secagem_atrasada: 0,
+    };
+  }
+};
+
+/* =========================
+   GET — INDÚSTRIAS
+========================= */
+
+export const getIndustriasPorPropriedade = async (propriedadeId: string) => {
   try {
     if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
 
     const response: Industria[] = await apiFetch(
-      `/industrias/propriedade/${propriedadeId}`
+      `/laticinios/propriedade/${propriedadeId}`
     );
+
     return response || [];
-    
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro ao buscar indústrias da propriedade:", error);
     return [];
   }
 };
 
+/* =========================
+   POST / PATCH (INALTERADOS)
+========================= */
 
 export const registrarLactacaoApi = async (payload: LactacaoRegistroPayload) => {
   try {
-    const response = await apiFetch("/lactacao", {
+    return await apiFetch("/lactacao", {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    return response;
   } catch (error) {
     console.error("Erro ao registrar lactação na API:", error);
     throw new Error("Falha ao registrar lactação.");
@@ -160,11 +189,10 @@ export const registrarLactacaoApi = async (payload: LactacaoRegistroPayload) => 
 
 export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {
   try {
-    const response = await apiFetch("/coletas", { 
+    return await apiFetch("/coletas", {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    return response;
   } catch (error) {
     console.error("Erro ao registrar coleta na API:", error);
     throw new Error("Falha ao registrar coleta.");
@@ -173,11 +201,10 @@ export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {
 
 export const registrarEstoqueApi = async (payload: EstoqueRegistroPayload) => {
   try {
-    const response = await apiFetch("/estoque-leite", { 
+    return await apiFetch("/estoque-leite", {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    return response;
   } catch (error) {
     console.error("Erro ao registrar estoque na API:", error);
     throw new Error("Falha ao registrar estoque.");

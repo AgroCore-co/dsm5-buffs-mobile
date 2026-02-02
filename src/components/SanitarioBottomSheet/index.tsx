@@ -7,18 +7,19 @@ import dayjs from "dayjs";
 import DropDownPicker from "react-native-dropdown-picker";
 import sanitarioService from "../../services/sanitarioService";
 import { ConfirmarExclusaoModal } from "../ModalAlertaDelete";
+import { formatarDataBR } from "../../utils/date";
 
 interface SanitarioItem {
-    id_sanit: string;
+    idSanit: string;
     doenca?: string;
     dosagem?: number;
-    dt_aplicacao?: string;
-    dt_retorno?: string;
-    id_medicao?: string;
+    dtAplicacao?: string;
+    dtRetorno?: string;
+    idMedicacao?: string;
     nome_medicamento?: string;
     observacao?: string;
-    necessita_retorno?: boolean;
-    unidade_medida?: string;
+    necessitaRetorno?: boolean;
+    unidadeMedida?: string;
 }
 
 interface SanitarioBottomSheetProps {
@@ -26,7 +27,7 @@ interface SanitarioBottomSheetProps {
     onEditSave: (data: SanitarioItem) => void;
     onClose: () => void;
     onDelete: (id_sanit: string) => void;
-    propriedadeId: number;
+    propriedadeId: string;
 }
 
 export const SanitarioBottomSheet: React.FC<SanitarioBottomSheetProps> = ({ item, onEditSave, onClose, onDelete, propriedadeId}) => {
@@ -37,7 +38,7 @@ export const SanitarioBottomSheet: React.FC<SanitarioBottomSheetProps> = ({ item
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [medicacoes, setMedicacoes] = useState<{label:string,value:string}[]>([]);
     const [openMedicacao, setOpenMedicacao] = useState(false);
-    const [medicacaoSelecionada, setMedicacaoSelecionada] = useState<string | null>(item.id_medicao || null);
+    const [medicacaoSelecionada, setMedicacaoSelecionada] = useState<string | null>(item.idMedicacao || null);
     const [loadingMedicacoes, setLoadingMedicacoes] = useState(true);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
@@ -79,26 +80,26 @@ export const SanitarioBottomSheet: React.FC<SanitarioBottomSheetProps> = ({ item
 
     const toggleEdit = () => {
         if (isEditing) {
-            const id_medicao = formData.id_medicao;
+            const idMedicao = formData.idMedicacao;
             const dosagem = formData.dosagem;
-            const unidade_medida = formData.unidade_medida;
-            const necessita_retorno = formData.necessita_retorno;
-            const dt_retorno = formData.dt_retorno;
+            const unidade_medida = formData.unidadeMedida;
+            const necessitaRetorno = formData.necessitaRetorno;
+            const dtRetorno = formData.dtRetorno;
 
             const payloadApi = {
-                id_medicao: id_medicao  || null,
+                idMedicao: idMedicao  || null,
                 dosagem: dosagem || 0,              
                 unidade_medida: unidade_medida || null,
-                necessita_retorno: necessita_retorno || null,
-                dt_retorno: dt_retorno || null,
+                necessitaRetorno: necessitaRetorno || null,
+                dtRetornov: dtRetorno || null,
             };
             
             const cleanedPayload = Object.fromEntries(
                 Object.entries(payloadApi).filter(([_, value]) => value !== null && value !== undefined)
             );
             
-            console.log("PAYLOAD ZOOTÉCNICO LIMPO PARA API:", cleanedPayload);
-            onEditSave({ id_sanit: formData.id_sanit, ...cleanedPayload }); 
+            console.log("PAYLOAD Sanitário LIMPO PARA API:", cleanedPayload);
+            onEditSave({ idSanit: formData.idSanit, ...cleanedPayload }); 
         }
         setIsEditing(!isEditing);
     };
@@ -109,7 +110,7 @@ export const SanitarioBottomSheet: React.FC<SanitarioBottomSheetProps> = ({ item
 
     const handleConfirmDelete = () => {
         setIsDeleteModalVisible(false); 
-        onDelete(item.id_sanit); 
+        onDelete(item.idSanit); 
         onClose();
     }
 
@@ -152,7 +153,7 @@ return (
                         Doença: {String(formData.doenca ?? "-")}
                       </Text>
                       <Text style={styles.cardSubtitle}>
-                        Aplicado em: {formatDate(formData?.dt_aplicacao)}
+                        Aplicado em: {formatarDataBR(formData?.dtAplicacao)}
                       </Text>
                     </View>
                 </View>
@@ -196,7 +197,7 @@ return (
 
                         {!isEditing ? (
                             <Text style={styles.listValue}>
-                                {String(formData.dosagem ?? "-")} {formData.unidade_medida ?? ""}
+                                {String(formData.dosagem ?? "-")} {formData.unidadeMedida ?? ""}
                             </Text>
                         ) : (
                             <View style={{ flexDirection: "row", gap: 8, left: '15%' }}>
@@ -208,8 +209,8 @@ return (
                                 />
                                 <TextInput
                                     style={styles.inputFull2}
-                                    value={formData.unidade_medida ?? ""}
-                                    onChangeText={(t) => handleChange("unidade_medida", t)}
+                                    value={formData.unidadeMedida ?? ""}
+                                    onChangeText={(t) => handleChange("unidadeMedida", t)}
                                 />
                             </View>
                         )}
@@ -221,27 +222,27 @@ return (
 
                         {!isEditing ? (
                             <Text style={styles.listValue}>
-                                {formData.necessita_retorno ? "Sim" : "Não"}
+                                {formData.necessitaRetorno ? "Sim" : "Não"}
                             </Text>
                         ) : (
                             <Switch
-                                value={Boolean(formData.necessita_retorno)}
-                                onValueChange={(v) => handleChange("necessita_retorno", v)}
+                                value={Boolean(formData.necessitaRetorno)}
+                                onValueChange={(v) => handleChange("necessitaRetorno", v)}
                                 thumbColor="#FAC638"
                             />
                         )}
                     </View>
 
                     {/* Retorno (apenas se necessitar) */}
-                    {formData.necessita_retorno && (
+                    {formData.necessitaRetorno && (
                       <View style={styles.listItem}>
                         <Text style={styles.listLabel}>Retorno:</Text>
                         {!isEditing ? (
-                          <Text style={styles.listValue}>{formatDate(formData.dt_retorno)}</Text>
+                          <Text style={styles.listValue}>{formatarDataBR(formData.dtRetorno)}</Text>
                         ) : (
                           <TouchableOpacity onPress={() => setShowDatePicker(true)}>
                             <Text style={[styles.listValue, { color: colors.black.base }]}>
-                              {formData.dt_retorno ? formatDate(formData.dt_retorno) : "Selecionar"}
+                              {formData.dtRetorno ? formatarDataBR(formData.dtRetorno) : "Selecionar"}
                             </Text>
                           </TouchableOpacity>
                         )}
@@ -272,10 +273,10 @@ return (
 
                 <DatePickerModal
                   visible={showDatePicker}
-                  date={formData.dt_retorno}
+                  date={formData.dtRetorno}
                   onClose={() => setShowDatePicker(false)}
                   onSelectDate={(selected) => {
-                    handleChange("dt_retorno", dayjs(selected).format("YYYY-MM-DD"));
+                    handleChange("dtRetorno", dayjs(selected).format("YYYY-MM-DD"));
                   }}
                 />
     </BottomSheetScrollView>

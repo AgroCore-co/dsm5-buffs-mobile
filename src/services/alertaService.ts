@@ -1,10 +1,10 @@
 import { apiFetch } from "../lib/apiClient";
-import { getBufaloDetalhes } from "./bufaloService";
+
+export type Filtro = "TODOS" | "PENDENTES";
 
 export type Alerta = {
-  nome_animal: string;
-  id_alerta: string;
-  animal_id: string;
+  idAlerta: string;
+  animalId: string;
   grupo: string;
   localizacao: string;
   motivo: string;
@@ -18,10 +18,15 @@ export type Alerta = {
   id_propriedade: string;
   created_at: string;
   updated_at: string;
+
+  // 🔹 Dados agregados do búfalo (vindos do backend)
+  nome_animal: string;
+  brinco_animal?: string | null;
 };
 
-export type Filtro = "TODOS" | "PENDENTES";
-
+/**
+ * Busca alertas por propriedade
+ */
 export const getAlertasPorPropriedade = async (
   propriedadeId: string | null,
   filtro: Filtro = "PENDENTES",
@@ -29,49 +34,54 @@ export const getAlertasPorPropriedade = async (
   limit: number = 10
 ) => {
   try {
-    const incluirVistos = filtro !== "PENDENTES"; // PENDENTES = só não vistos
+    const incluirVistos = filtro !== "PENDENTES";
 
     const result = await apiFetch(
       `/alertas/propriedade/${propriedadeId}?incluirVistos=${incluirVistos}&page=${page}&limit=${limit}`
     );
 
-    let alertas: Alerta[] = result.data.map((a: any) => ({
-      ...a,
-      prioridade: a.prioridade?.toUpperCase(),
-    }));
-
-    // Ordena: não vistos primeiro (para quando filtro "TODOS")
-    alertas.sort((a, b) => Number(a.visto) - Number(b.visto));
-
-    // Busca o nome real do animal
-    const alertasComNome = await Promise.all(
-      alertas.map(async (a) => {
-        const detalhes = await getBufaloDetalhes(a.animal_id);
-        return {
-          ...a,
-          nome_animal: detalhes?.nome || "Sem nome", // EXTRAÇÃO CORRETA
-        };
-      })
-    );
+    const alertas: Alerta[] = result.data
+      .map((a: any) => ({
+        ...a,
+        prioridade: a.prioridade?.toUpperCase(),
+        nome_animal: a.bufalo?.nome ?? "Sem nome",
+        brinco_animal: a.bufalo?.brinco ?? null,
+      }))
+      // 🔹 não vistos primeiro
+      .sort((a: Alerta, b: Alerta) => Number(a.visto) - Number(b.visto));
 
     return {
-      alertas: alertasComNome,
+      alertas,
       meta: result.meta,
     };
   } catch (err) {
     console.error("Erro ao buscar alertas:", err);
-    return { alertas: [], meta: { page: 1, limit, total: 0, totalPages: 1 } };
+    return {
+      alertas: [],
+      meta: {
+        page: 1,
+        limit,
+        total: 0,
+        totalPages: 1,
+      },
+    };
   }
 };
 
+/**
+ * Marca alerta como visto
+ */
 export const marcarAlertaVisto = async (id_alerta: string) => {
   try {
-    const alerta = await apiFetch(`/alertas/${id_alerta}/visto?status=true`, 
-    { method: "PATCH" } 
-  );
-    return alerta
+    return await apiFetch(
+      `/alertas/${id_alerta}/visto?status=true`,
+      { method: "PATCH" }
+    );
   } catch (err) {
-    console.error(`Erro ao marcar alerta ${id_alerta} como visto:`, err);
+    console.error(
+      `Erro ao marcar alerta ${id_alerta} como visto:`,
+      err
+    );
     throw err;
   }
 };

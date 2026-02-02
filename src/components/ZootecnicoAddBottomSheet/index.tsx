@@ -10,13 +10,13 @@ import {
     Platform,
     ToastAndroid,
     Alert,
-    ActivityIndicator // Adicionado para simular o loading no save
 } from "react-native";
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { colors } from "../../styles/colors";
 import { DatePickerModal } from "../DatePickerModal";
 import dayjs from "dayjs";
 import YellowButton from "../Button"; // Assumindo que o YellowButton é o componente de botão padrão
+import { formatarDataBR } from "../../utils/date";
 
 // ==========================================================
 // --- CONFIGURAÇÃO DE CORES (Padrão Unificado) ---
@@ -36,12 +36,12 @@ const mergedColors = { ...defaultColors, ...colors };
 // ==========================================================
 interface ZootecnicoPayload {
     peso?: number;
-    condicao_corporal?: number;
-    cor_pelagem?: string;
-    formato_chifre?: string;
-    porte_corporal?: string;
-    dt_registro: string;
-    tipo_pesagem?: string;
+    condicaoCorporal?: number;
+    corPelagem?: string;
+    formatoChifre?: string;
+    porteCorporal?: string;
+    dtRegistro: string;
+    tipoPesagem?: string;
 }
 
 interface ZootecnicoAddBottomSheetProps {
@@ -52,12 +52,12 @@ interface ZootecnicoAddBottomSheetProps {
 
 const initialFormData: ZootecnicoPayload = {
     peso: undefined,
-    condicao_corporal: undefined,
-    cor_pelagem: '',
-    formato_chifre: '',
-    porte_corporal: '',
-    dt_registro: dayjs().format("YYYY-MM-DD"),
-    tipo_pesagem: '',
+    condicaoCorporal: undefined,
+    corPelagem: '',
+    formatoChifre: '',
+    porteCorporal: '',
+    dtRegistro: dayjs().format("YYYY-MM-DD"),
+    tipoPesagem: '',
 };
 
 // ==========================================================
@@ -198,7 +198,7 @@ export const ZootecnicoAddBottomSheet: React.FC<ZootecnicoAddBottomSheetProps> =
 
     const handleSave = () => {
         // Validação básica para evitar save vazio
-        if (!formData.peso && !formData.condicao_corporal && !formData.cor_pelagem && !formData.formato_chifre && !formData.porte_corporal) {
+        if (!formData.peso && !formData.condicaoCorporal && !formData.corPelagem && !formData.formatoChifre && !formData.porteCorporal) {
              showToast("Preencha ao menos um campo de métrica/característica.", true);
              return;
         }
@@ -208,7 +208,7 @@ export const ZootecnicoAddBottomSheet: React.FC<ZootecnicoAddBottomSheetProps> =
         const payloadApi: ZootecnicoPayload = {
             ...formData,
             peso: formData.peso ? Number(formData.peso) : undefined,
-            condicao_corporal: formData.condicao_corporal ? Number(formData.condicao_corporal) : undefined,
+            condicaoCorporal: formData.condicaoCorporal ? Number(formData.condicaoCorporal) : undefined,
         };
         
         // Remove campos vazios, nulos ou indefinidos do payload
@@ -278,11 +278,11 @@ return (
                         {[1, 2, 3, 4, 5].map((n) => (
                             <TouchableOpacity
                             key={n}
-                            onPress={() => handleChange("condicao_corporal", String(n))}
+                            onPress={() => handleChange("condicaoCorporal", String(n))}
                             style={styles.radioItem}
                             >
                             <View style={styles.radioCircle}>
-                                {String(formData.condicao_corporal) === String(n) && (
+                                {String(formData.condicaoCorporal) === String(n) && (
                                 <View style={styles.radioSelected} />
                                 )}
                             </View>
@@ -295,30 +295,30 @@ return (
                     {/* INPUT: Cor Pelagem (com Floating Label) */}
                         <InputWithFloatingLabel
                             label="Cor Pelagem"
-                            value={formData.cor_pelagem ?? ""}
-                            onChangeText={(t) => handleChange("cor_pelagem", t)}
+                            value={formData.corPelagem ?? ""}
+                            onChangeText={(t) => handleChange("corPelagem", t)}
                         />
 
                     {/* INPUT: Formato Chifre (com Floating Label) */}
                         <InputWithFloatingLabel
                             label="Formato Chifre"
-                            value={formData.formato_chifre ?? ""}
-                            onChangeText={(t) => handleChange("formato_chifre", t)}
+                            value={formData.formatoChifre ?? ""}
+                            onChangeText={(t) => handleChange("formatoChifre", t)}
                         />
 
                     {/* INPUT: Porte Corporal (com Floating Label) */}
                         <InputWithFloatingLabel
                             label="Porte Corporal"
-                            value={formData.porte_corporal ?? ""}
-                            onChangeText={(t) => handleChange("porte_corporal", t)}
+                            value={formData.porteCorporal ?? ""}
+                            onChangeText={(t) => handleChange("porteCorporal", t)}
                         />
                     
                     <Text style={styles.sectionTitle}>Adicional</Text>
                     {/* INPUT: Tipo Pesagem (com Floating Label) */}
                         <InputWithFloatingLabel
                             label="Tipo Pesagem"
-                            value={formData.tipo_pesagem ?? ""}
-                            onChangeText={(t) => handleChange("tipo_pesagem", t)}
+                            value={formData.tipoPesagem ?? ""}
+                            onChangeText={(t) => handleChange("tipoPesagem", t)}
                         />
                         
                         {/* Data de Registro (Ajustado ao padrão dateFieldContainer) */}
@@ -326,7 +326,7 @@ return (
                             <Text style={styles.listLabel}>Data Registro:</Text>
                             <TouchableOpacity style={styles.dateDisplayButton} onPress={() => setShowDatePicker(true)}>
                                 <Text style={styles.dateDisplayValue}>
-                                    {formatDate(formData.dt_registro)}
+                                    {formatarDataBR(formData.dtRegistro)}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -343,10 +343,10 @@ return (
 
                 <DatePickerModal
                   visible={showDatePicker}
-                  date={formData.dt_registro}
+                  date={formData.dtRegistro}
                   onClose={() => setShowDatePicker(false)}
                   onSelectDate={(selected) => {
-                    handleChange("dt_registro", dayjs(selected).format("YYYY-MM-DD"));
+                    handleChange("dtRegistro", dayjs(selected).format("YYYY-MM-DD"));
                   }}
                 />
     </BottomSheetScrollView>

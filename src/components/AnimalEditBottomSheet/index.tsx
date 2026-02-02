@@ -19,6 +19,7 @@ import YellowButton from "../Button";
 import { colors } from "../../styles/colors";
 import dayjs from "dayjs";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { formatarDataBR } from "../../utils/date";
 
 // ==========================================================
 // --- CONFIGURAÇÃO DE CORES (Padrão) ---
@@ -144,11 +145,11 @@ const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
 // --- INTERFACES (Inalteradas) ---
 // ==========================================================
 interface AnimalInfoItem {
-    id_bufalo: number;
+    id_bufalo: string;
     nome?: string;
     brinco: string;
     microchip?: string;
-    dt_nascimento?: string;
+    dtNascimento?: string;
     sexo: 'F' | 'M';
     nivel_maturidade?: 'B' | 'N' | 'V' | 'T';
     racaNome?: string;
@@ -159,7 +160,7 @@ interface AnimalInfoItem {
 
 interface AnimalEditBottomSheetProps {
     item: AnimalInfoItem;
-    onEditSave: (id_bufalo: number, data: any) => Promise<void>;
+    onEditSave: (id_bufalo: string, data: any) => Promise<void>;
     onClose: () => void;
 }
 
@@ -190,9 +191,10 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
     const [nivelMaturidade, setNivelMaturidade] = useState(item.nivel_maturidade || "");
     const [idRaca, setIdRaca] = useState<number | null>(item.id_raca || null);
     
+    
     // ESTADO ORIGINAL (com o potencial erro de tipagem no brincoMae)
     const [brincoPai, setBrincoPai] = useState(normalizeParentName(item.paiNome)); 
-    const [brincoMae, setBrincoMae] = useState(normalizeParentName(item.paiNome)); // MANTIDO O CÓDIGO ORIGINAL COM O item.paiNome
+    const [brincoMae, setBrincoMae] = useState(normalizeParentName(item.maeNome)); 
     
     const [racas, setRacas] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -369,7 +371,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                     {/* Data de Nascimento (Não Editável) */}
                     <InputWithFloatingLabel
                         label="Data de Nascimento"
-                        value={item.dt_nascimento ? dayjs(item.dt_nascimento).format("DD/MM/YYYY") : "Não informado"}
+                        value={item.dtNascimento ? formatarDataBR(item.dtNascimento) : "Não informado"}
                         onChangeText={() => {}}
                         editable={false}
                     />
@@ -389,7 +391,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                                 { label: "Touro (T)", value: "T" },
                             ]}
                             placeholder="Selecione Maturidade"
-                            listMode="SCROLLVIEW"
+                            listMode="MODAL"
                             zIndex={4000}
                             style={styles.dropdownStyle}
                             dropDownContainerStyle={styles.dropdownContainerStyle}
@@ -407,9 +409,9 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                             setOpen={setOpenRaca}
                             value={idRaca}
                             setValue={setIdRaca}
-                            items={racas.map(r => ({ label: r.nome, value: r.id_raca }))}
+                            items={racas.map(r => ({ label: r.nome, value: r.idRaca }))}
                             placeholder="Selecione Raça"
-                            listMode="SCROLLVIEW"
+                            listMode="MODAL"
                             zIndex={3000}
                             style={styles.dropdownStyle}
                             dropDownContainerStyle={styles.dropdownContainerStyle}

@@ -21,6 +21,7 @@ import { SanitarioAddBottomSheet } from "../components/SanitarioAddBottomSheet";
 import { ZootecnicoAddBottomSheet } from "../components/ZootecnicoAddBottomSheet";
 import Plus from '../../assets/images/plus.svg';
 import BuffaloLoader from "../components/BufaloLoader";
+import { Portal } from "@gorhom/portal";
 
 type RootStackParamList = {
   AnimalDetail: { id: string };
@@ -29,7 +30,7 @@ type RootStackParamList = {
 type NivelMaturidade = 'B' | 'N' | 'V' | 'T';
 
 interface BufaloDetalhes {
-    id_bufalo: number;
+    id_bufalo: string;
     nome: string;
     brinco: string;
     sexo: 'F' | 'M';
@@ -39,6 +40,7 @@ interface BufaloDetalhes {
     id_raca: number;
     paiNome?: string;
     maeNome?: string;
+    microchip?: string;
 }
 
 interface Grupo {
@@ -71,6 +73,13 @@ export const AnimalDetailScreen = () => {
 
   const [isAddingZootecnico, setIsAddingZootecnico] = useState(false);
   const [isAddingSanitario, setIsAddingSanitario] = useState(false);
+
+  const isAnyBottomSheetOpen =
+  !!selectedZootec ||
+  !!selectedSanit ||
+  isEditingInfo ||
+  isAddingZootecnico ||
+  isAddingSanitario;
 
   const fetchData = async (
     pageZootecToLoad = pageZootec, 
@@ -185,7 +194,7 @@ export const AnimalDetailScreen = () => {
     }
   };
 
-  const handleSaveInfo = async (id_bufalo: number, dadosAtualizados: any) => {
+  const handleSaveInfo = async (id_bufalo: string, dadosAtualizados: any) => {
     try {
       await bufaloService.updateBufalo(id_bufalo, dadosAtualizados); 
       setIsEditingInfo(false); // Fecha o BottomSheet usando o estado da tela
@@ -298,7 +307,7 @@ export const AnimalDetailScreen = () => {
           {tab === "zootec" && (
             <FlatList
               data={detalhes?.dadosZootecnicos || []}
-              keyExtractor={(item) => item.id_zootec.toString()}
+              keyExtractor={(item) => item.idZootec}
               renderItem={({ item }) => (
                 <ZootecnicoCard item={item} onPress={() => setSelectedZootec(item)} />
               )}
@@ -322,7 +331,7 @@ export const AnimalDetailScreen = () => {
           {tab === "sanit" && (
               <FlatList
                 data={detalhes?.dadosSanitarios || []}
-                keyExtractor={(item) => item.id_sanit.toString()}
+                keyExtractor={(item) => item.idSanit}
                 renderItem={({ item }) => (
                   <SanitarioCard item={item} onPress={() => setSelectedSanit(item)} />
                 )}
@@ -370,16 +379,18 @@ export const AnimalDetailScreen = () => {
         )}
 
         {!!isEditingInfo && detalhes && (
+          <Portal>
             <AnimalEditBottomSheet 
-                item={detalhes as BufaloDetalhes} 
-                onClose={() => setIsEditingInfo(false)} 
-                onEditSave={handleSaveInfo}
+              item={detalhes as BufaloDetalhes} 
+              onClose={() => setIsEditingInfo(false)} 
+              onEditSave={handleSaveInfo}
             />
+          </Portal>
         )}
 
       </MainLayout> 
 
-      {showAddButton && (
+      {showAddButton && !isAnyBottomSheetOpen && (
           <View style={styles.addButtonContainer}>
               <TouchableOpacity style={styles.floatingButton} onPress={onAddPress}>
                 <Text style={{padding:18}}><Plus width={24} height={24} fill={'black'} /></Text>

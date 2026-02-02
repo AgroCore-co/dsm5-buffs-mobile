@@ -6,6 +6,7 @@ import { ConfirmarAlteracaoStatusModal } from "../ModalAlterarStatus";
 import bufaloService from "../../services/bufaloService";
 import Pen  from "../../../assets/images/pen.svg";
 import { ConfirmModal } from "../ModalDeleteConfirm";
+import { formatarDataBR } from "../../utils/date";
 
 // Definição do tipo para o grupo retornado pela API
 // ID_GRUPO E NOME_GRUPO são strings (UUID/Nome)
@@ -21,7 +22,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
     const maturidadeMap: Record<string, string> = {
         B: "Bezerro", N: "Novilha", T: "Touro", V: "Vaca",
     };
-    const maturidadeTexto = maturidadeMap[detalhes.nivel_maturidade] || detalhes.nivel_maturidade;
+    const maturidadeTexto = maturidadeMap[detalhes.nivelMaturidade] || detalhes.nivelMaturidade;
     const[isEnabled, setIsEnabled] = useState(Boolean(detalhes?.status));
     const [modalVisible, setModalVisible] = useState(false);
     const [novoStatus, setNovoStatus] = useState<boolean | null>(null);
@@ -46,7 +47,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
             try {
                 // Removemos a lógica incorreta de parseInt.
                 // Usamos o ID da propriedade DIRETAMENTE como STRING (UUID).
-                const idPropriedade: number | null | undefined = detalhes.id_propriedade;
+                const idPropriedade: string | null | undefined = detalhes.idPropriedade;
                 // Verifica se a string (UUID) do ID da propriedade existe e não está vazia.
                 if (idPropriedade) {
                     // ⚠️ AQUI, bufaloService.getGrupos deve estar configurado para aceitar STRING.
@@ -59,7 +60,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
             }
         };
         fetchGrupos();
-    }, [detalhes.id_propriedade]);
+    }, [detalhes.idPropriedade]);
 
 
     const confirmarMudancaGrupo = useCallback(async () => {
@@ -69,7 +70,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
         
         try {
             // Executa a ação
-            await bufaloService.moverBufaloDeGrupo(detalhes.id_bufalo, idGrupoParaMudar);
+            await bufaloService.moverBufaloDeGrupo(detalhes.idBufalo, idGrupoParaMudar);
             // Atualiza os estados de sucesso
             setGrupoAtualId(idGrupoParaMudar);
             setNovoGrupoSelecionado(idGrupoParaMudar);
@@ -97,7 +98,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
 
         const novoNomeGrupo = grupos.find(g => g.id_grupo === idGrupo)?.nome_grupo || 'o grupo selecionado';
 
-        // 🚨 PREPARA E ABRE O MODAL CUSTOMIZADO
+        // PREPARA E ABRE O MODAL CUSTOMIZADO
         setIdGrupoParaMudar(idGrupo);
         setNomeGrupoParaMudar(novoNomeGrupo);
         setModalMudarGrupoVisible(true);
@@ -118,24 +119,26 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
 
     // Busca o nome do grupo atual para exibição
     const nomeGrupoAtual = useMemo(() => {
+        // 1️⃣ Prioridade: grupo carregado da lista de grupos
         const grupo = grupos.find(g => g.id_grupo === grupoAtualId);
         if (grupo) {
             return grupo.nome_grupo;
         }
-        if (detalhes && typeof detalhes === 'object' && detalhes.nome_grupo) {
-            return detalhes.nome_grupo;
+
+        // 2️⃣ Fallback: grupo vindo direto da API (se existir)
+        if (detalhes?.grupo?.nomeGrupo) {
+            return detalhes.grupo.nomeGrupo;
         }
-        if (typeof detalhes === 'string' && detalhes) {
-             return detalhes;
-        }
-        return '-' // Usar nome_grupo
-    }, [grupos, grupoAtualId, detalhes.grupo]);
+
+        // 3️⃣ Último fallback
+        return '-';
+    }, [grupos, grupoAtualId, detalhes]);
     // ... (FUNÇÕES DE STATUS EXISTENTES)
     const confirmarAlteracaoStatus = async () => {
         if (novoStatus === null) return;
         // ... (lógica de confirmação de status original)
         try {
-            await bufaloService.updateBufalo(detalhes.id_bufalo, { status: novoStatus });
+            await bufaloService.updateBufalo(detalhes.idBufalo, { status: novoStatus });
             setIsEnabled(novoStatus);
             detalhes.status = novoStatus;
         } catch (error) {
@@ -196,7 +199,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
                     <View style={styles.Row}>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Nascimento</Text>
-                            <Text style={styles.infoValue}>{detalhes?.dt_nascimento ? detalhes.dt_nascimento.split('T')[0].split('-').reverse().join('/') : '-'}</Text>
+                            <Text style={styles.infoValue}>{formatarDataBR(detalhes?.dtNascimento)}</Text>
                         </View>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Maturidade</Text>

@@ -2,14 +2,8 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { colors } from "../../styles/colors";
 import Sanit from "../../../assets/images/termometro.svg";
+import { formatarDataBR } from "../../utils/date";
 
-// Função auxiliar para formatar data
-function formatarDataSimples(dataISO: string) {
-  if (!dataISO) return "-";
-  const soData = dataISO.split("T")[0];
-  const partes = soData.split("-");
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
 
 export const SanitarioCard = ({ item, onDelete, onPress }: any) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -19,9 +13,7 @@ export const SanitarioCard = ({ item, onDelete, onPress }: any) => (
 
     {/* Bloco de Texto Principal */}
     <View style={styles.textContainer}>
-      <Text style={styles.textData}>
-        {item?.dt_aplicacao ? formatarDataSimples(item.dt_aplicacao) : "-"}
-      </Text>
+      <Text style={styles.textData}>{formatarDataBR(item?.dtAplicacao)}</Text>
 
       <Text style={styles.textInfoPrincipal} numberOfLines={1}>
         {item.doenca ?? "Sem diagnóstico"}
@@ -29,11 +21,11 @@ export const SanitarioCard = ({ item, onDelete, onPress }: any) => (
 
       <Text style={styles.textInfoSecundaria} numberOfLines={1}>
         Medicação: {item.nome_medicamento ?? "-"} | Dosagem:{" "}
-        {item.dosagem ? `${item.dosagem} ${item.unidade_medida}` : "-"}
+        {item.dosagem ? `${item.dosagem} ${item.unidadeMedida}` : "-"}
       </Text>
 
       <Text style={styles.textInfoSecundaria} numberOfLines={1}>
-        Retorno: {item.necessita_retorno ? "Sim" : "Não"}
+        Retorno: {item.necessitaRetorno ? "Sim" : "Não"}
       </Text>
     </View>
   </TouchableOpacity>

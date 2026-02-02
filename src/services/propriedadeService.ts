@@ -5,7 +5,7 @@ export const getPropriedades = async (token?: string) => {
   try {
     const result = await apiFetch("/propriedades");
     const propriedades = result?.propriedades?.map((p: any) => ({
-      id: p.id_propriedade,
+      id: p.idPropriedade,
       nome: p.nome,
     })) || [];
 

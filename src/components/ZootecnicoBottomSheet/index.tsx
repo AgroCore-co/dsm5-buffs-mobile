@@ -3,16 +3,17 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from "reac
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { colors } from "../../styles/colors";
 import { ConfirmarExclusaoModal } from "../ModalAlertaDelete";
+import { formatarDataBR } from "../../utils/date";
 
 interface ZootecnicoItem {
-    id_zootec: string;
-    tipo_pesagem?: string;
-    dt_registro?: string;
+    idZootec: string;
+    tipoPesagem?: string;
+    dtRegistro?: string;
     peso?: number;
-    condicao_corporal?: number;
-    cor_pelagem?: string;
-    formato_chifre?: string;
-    porte_corporal?: string;
+    condicaoCorporal?: number;
+    corPelagem?: string;
+    formatoChifre?: string;
+    porteCorporal?: string;
 }
 
 interface ZootecnicoBottomSheetProps {
@@ -44,17 +45,17 @@ export const ZootecnicoBottomSheet: React.FC<ZootecnicoBottomSheetProps> = ({ it
     const toggleEdit = () => {
         if (isEditing) {
             const peso = formData.peso;
-            const condicao_corporal = formData.condicao_corporal;
-            const cor_pelagem = formData.cor_pelagem;
-            const formato_chifre = formData.formato_chifre;
-            const porte_corporal = formData.porte_corporal;
+            const condicaoCorporal = formData.condicaoCorporal;
+            const corPelagem = formData.corPelagem;
+            const formatoChifre = formData.formatoChifre;
+            const porteCorporal = formData.porteCorporal;
 
             const payloadApi = {
                 peso: peso  || 0,
-                condicao_corporal: condicao_corporal || 0,              
-                cor_pelagem: cor_pelagem || null,
-                formato_chifre: formato_chifre || null,
-                porte_corporal: porte_corporal || null,
+                condicaoCorporal: condicaoCorporal || 0,              
+                corPelagem: corPelagem || null,
+                formatoChifre: formatoChifre || null,
+                porteCorporal: porteCorporal || null,
             };
             
             const cleanedPayload = Object.fromEntries(
@@ -62,7 +63,7 @@ export const ZootecnicoBottomSheet: React.FC<ZootecnicoBottomSheetProps> = ({ it
             );
             
             console.log("PAYLOAD ZOOTÉCNICO LIMPO PARA API:", cleanedPayload);
-            onEditSave({ id_zootec: formData.id_zootec, ...cleanedPayload }); 
+            onEditSave({ idZootec: formData.idZootec, ...cleanedPayload }); 
         }
         setIsEditing(!isEditing);
     };
@@ -73,7 +74,7 @@ export const ZootecnicoBottomSheet: React.FC<ZootecnicoBottomSheetProps> = ({ it
 
     const handleConfirmDelete = () => {
         setIsDeleteModalVisible(false); 
-        onDelete(item.id_zootec); 
+        onDelete(item.idZootec); 
         onClose();
     }
 
@@ -114,10 +115,10 @@ return (
       <View style={styles.mainCard}>
         <View style={styles.cardRow}>
             <Text style={styles.cardTitle}>
-              Registro {String(formData.tipo_pesagem ?? "")}
+              Registro {String(formData.tipoPesagem ?? "")}
             </Text>
             <Text style={styles.cardSubtitle}>
-              Data do Registro: {formatDate(formData?.dt_registro)}
+              Data do Registro: {formatarDataBR(formData?.dtRegistro)}
             </Text>
         </View>
       </View>
@@ -150,18 +151,18 @@ return (
 
       {!isEditing ? (
         <Text style={styles.listValue}>
-          {String(formData.condicao_corporal ?? "-")}
+          {String(formData.condicaoCorporal ?? "-")}
         </Text>
       ) : (
         <View style={{ flexDirection: "row", gap: 12 }}>
           {[1, 2, 3, 4, 5].map((n) => (
             <TouchableOpacity
               key={n}
-              onPress={() => handleChange("condicao_corporal", String(n))}
+              onPress={() => handleChange("condicaoCorporal", String(n))}
               style={styles.radioItem}
             >
               <View style={styles.radioCircle}>
-                {String(formData.condicao_corporal) === String(n) && (
+                {String(formData.condicaoCorporal) === String(n) && (
                   <View style={styles.radioSelected} />
                 )}
               </View>
@@ -177,12 +178,12 @@ return (
       <Text style={styles.listLabel}>Pelagem</Text>
 
       {!isEditing ? (
-        <Text style={styles.listValue}>{formData.cor_pelagem ?? "-"}</Text>
+        <Text style={styles.listValue}>{formData.corPelagem ?? "-"}</Text>
       ) : (
         <TextInput
           style={styles.inputFull}
-          value={formData.cor_pelagem ?? ""}
-          onChangeText={(t) => handleChange("cor_pelagem", t)}
+          value={formData.corPelagem ?? ""}
+          onChangeText={(t) => handleChange("corPelagem", t)}
         />
       )}
     </View>
@@ -192,12 +193,12 @@ return (
       <Text style={styles.listLabel}>Chifre</Text>
 
       {!isEditing ? (
-        <Text style={styles.listValue}>{formData.formato_chifre ?? "-"}</Text>
+        <Text style={styles.listValue}>{formData.formatoChifre ?? "-"}</Text>
       ) : (
         <TextInput
           style={styles.inputFull}
-          value={formData.formato_chifre ?? ""}
-          onChangeText={(t) => handleChange("formato_chifre", t)}
+          value={formData.formatoChifre ?? ""}
+          onChangeText={(t) => handleChange("formatoChifre", t)}
         />
       )}
     </View>
@@ -207,12 +208,12 @@ return (
       <Text style={styles.listLabel}>Porte</Text>
 
       {!isEditing ? (
-        <Text style={styles.listValue}>{formData.porte_corporal ?? "-"}</Text>
+        <Text style={styles.listValue}>{formData.porteCorporal ?? "-"}</Text>
       ) : (
         <TextInput
           style={styles.inputFull}
-          value={formData.porte_corporal ?? ""}
-          onChangeText={(t) => handleChange("porte_corporal", t)}
+          value={formData.porteCorporal ?? ""}
+          onChangeText={(t) => handleChange("porteCorporal", t)}
         />
       )}
     </View>
@@ -245,7 +246,7 @@ return (
         onClose={() => setIsDeleteModalVisible(false)}
         onConfirm={handleConfirmDelete}
         title="Excluir Registro Zootécnico"
-        message={`Tem certeza que deseja excluir o registro da data ${formatDate(item.dt_registro)}? Esta ação é irreversível.`}
+        message={`Tem certeza que deseja excluir o registro da data ${formatarDataBR(item.dtRegistro)}? Esta ação é irreversível.`}
       />
   </BottomSheet>
 )};

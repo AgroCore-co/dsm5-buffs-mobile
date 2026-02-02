@@ -1,7 +1,6 @@
 import React, { useState, useEffect} from "react";
 import { View, ScrollView, StyleSheet, RefreshControl, Text, ActivityIndicator } from "react-native";
 import Propriedades from "../components/Dropdown";
-import AlertasPendentes from "../components/Lembretes";
 import DashPropriedade from "../components/DashPropriedade";
 import { colors } from "../styles/colors";
 import BuffsLogo from '../../assets/images/logoBuffs.svg'; 
@@ -10,10 +9,7 @@ import { UserMenu } from "../components/UserMenu";
 import BuffaloLoader from "../components/BufaloLoader";
 
 import { usePropriedade } from "../context/PropriedadeContext";
-import bufaloService from "../services/bufaloService";
 import propriedadeService from "../services/propriedadeService";
-import AgroCore from "../icons/agroCore";
-import BellIcon from "../icons/bell";
 import { NotificacoesButton } from "../components/NotificacoesButton";
 
 

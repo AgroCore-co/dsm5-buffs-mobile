@@ -1,18 +1,17 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface PropriedadeContextProps {
-  propriedadeSelecionada: number | null;
-  setPropriedadeSelecionada: (id: number | null) => void;
+  propriedadeSelecionada: string | null;
+  setPropriedadeSelecionada: (id: string | null) => void;
 }
 
 const PropriedadeContext = createContext<PropriedadeContextProps | undefined>(undefined);
 
 export const PropriedadeProvider = ({ children }: { children: ReactNode }) => {
-  const [propriedadeSelecionada, setPropriedadeSelecionada] = useState<number | null>(null);
+  const [propriedadeSelecionada, setPropriedadeSelecionada] = useState<string | null>(null);
   
   return (
     <PropriedadeContext.Provider value={{ propriedadeSelecionada, setPropriedadeSelecionada }}>
-      
       {children}
     </PropriedadeContext.Provider>
   );

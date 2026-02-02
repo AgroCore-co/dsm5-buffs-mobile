@@ -148,11 +148,11 @@ export const ReproducaoScreen = () => {
           renderItem={({ item }) => (
             <CardReproducao
               reproducao={{
-                brincoBufala: item.brincoVaca,
-                brincoTouro: item.brincoTouro,
+                brincoBufala: item.brincoFemea,
+                brincoTouro: item.brincoMacho,
                 tipoReproducao: item.tipoInseminacao,
                 concluida: item.tipoParto,
-                dataCruzamento: item.dt_evento,
+                dataCruzamento: item.dtEvento,
                 previsaoParto: item.previsaoParto,
                 status: item.status,
                 tipo_parto: item.tipoParto,

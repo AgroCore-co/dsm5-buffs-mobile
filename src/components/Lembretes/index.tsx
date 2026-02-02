@@ -60,8 +60,12 @@ export default function AlertasPendentes({
     useState<Alerta | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const formatarData = (iso: string) => {
-    const [ano, mes, dia] = iso.split("T")[0].split("-");
+  const formatarData = (data: string) => {
+    if (!data) return "";
+
+    const [dataParte] = data.split(" "); // "2025-11-22"
+    const [ano, mes, dia] = dataParte.split("-");
+
     return `${dia}/${mes}/${ano}`;
   };
 
@@ -85,7 +89,7 @@ export default function AlertasPendentes({
         const mapa = new Map<string, Alerta>();
 
         [...(reset ? [] : prev), ...res.alertas].forEach((a) => {
-          mapa.set(a.id_alerta, a);
+          mapa.set(a.idAlerta, a);
         });
 
         return Array.from(mapa.values());
@@ -121,10 +125,10 @@ export default function AlertasPendentes({
     if (!alertaSelecionado) return;
 
     try {
-      await marcarAlertaVisto(alertaSelecionado.id_alerta);
+      await marcarAlertaVisto(alertaSelecionado.idAlerta);
       setAlertas((prev) =>
         prev.map((a) =>
-          a.id_alerta === alertaSelecionado.id_alerta
+          a.idAlerta === alertaSelecionado.idAlerta
             ? { ...a, visto: true }
             : a
         )
@@ -141,9 +145,9 @@ export default function AlertasPendentes({
       onPress={() => {
         if (
           (item.nicho === "SANITARIO" || item.nicho === "CLINICO") &&
-          item.animal_id
+          item.animalId
         ) {
-          navigation.navigate("AnimalDetail", { id: item.animal_id });
+          navigation.navigate("AnimalDetail", { id: item.animalId });
         }
 
         if (item.nicho === "REPRODUCAO") {
@@ -229,7 +233,7 @@ export default function AlertasPendentes({
 
       <FlatList
         data={alertas}
-        keyExtractor={(item) => item.id_alerta}
+        keyExtractor={(item) => item.idAlerta}
         renderItem={renderItem}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}

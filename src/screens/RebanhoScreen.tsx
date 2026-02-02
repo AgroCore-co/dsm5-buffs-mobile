@@ -22,7 +22,6 @@ import BuffaloLoader from '../components/BufaloLoader';
 
 type Animal = {
   id: string;
-  id_bufalo: string;
   nome: string;
   brinco: string;
   status: boolean;
@@ -87,13 +86,13 @@ export const RebanhoScreen = () => {
       );
 
       const animaisFormatados = bufalos.map((b: any) => ({
-        id: b.id_bufalo,
+        id: b.idBufalo,
         status: b.status,
         brinco: b.brinco,
         nome: b.nome,
         raca: b.raca?.nome ?? "Sem raça definida",
         sexo: b.sexo,
-        maturidade: b.nivel_maturidade,
+        maturidade: b.nivelMaturidade,
       }));
 
       setAnimais(animaisFormatados);
@@ -196,7 +195,7 @@ export const RebanhoScreen = () => {
         <FlatList
           data={listLoading ? [] : animaisFiltrados}
           keyExtractor={(item, index) =>
-            String(item.id || item.id_bufalo || index)
+            String(item.id || index)
           }
           showsVerticalScrollIndicator={false}
 
@@ -218,19 +217,22 @@ export const RebanhoScreen = () => {
             </View>
           }
 
-          renderItem={({ item }) => (
-            <CardBufalo
-              nome={item.nome}
-              brinco={item.brinco}
-              status={item.status}
-              sexo={item.sexo}
-              maturidade={item.maturidade || "Desconhecida"}
-              categoria={item.raca}
-              onPress={() =>
-                navigation.navigate("AnimalDetail", { id: item.id })
-              }
-            />
-          )}
+          renderItem={({ item }) => {
+            return (
+              <CardBufalo
+                nome={item.nome}
+                brinco={item.brinco}
+                status={item.status}
+                sexo={item.sexo}
+                maturidade={item.maturidade || "Desconhecida"}
+                categoria={item.raca}
+                onPress={() =>
+                  navigation.navigate("AnimalDetail", { id: item.id })
+                }
+              />
+            );
+          }}
+
 
           ListEmptyComponent={
             listLoading ? (

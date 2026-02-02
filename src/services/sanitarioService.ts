@@ -7,19 +7,6 @@ export interface Medicacao {
   tipo_tratamento: string; 
 }
 
-const fetchMedicamentosMap = async () => {
-  try {
-    const medicamentos = await apiFetch("/medicamentos");
-    const mapMedicamentos: Record<string, string> = {};
-    medicamentos.forEach((m: any) => (mapMedicamentos[m.id_medicacao] = m.medicacao));
-
-    return mapMedicamentos;
-  } catch (err) {
-    console.error("Erro ao buscar mapa de medicamentos:", err);
-    return {};
-  }
-};
-
 export const sanitarioService = {
   add: async (payload: any) => {
     try {
@@ -40,21 +27,24 @@ export const sanitarioService = {
       throw err;
     }
   },
-  getHistorico: async (id_bufalo: string, page: number = 1, limit: number = 10) => {
+  getHistorico: async (
+    id_bufalo: string,
+    page: number = 1,
+    limit: number = 10
+  ) => {
     try {
-      const mapMedicamentos = await fetchMedicamentosMap();
-      const result = await apiFetch(`/dados-sanitarios/bufalo/${id_bufalo}?page=${page}&limit=${limit}`);
-      const dadosTratados = result.data.map((registro: any) => {
+      const result = await apiFetch(
+        `/dados-sanitarios/bufalo/${id_bufalo}?page=${page}&limit=${limit}`
+      );
 
-        const idMedicao = registro.id_medicao;
-        const nomeMedicamento = mapMedicamentos[idMedicao] || 'Medicamento Desconhecido';
+      const dadosTratados = result.data.map((registro: any) => ({
+        ...registro,
 
-        return {
-          ...registro,
-          nome_medicamento: nomeMedicamento, 
-        };
-      });
-      
+        // nomes normalizados para o front
+        nome_medicamento: registro.medicacoe?.medicacao ?? "Medicamento Desconhecido",
+        tipo_tratamento: registro.medicacoe?.tipoTratamento ?? "-",
+      }));
+
       return {
         ...result,
         data: dadosTratados,
@@ -72,7 +62,7 @@ export const sanitarioService = {
       throw err;
     }
   },
-  async getMedicamentosByPropriedade(idPropriedade: number): Promise<Medicacao[]> {
+  async getMedicamentosByPropriedade(idPropriedade: string): Promise<Medicacao[]> {
     try {
       const response = await apiFetch(`/medicamentos/propriedade/${idPropriedade}`);
       const medicamentosData = response;
@@ -83,9 +73,9 @@ export const sanitarioService = {
       }
 
       return medicamentosData.map((item: any) => ({
-        id_medicacao: item.id_medicacao,
+        id_medicacao: item.idMedicacao,
         medicacao: item.medicacao,
-        tipo_tratamento: item.tipo_tratamento,
+        tipo_tratamento: item.tipoTratamento,
         descricao: item.descricao 
       }));
     } catch (err) {
@@ -93,7 +83,7 @@ export const sanitarioService = {
       return []; 
     }
   },
-  delete: async (id_sanit: number) => {
+  delete: async (id_sanit: string) => {
     try {
       return await apiFetch(`/dados-sanitarios/${id_sanit}`, {
         method: "DELETE",
@@ -103,7 +93,7 @@ export const sanitarioService = {
       throw err;
     }
   },
-  update: async (id_sanit: number, payload: any) => {
+  update: async (id_sanit: string, payload: any) => {
     try {
       return await apiFetch(`/dados-sanitarios/${id_sanit}`, {
         method: "PATCH",

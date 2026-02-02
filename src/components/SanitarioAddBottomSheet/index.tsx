@@ -51,7 +51,7 @@ interface SanitarioAddBottomSheetProps {
     id_bufalo: string;
     onAddSave: (data: SanitarioPayload) => void;
     onClose: () => void;
-    propriedadeId: number;
+    propriedadeId: string;
 }
 
 const initialFormData: Omit<SanitarioPayload, 'id_bufalo'> = {
@@ -334,7 +334,7 @@ return (
                                     placeholder="Selecione a Medicação"
                                     style={styles.dropdownStyle}
                                     dropDownContainerStyle={styles.dropdownContainerStyle}
-                                    listMode="SCROLLVIEW"
+                                    listMode="MODAL"
                                     // ZIndex para garantir que ele esteja acima do conteúdo
                                     zIndex={openMedicacao ? 4000 : 1}
                                     zIndexInverse={openMedicacao ? 1 : 4000}
