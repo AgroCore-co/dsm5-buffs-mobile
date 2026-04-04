@@ -1,6 +1,7 @@
 export const colors = {
     yellow: {
         base: "#FFCF78",
+        button: "#FFCF78",
         dark: "#F2B84D",
         static: "#F59E0B",
         warning: "#fae39dff"

@@ -22,7 +22,7 @@ export interface ReproducoesResponse {
 
 export interface ReproducaoUpdatePayload {
   status: string;
-  tipo_parto: string; 
+  tipo_parto?: string;
 }
 
 export interface CicloLactacaoPayload {
@@ -32,22 +32,6 @@ export interface CicloLactacaoPayload {
   padrao_dias: number;    // 305
   observacao: string;     
 }
-
-const fetchNomeAnimal = async (id: string) => {
-  if (!id) return "-";
-  try {
-    const animal = await apiFetch(`/bufalos/${id}`);
-    return animal.nome || id;
-  } catch (error) {
-    console.error(`Erro ao buscar animal ${id}:`, error);
-    return id;
-  }
-};
-
-const fetchNomeSemenOuOvulo = async (id: string) => {
-  if (!id) return "-";
-  return `${id.slice(0, 5)}`;
-};
 
 export const getReproducaoDashboardStats = async (propriedadeId: string): Promise<ReproducaoDashboardStats> => {
   if (!propriedadeId) {
@@ -159,30 +143,6 @@ export const getReproducoes = async (
   }
 };
 
-export const updateReproducao = async (
-  id: string, 
-  data: ReproducaoUpdatePayload // Usando a interface de tipagem
-) => {
-  if (!id) {
-    throw new Error("ID da reprodução é obrigatório para atualização.");
-  }
-  
-  try {
-    const response = await apiFetch(`/cobertura/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    return response;
-  } catch (error: any) {
-    console.error("Erro ao atualizar reprodução:", error);
-    // Lançar o erro com uma mensagem mais clara, se possível
-    throw new Error(error.message || "Erro desconhecido ao atualizar reprodução.");
-  }
-};
-
 export const createReproducao = async (data: any) => {
   try {
     const response = await apiFetch("/cobertura", {
@@ -213,4 +173,51 @@ export const createCicloLactacao = async (data: CicloLactacaoPayload) => {
     console.error("Erro ao criar ciclo de lactação:", error);
     throw error;
   }
+};
+
+
+
+export interface RegistrarPartoPayload {
+  dt_parto: string;
+  tipo_parto: string;
+  observacao?: string;
+  criar_ciclo_lactacao: boolean;
+  padrao_dias_lactacao?: number;
+}
+
+/**
+ * Atualiza reprodução APENAS para FALHA ou EM ANDAMENTO
+ */
+export const updateReproducao = async (
+  id: string,
+  data: ReproducaoUpdatePayload
+) => {
+  if (!id) {
+    throw new Error("ID da reprodução é obrigatório.");
+  }
+
+  return apiFetch(`/cobertura/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
+/**
+ * Registra parto (CONCLUÍDA)
+ * 👉 Backend controla status + ciclo de lactação
+ */
+export const registrarParto = async (
+  id: string,
+  data: RegistrarPartoPayload
+) => {
+  if (!id) {
+    throw new Error("ID da reprodução é obrigatório.");
+  }
+
+  return apiFetch(`/cobertura/${id}/registrar-parto`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
 };

@@ -5,7 +5,7 @@ import AlertasPendentes from "../components/Lembretes";
 import { colors } from "../styles/colors";
 import { MainLayout } from "../layouts/MainLayout";
 import BuffaloLoader from "../components/BufaloLoader";
-import Back from "../../assets/images/arrow.svg";
+import RotateLeftIcon from "../icons/arrow";
 
 import { usePropriedade } from "../context/PropriedadeContext";
 import { useNavigation } from "@react-navigation/native";
@@ -16,7 +16,6 @@ export const NotificacoesScreen = () => {
 
   const [loadingInicial, setLoadingInicial] = useState(true);
 
-  // ⬇️ loader inicial depende SOMENTE da propriedade
   useEffect(() => {
     if (propriedadeSelecionada) {
       setLoadingInicial(false);
@@ -39,7 +38,7 @@ export const NotificacoesScreen = () => {
           style={styles.headerButton}
           onPress={() => navigation.goBack()}
         >
-          <Back width={24} height={24} />
+          <RotateLeftIcon width={24} height={24} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Notificações</Text>
@@ -80,6 +79,7 @@ const styles = StyleSheet.create({
     height: 48,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 10
   },
 
   headerTitle: {

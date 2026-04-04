@@ -9,13 +9,13 @@ export type Alerta = {
   localizacao: string;
   motivo: string;
   nicho: string;
-  data_alerta: string;
+  dataAlerta: string;
   prioridade: "ALTA" | "MEDIA" | "BAIXA";
   observacao: string;
   visto: boolean;
-  id_evento_origem: string | null;
-  tipo_evento_origem: string | null;
-  id_propriedade: string;
+  idEventoOrigem: string | null;
+  tipoEventoOrigem: string | null;
+  idPropriedade: string;
   created_at: string;
   updated_at: string;
 

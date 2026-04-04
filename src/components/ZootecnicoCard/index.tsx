@@ -10,26 +10,16 @@ import { colors } from "../../styles/colors";
 import Zootec from "../../../assets/images/statistics.svg"
 import { formatarDataBR } from "../../utils/date";
 
-  // Função auxiliar para formatar
-  function formatarDataSimples(dataISO: string) {
-    if (!dataISO) {
-      return '-';
-    }
-    const soData = dataISO.split('T')[0];
-    const partes = soData.split('-');
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-  }
 
 export const ZootecnicoCard = ({ item, onDelete, onPress }: any) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
     <View style={styles.iconContainer}>
-      <Zootec width={20} height={20} />
     </View>
 
     {/* Bloco de Texto Principal */}
     <View style={styles.textContainer}>
-      <Text style={styles.textData}>{formatarDataBR(item?.dtRegistro)}</Text>
-      <Text style={styles.textInfoPrincipal} numberOfLines={1}>{item.peso} kg | CC: {item.condicaoCorporal}</Text>
+      <Text style={styles.textData}>Registrado em: {formatarDataBR(item?.dtRegistro)}</Text>
+      <Text style={styles.textInfoPrincipal} numberOfLines={1}>Peso: {item.peso} kg | Condição Coporal: {item.condicaoCorporal}</Text>
       
       <Text style={styles.textInfoSecundaria} numberOfLines={1}>
         Pelagem: {item.corPelagem} | Porte: {item.porteCorporal} | Tipo: {item.tipoPesagem}
@@ -43,7 +33,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white.base,
     padding: 16,
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
@@ -60,17 +50,13 @@ const styles = StyleSheet.create({
     }),
   },
   iconContainer: {
-    width: 48, 
-    height: 48,
+    width: 10, 
+    height: 10,
     borderRadius: 24,
     backgroundColor: colors.yellow.base,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-  },
-  iconText: {
-    fontSize: 24, 
-    color: colors.yellow.base
   },
   textContainer: {
     flex: 1, 

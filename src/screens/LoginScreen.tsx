@@ -25,7 +25,9 @@ export const LoginScreen = () => {
       await login(email, password);   
     } catch (err: any) {
       setError(err.message || "Erro ao tentar entrar.");
+      setError(err.message || "Erro ao tentar entrar.");
     } finally {
+      console.log("⏹ Finalizou tentativa");
       setLocalLoading(false);
     }
   };

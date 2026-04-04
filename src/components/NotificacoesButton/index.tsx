@@ -25,11 +25,11 @@ export const NotificacoesButton = () => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: colors.yellow.dark,
+    backgroundColor: colors.yellow.button,
     borderRadius: 50,
-    marginTop: 30,
+    marginTop: 35,
     position: "absolute",
-    right: 20,
+    right: 10,
     height: 40,
     width: 40,
     justifyContent: "center",

@@ -19,7 +19,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import "dayjs/locale/pt-br"; 
 import { usePropriedade } from "../../context/PropriedadeContext";
 import { colors } from "../../styles/colors";
-import { updateReproducao, ReproducaoUpdatePayload, createCicloLactacao } from "../../services/reproducaoService";
+import { updateReproducao, ReproducaoUpdatePayload, createCicloLactacao, registrarParto } from "../../services/reproducaoService";
 import YellowButton from "../Button";
 
 // Configuração de cores (Inalterado)
@@ -173,10 +173,11 @@ export const ReproducaoAttBottomSheet: React.FC<
   // Mapeamentos para DropDownPicker (Inalterado)
   const statusItems = useMemo(() => [
     { label: "Em andamento", value: "Em andamento" },
-    { label: "Falha", value: "Falha" },
-    { label: "Confirmada, está em prenha", value: "Confirmada" },
-    { label: "Concluída, nasceu", value: "Concluída" },
+    { label: "Confirmada (Prenha)", value: "Confirmada" },
+    { label: "Concluída (Parto)", value: "Concluida" },
+    { label: "Falhou", value: "Falhou" },
   ], []);
+
 
   const partoItems = useMemo(() => [
     { label: "Normal", value: "Normal" },
@@ -208,49 +209,58 @@ export const ReproducaoAttBottomSheet: React.FC<
     }
   };
 
+
   const handleSave = async () => {
     if (!propriedadeSelecionada) {
       return showToast("Propriedade não selecionada.", true);
     }
-    
-    const reproducaoId = initialData.id; 
+
+    const reproducaoId = initialData.id;
 
     if (form.status === "Concluida" && !form.tipo_parto) {
-        return showToast("Se o status for 'Concluída', o Tipo de Parto é obrigatório.", true);
+      return showToast(
+        "Para concluir a reprodução, o tipo de parto é obrigatório.",
+        true
+      );
     }
-    
-    // Payload tipado
-    const payload: ReproducaoUpdatePayload = {
-      status: form.status,
-      tipo_parto: form.status === "Concluida" ? form.tipo_parto : null,
-    };
 
     try {
-      await updateReproducao(reproducaoId, payload);
-      showToast("Reprodução atualizada com sucesso!");
+      // 🟢 CONCLUIR (PARTO)
       if (form.status === "Concluida") {
         const dtParto = new Date().toISOString().split("T")[0];
-        const lactacaoPayload = {
-            id_bufala: initialData.id_bufala,      // UUID da Búfala (deve vir no initialData)
-            id_propriedade: propriedadeSelecionada, // UUID da Propriedade
-            dt_parto: dtParto,
-            padrao_dias: 305, 
-            observacao: `Parto registrado: ${form.tipo_parto}. Reprodução ID: ${initialData.id}`,
-        };
-        console.log("PAYLOAD CICLO LACTAÇÃO ENVIADO:", JSON.stringify(lactacaoPayload, null, 2));
 
-        await createCicloLactacao(lactacaoPayload);
+        await registrarParto(reproducaoId, {
+          dt_parto: dtParto,
+          tipo_parto: form.tipo_parto,
+          observacao: "Parto registrado via aplicativo",
+          criar_ciclo_lactacao: true,
+          padrao_dias_lactacao: 305,
+        });
+
+        showToast("Parto registrado com sucesso!");
+        onSuccess();
+        onClose();
+        return;
       }
+
+      // 🟡 DEMAIS STATUS (PATCH)
+      await updateReproducao(reproducaoId, {
+        status: form.status,
+      });
+
+      showToast("Reprodução atualizada com sucesso!");
       onSuccess();
       onClose();
     } catch (error: any) {
-      // ⚠️ Tratamento de erro simplificado, apenas exibindo uma mensagem genérica
-      // (a API ainda pode retornar erros de regra de negócio, mas o componente não os tratará especificamente)
-      const errorMessage = error?.message || "Não foi possível atualizar a reprodução. Verifique os dados.";
-      console.error("Erro ao salvar:", error);
-      showToast(errorMessage, true);
+      console.error("Erro ao atualizar reprodução:", error);
+      showToast(
+        error?.message || "Erro ao atualizar reprodução.",
+        true
+      );
     }
   };
+
+
 
   return (
     <BottomSheet
@@ -285,7 +295,7 @@ export const ReproducaoAttBottomSheet: React.FC<
             {/* Campo Não Editável: Data do Evento */}
             <InputWithFloatingLabel
                 label="Data do Evento"
-                value={initialData?.dt_evento || "-"}
+                value={initialData?.dtEvento || "-"}
                 onChangeText={() => {}}
                 editable={false}
             />

@@ -11,7 +11,6 @@ import {
     Animated,
     Easing 
 } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
 import bufaloService from "../../services/bufaloService";
 import { usePropriedade } from "../../context/PropriedadeContext";
 import YellowButton from "../Button"; 
@@ -19,10 +18,8 @@ import { colors } from "../../styles/colors";
 import { DatePickerModal } from "../DatePickerModal"; 
 import dayjs from "dayjs";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import SelectBottomSheet from "../SelectBottomSheet";
 
-// ==========================================================
-// --- CONFIGURAÇÃO DE CORES (Padrão Unificado) ---
-// ==========================================================
 const defaultColors = {
     primary: { base: "#FAC638" },
     gray: { base: "#6B7280", claro: "#F8F7F5" },
@@ -32,82 +29,6 @@ const defaultColors = {
 };
 const mergedColors = { ...defaultColors, ...colors };
 
-// ==========================================================
-// --- Componente de Input com Floating Label (REPLICADO) ---
-// ==========================================================
-interface FloatingLabelInputProps {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    keyboardType?: "default" | "numeric" | "email-address" | "phone-pad" | "url";
-    multiline?: boolean;
-    style?: any; 
-}
-
-const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
-    label, value, onChangeText, keyboardType = "default", multiline = false, style,
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const focusAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.timing(focusAnim, { toValue: 1, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        if (!value) {
-            Animated.timing(focusAnim, { toValue: 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-        }
-    };
-    
-    useEffect(() => {
-        Animated.timing(focusAnim, { toValue: value ? 1 : 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    }, [value]);
-
-    const labelStyle = {
-        top: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [18, -12] }),
-        fontSize: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 12] }),
-        color: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [mergedColors.gray.base, isFocused ? mergedColors.primary.base : mergedColors.gray.base], 
-        }),
-    };
-
-    const borderColor = isFocused ? mergedColors.primary.base : mergedColors.border;
-    
-    return (
-        <View style={[floatingStylesLocal.inputContainer, multiline && floatingStylesLocal.inputContainerMultiline, style]}>
-            <Animated.Text style={[floatingStylesLocal.label, labelStyle]}>
-                {label}
-            </Animated.Text>
-            <TextInput
-                style={[
-                    styles.inputBase, 
-                    { 
-                        borderColor: borderColor, 
-                        height: multiline ? 100 : 50, 
-                        paddingTop: multiline ? 12 : 15,
-                        textAlignVertical: multiline ? 'top' : 'center',
-                    }
-                ]}
-                value={value}
-                onChangeText={onChangeText}
-                keyboardType={keyboardType}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                multiline={multiline}
-                placeholderTextColor="transparent"
-            />
-        </View>
-    );
-};
-// --- Fim Componente de Input com Floating Label ---
-
-// ==========================================================
-// --- COMPONENTE PRINCIPAL ---
-// ==========================================================
 interface CadastrarBufaloFormProps {
     onClose: () => void;
 }
@@ -124,7 +45,7 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
     const [dtNascimento, setDtNascimento] = useState<string | undefined>(undefined);
     const [sexo, setSexo] = useState<string | null>(null); // Alterado para null para Dropdown
     const [nivelMaturidade, setNivelMaturidade] = useState<string | null>(null); // Alterado para null
-    const [idRaca, setIdRaca] = useState<number | null>(null);
+    const [idRaca, setIdRaca] = useState<string | null>(null);
     const [brincoPai, setBrincoPai] = useState("");
     const [brincoMae, setBrincoMae] = useState("");
     const [isSaving, setIsSaving] = useState(false);
@@ -155,9 +76,9 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
         try {
             // Verifica se a estrutura de raças retornada é compatível
             const racasApi = await bufaloService.getRacas();
-            const mappedRacas = racasApi.map((r: { nome: any; id_raca: any; }) => ({ 
+            const mappedRacas = racasApi.map((r: { nome: any; idRaca: any; }) => ({ 
                 label: r.nome, 
-                value: r.id_raca 
+                value: r.idRaca 
             }));
             setRacas(mappedRacas);
         } catch (err) {
@@ -195,7 +116,7 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
         setIsSaving(true);
 
         try {
-            let idPai: number | null = null;
+            let idPai: string | null = null;
             if (brincoPai) {
                 const paiEncontrado = await bufaloService.getBufaloByBrincoAndSexo(
                 propriedadeSelecionada, brincoPai, "M"
@@ -205,10 +126,10 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                     setIsSaving(false);
                     return;
                 }
-                idPai = paiEncontrado.id || paiEncontrado.id_bufalo;
+                idPai = paiEncontrado.idBufalo;
             }
 
-            let idMae: number | null = null;
+            let idMae: string | null = null;
             if (brincoMae) {
                 const maeEncontrada = await bufaloService.getBufaloByBrincoAndSexo(
                 propriedadeSelecionada, brincoMae, "F"
@@ -218,7 +139,7 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                     setIsSaving(false);
                     return;
                 }
-                idMae = maeEncontrada.id || maeEncontrada.id_bufalo;
+                idMae = maeEncontrada.idBufalo;
             }
 
             const payload = {
@@ -236,6 +157,8 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                 id_propriedade: propriedadeSelecionada,
             };
             
+            console.log("Payload para criação do búfalo:", payload);
+
             // Remove campos nulos/vazios do payload, exceto o brinco que é obrigatório e já foi validado.
             const cleanedPayload = Object.fromEntries(
                 Object.entries(payload).filter(([_, value]) => value !== null && value !== undefined && value !== '')
@@ -282,23 +205,30 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                 {/* Dados Básicos */}
                 <Text style={styles.sectionTitle}>Dados de Identificação</Text>
                 <View style={styles.listContainer}>
-                    <InputWithFloatingLabel
-                        label="Nome (Opcional)"
-                        value={nome}
-                        onChangeText={setNome}
-                        style={styles.inputSpacing}
-                    />
-                    <InputWithFloatingLabel
-                        label="Brinco (Obrigatório)"
-                        value={brinco}
-                        onChangeText={setBrinco}
-                        style={styles.inputSpacing}
-                    />
-                    <InputWithFloatingLabel
-                        label="Microchip (Opcional)"
-                        value={microchip}
-                        onChangeText={setMicrochip}
-                    />
+                    <View style={styles.inputSpacing}>
+                        <Text style={styles.label}>Nome (Opcional)</Text>
+                        <TextInput
+                            style={styles.inputBase}
+                            value={nome}
+                            onChangeText={setNome}
+                            placeholder="Digite o nome do animal"/>
+                    </View>
+                    <View style={styles.inputSpacing}>
+                        <Text style={styles.label}>Brinco (Obrigatório)</Text>
+                        <TextInput
+                            style={styles.inputBase}
+                            value={brinco}
+                            onChangeText={setBrinco}
+                            placeholder="Digite o brinco do animal"/>
+                    </View>
+                    <View>
+                        <Text style={styles.label}>Microchip (Opcional)</Text>
+                        <TextInput
+                            style={styles.inputBase}
+                            value={microchip}
+                            onChangeText={setMicrochip}
+                            placeholder="Digite o microchip do animal"/>
+                    </View>
                 </View>
 
                 {/* Características */}
@@ -311,41 +241,31 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                         {/* Sexo */}
                         <View style={[styles.halfInput, { zIndex: getDropdownZIndex('sexo') }]}>
                             <Text style={styles.dropdownLabel}>Sexo:</Text>
-                            <DropDownPicker
-                                open={openSexo}
-                                setOpen={setOpenSexo}
-                                value={sexo}
-                                setValue={setSexo}
+                            <SelectBottomSheet
                                 items={[
                                     { label: "Macho", value: "M" },
                                     { label: "Fêmea", value: "F" },
                                 ]}
-                                placeholder="Selecione"
-                                style={styles.dropdownStyle}
-                                dropDownContainerStyle={styles.dropdownContainerStyle}
-                                listMode="SCROLLVIEW"
-                            />
+                                value={sexo}
+                                onChange={(value) => setSexo(value)}
+                                title="Selecionar sexo"
+                                placeholder="Selecione"/>
                         </View>
                         
                         {/* Maturidade */}
                         <View style={[styles.halfInput, { zIndex: getDropdownZIndex('maturidade') }]}>
                             <Text style={styles.dropdownLabel}>Maturidade:</Text>
-                            <DropDownPicker
-                                open={openMaturidade}
-                                setOpen={setOpenMaturidade}
-                                value={nivelMaturidade}
-                                setValue={setNivelMaturidade}
+                            <SelectBottomSheet
                                 items={[
                                     { label: "Bezerro", value: "B" },
                                     { label: "Novilha", value: "N" },
                                     { label: "Vaca", value: "V" },
                                     { label: "Touro", value: "T" },
                                 ]}
-                                placeholder="Selecione"
-                                style={styles.dropdownStyle}
-                                dropDownContainerStyle={styles.dropdownContainerStyle}
-                                listMode="SCROLLVIEW"
-                            />
+                                value={nivelMaturidade}
+                                onChange={(value) => setNivelMaturidade(value)}
+                                title="Selecionar maturidade"
+                                placeholder="Selecione"/>
                         </View>
                     </View>
 
@@ -365,34 +285,42 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                     {/* Raça (Dropdown Full Width) */}
                     <View style={[{ zIndex: getDropdownZIndex('raca'), marginBottom: 12 }]}>
                         <Text style={styles.dropdownLabel}>Raça:</Text>
-                        <DropDownPicker
-                            open={openRaca}
-                            setOpen={setOpenRaca}
+                        <SelectBottomSheet
+                            items={racas}
                             value={idRaca}
-                            setValue={setIdRaca}
-                            items={racas} // Já mapeadas no useEffect
-                            placeholder="Selecione Raça"
-                            style={styles.dropdownStyle}
-                            dropDownContainerStyle={styles.dropdownContainerStyle}
-                            listMode="SCROLLVIEW"
-                        />
+                            onChange={(value) => setIdRaca(value)}
+                            title="Selecionar raça"
+                            placeholder="Selecione raça"
+                            />
                     </View>
+                </View>                
+                {/* Características */}
+                <Text style={styles.sectionTitle}>Parentesco (Brincos Opcionais)</Text>
+                <View style={styles.listContainer}>
+                    
+                    {/* Sexo e Maturidade (Dropdowns lado a lado) */}
+                    <View style={styles.row}></View>
+                
                     
                     {/* Parentesco (Floating Labels lado a lado) */}
-                    <Text style={[styles.parentescoTitle]}>Parentesco (Brincos Opcionais):</Text>
                     <View style={styles.row}>
-                        <InputWithFloatingLabel 
-                            label="Brinco do Pai (Macho)" 
-                            value={brincoPai} 
-                            onChangeText={setBrincoPai} 
-                            style={styles.halfInput}
-                        />
-                        <InputWithFloatingLabel 
-                            label="Brinco da Mãe (Fêmea)" 
-                            value={brincoMae} 
-                            onChangeText={setBrincoMae} 
-                            style={styles.halfInput}
-                        />
+                        <View style={styles.halfInput}>
+                            <Text style={styles.label}>Brinco do Pai</Text>
+                            <TextInput
+                                style={styles.inputBase}
+                                value={brincoPai}
+                                onChangeText={setBrincoPai}
+                                placeholder="Digite o brinco do Pai"/>
+                        </View>
+
+                        <View style={styles.halfInput}>
+                            <Text style={styles.label}>Brinco da Mãe</Text>
+                            <TextInput
+                                style={styles.inputBase}
+                                value={brincoMae}
+                                onChangeText={setBrincoMae}
+                                 placeholder="Digite o brinco da Mãe"/>
+                        </View>
                     </View>
 
                 </View>
@@ -417,29 +345,6 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
         </BottomSheet>
     );
 };
-
-// ==========================================================
-// --- ESTILOS UNIFICADOS ---
-// ==========================================================
-const floatingStylesLocal = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12, 
-        paddingTop: 8, 
-        position: "relative",
-    },
-    inputContainerMultiline: {
-        height: 120, 
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: mergedColors.white.base, 
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-});
-
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
@@ -492,7 +397,7 @@ const styles = StyleSheet.create({
     listContainer: {
         backgroundColor: mergedColors.white.base,
         borderRadius: 16,
-        marginHorizontal: 16,
+        marginHorizontal: 10,
         padding: 16,
         overflow: "visible", 
     },
@@ -573,9 +478,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "center",
         padding: 16,
-        borderTopWidth: 1,
-        borderColor: mergedColors.border,
         marginTop: 16,
-        backgroundColor: mergedColors.white.base,
+    },
+    label: {
+        fontSize: 14,
+        color: mergedColors.text.secondary,
+        fontWeight: "600",
+        marginBottom: 4,
     },
 });

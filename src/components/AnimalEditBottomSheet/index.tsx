@@ -18,8 +18,9 @@ import { usePropriedade } from "../../context/PropriedadeContext";
 import YellowButton from "../Button";
 import { colors } from "../../styles/colors";
 import dayjs from "dayjs";
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { formatarDataBR } from "../../utils/date";
+import SelectBottomSheet from "../SelectBottomSheet";
 
 // ==========================================================
 // --- CONFIGURAÇÃO DE CORES (Padrão) ---
@@ -35,132 +36,25 @@ const defaultColors = {
 const mergedColors = { ...defaultColors, ...colors };
 
 // ==========================================================
-// --- FLOATING LABEL INPUT COMPONENT (Replicado) ---
-// ==========================================================
-
-interface FloatingLabelInputProps {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    editable?: boolean;
-    style?: any;
-    keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
-    multiline?: boolean;
-}
-
-// Estilos de suporte para o Floating Label
-const floatingStyles = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12,
-        paddingTop: 8,
-        position: "relative",
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: mergedColors.white.base,
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-});
-
-const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
-    label,
-    value,
-    onChangeText,
-    editable = true,
-    style,
-    keyboardType = 'default',
-    multiline = false,
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const focusAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.timing(focusAnim, { toValue: 1, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        if (!value) {
-            Animated.timing(focusAnim, { toValue: 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-        }
-    };
-
-    useEffect(() => {
-        Animated.timing(focusAnim, { toValue: value ? 1 : 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    }, [value]);
-
-    const labelStyle = {
-        top: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [18, -12],
-        }),
-        fontSize: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [16, 12],
-        }),
-        color: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [mergedColors.gray.base, isFocused ? mergedColors.primary.base : mergedColors.gray.base],
-        }),
-    };
-
-    const borderColor = isFocused ? mergedColors.primary.base : mergedColors.border;
-    const backgroundColor = editable ? mergedColors.white.base : mergedColors.gray.claro;
-
-    return (
-        <View style={[floatingStyles.inputContainer, style]}>
-            <Animated.Text style={[floatingStyles.label, labelStyle]}>
-                {label}
-            </Animated.Text>
-            <TextInput
-                style={[
-                    styles.inputBase,
-                    {
-                        borderColor: borderColor,
-                        backgroundColor: backgroundColor,
-                        color: editable ? mergedColors.text.primary : mergedColors.gray.base,
-                        height: multiline ? 100 : 50,
-                        paddingTop: multiline ? 12 : 15,
-                        textAlignVertical: multiline ? 'top' : 'center',
-                    }
-                ]}
-                value={value}
-                onChangeText={onChangeText}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                editable={editable}
-                placeholderTextColor="transparent"
-                keyboardType={keyboardType}
-                multiline={multiline}
-            />
-        </View>
-    );
-};
-
-// ==========================================================
 // --- INTERFACES (Inalteradas) ---
 // ==========================================================
 interface AnimalInfoItem {
-    id_bufalo: string;
+    idBufalo: string;
     nome?: string;
     brinco: string;
     microchip?: string;
     dtNascimento?: string;
     sexo: 'F' | 'M';
-    nivel_maturidade?: 'B' | 'N' | 'V' | 'T';
+    nivelMaturidade?: 'B' | 'N' | 'V' | 'T';
     racaNome?: string;
-    id_raca?: number;
+    idRaca?: string;
     paiNome?: string;
     maeNome?: string;
 }
 
 interface AnimalEditBottomSheetProps {
     item: AnimalInfoItem;
-    onEditSave: (id_bufalo: string, data: any) => Promise<void>;
+    onEditSave: (idBufalo: string, data: any) => Promise<void>;
     onClose: () => void;
 }
 
@@ -182,14 +76,16 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
 
     const { propriedadeSelecionada } = usePropriedade();
     
-    const sheetRef = useRef<BottomSheet>(null);
+    const sheetRef = useRef<BottomSheetModal>(null);
     const snapPoints = useMemo(() => ["80%", "95%"], []);
-    
+    useEffect(() => {
+        sheetRef.current?.present();
+    }, []);
     const [nome, setNome] = useState(item.nome || "");
     const [brinco, setBrinco] = useState(item.brinco || "");
     const [microchip, setMicrochip] = useState(item.microchip || "");
-    const [nivelMaturidade, setNivelMaturidade] = useState(item.nivel_maturidade || "");
-    const [idRaca, setIdRaca] = useState<number | null>(item.id_raca || null);
+    const [nivelMaturidade, setNivelMaturidade] = useState(item.nivelMaturidade || "");
+    const [idRaca, setIdRaca] = useState(item.idRaca || "");
     
     
     // ESTADO ORIGINAL (com o potencial erro de tipagem no brincoMae)
@@ -213,19 +109,21 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
     }, [onClose]);
 
     useEffect(() => {
-        const fetchRacas = async () => {
+            const fetchRacas = async () => {
             try {
+                // Verifica se a estrutura de raças retornada é compatível
                 const racasApi = await bufaloService.getRacas();
-                setRacas(racasApi);
+                const mappedRacas = racasApi.map((r: { nome: any; idRaca: any; }) => ({ 
+                    label: r.nome, 
+                    value: r.idRaca 
+                }));
+                setRacas(mappedRacas);
             } catch (err) {
                 console.error("Erro ao buscar raças:", err);
-                Alert.alert("Erro", "Não foi possível carregar a lista de raças.");
-            } finally {
-                setLoading(false);
             }
-        };
-        fetchRacas();
-    }, []);
+            };
+            fetchRacas();
+        }, []);
 
     const showToast = (message: string, isError: boolean = false) => {
         if (Platform.OS === 'android') {
@@ -234,6 +132,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
             Alert.alert(isError ? "Erro" : "Sucesso", message);
         }
     };
+    
 
     const handleSave = async () => {
         if (isSaving) return;
@@ -292,7 +191,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                 id_mae: idMae,
             };
             // Chama a função passada pela tela pai para persistir e recarregar
-            await onEditSave(item.id_bufalo, payload); 
+            await onEditSave(item.idBufalo, payload); 
             showToast("Informações atualizadas com sucesso!");
             
         } catch (err) {
@@ -305,7 +204,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
     
     if (loading && racas.length === 0) { 
         return (
-            <BottomSheet
+            <BottomSheetModal
                 ref={sheetRef}
                 index={0}
                 snapPoints={snapPoints}
@@ -318,26 +217,28 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                     <ActivityIndicator size="large" color={mergedColors.primary.base} />
                     <Text style={{ marginTop: 10, color: mergedColors.text.secondary }}>Carregando dados...</Text>
                 </View>
-            </BottomSheet>
+            </BottomSheetModal>
         );
     }
 
 
     return (
-        <BottomSheet
+        <BottomSheetModal
             ref={sheetRef}
             index={0}
+            name="EditAnimalModal"
             snapPoints={snapPoints}
             onChange={handleSheetChange}
             backgroundStyle={styles.sheetBackground}
             handleIndicatorStyle={styles.handleIndicator}
-            enablePanDownToClose={true}
+            stackBehavior="push"
             backdropComponent={(props) => (
                 <BottomSheetBackdrop
                     {...props}
                     disappearsOnIndex={-1}
                     appearsOnIndex={0}
                     pressBehavior="none"
+                    enableTouchThrough={true}
                 />
             )}
         >
@@ -351,9 +252,24 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                 {/* --- Dados Básicos --- */}
                 <Text style={styles.sectionTitle}>Dados Básicos</Text>
                 <View style={styles.listContainer}>
-                    <InputWithFloatingLabel label="Nome" value={nome} onChangeText={setNome} />
-                    <InputWithFloatingLabel label="Brinco" value={brinco} onChangeText={setBrinco} />
-                    <InputWithFloatingLabel label="Microchip" value={microchip} onChangeText={setMicrochip} />
+                    <Text style={styles.label}>Nome</Text>
+                    <TextInput
+                        style={styles.inputBase}
+                        value={nome}
+                        onChangeText={setNome}
+                        placeholder="Digite o nome do animal"/>
+                    <Text style={styles.label}>Brinco</Text>
+                    <TextInput
+                        style={styles.inputBase}
+                        value={brinco}
+                        onChangeText={setBrinco}
+                        placeholder="Digite o brinco do animal"/>
+                    <Text style={styles.label}>Microchip</Text>
+                    <TextInput
+                        style={styles.inputBase}
+                        value={microchip}
+                        onChangeText={setMicrochip}
+                        placeholder="Digite o microchip do animal"/>
                 </View>
                 
                 {/* --- Características --- */}
@@ -361,60 +277,48 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                 <View style={styles.listContainer}>
                     
                     {/* Campo Sexo (Não Editável) */}
-                    <InputWithFloatingLabel
-                        label="Sexo"
+                    <Text style={styles.label}>Sexo</Text>
+                    <TextInput
+                        style={[styles.inputBase, styles.inputDisabled]}
                         value={item.sexo === 'F' ? 'Fêmea' : 'Macho'}
                         onChangeText={() => {}}
                         editable={false}
-                    />
-
+                        pointerEvents="none"
+                        placeholder="Digite o sexo do animal"/>
+  
                     {/* Data de Nascimento (Não Editável) */}
-                    <InputWithFloatingLabel
-                        label="Data de Nascimento"
+                    <Text style={styles.label}>Data de Nascimento</Text>
+                    <TextInput
+                        style={[styles.inputBase, styles.inputDisabled]}
                         value={item.dtNascimento ? formatarDataBR(item.dtNascimento) : "Não informado"}
                         onChangeText={() => {}}
                         editable={false}
-                    />
+                        placeholder="Digite a data de nascimento do animal"/>
 
                     {/* Dropdown Maturidade */}
                     <View style={{ zIndex: zIndexMaturidade, marginBottom: 12 }}>
-                        <Text style={styles.listLabel}>Nível de Maturidade:</Text>
-                        <DropDownPicker
-                            open={openMaturidade}
-                            setOpen={setOpenMaturidade}
-                            value={nivelMaturidade}
-                            setValue={setNivelMaturidade}
+                        <Text style={styles.dropdownLabel}>Maturidade:</Text>
+                        <SelectBottomSheet
                             items={[
-                                { label: "Bezerro (B)", value: "B" },
-                                { label: "Novilha (N)", value: "N" },
-                                { label: "Vaca (V)", value: "V" },
-                                { label: "Touro (T)", value: "T" },
+                                { label: "Bezerro", value: "B" },
+                                { label: "Novilha", value: "N" },
+                                { label: "Vaca", value: "V" },
+                                { label: "Touro", value: "T" },
                             ]}
-                            placeholder="Selecione Maturidade"
-                            listMode="MODAL"
-                            zIndex={4000}
-                            style={styles.dropdownStyle}
-                            dropDownContainerStyle={styles.dropdownContainerStyle}
-                        />
+                            value={nivelMaturidade}
+                            onChange={(value) => setNivelMaturidade(value)}
+                            title="Selecionar maturidade"
+                            placeholder="Selecione"/>
                     </View>
-                </View>
-                
-                {/* --- Raça --- */}
-                <Text style={styles.sectionTitle}>Raça</Text>
-                <View style={styles.listContainer}>
+                    
                     <View style={{ zIndex: zIndexRaca, marginBottom: 12 }}>
-                        <Text style={styles.listLabel}>Raça:</Text>
-                        <DropDownPicker
-                            open={openRaca}
-                            setOpen={setOpenRaca}
-                            value={idRaca}
-                            setValue={setIdRaca}
-                            items={racas.map(r => ({ label: r.nome, value: r.idRaca }))}
-                            placeholder="Selecione Raça"
-                            listMode="MODAL"
-                            zIndex={3000}
-                            style={styles.dropdownStyle}
-                            dropDownContainerStyle={styles.dropdownContainerStyle}
+                        <Text style={styles.dropdownLabel}>Raça:</Text>
+                        <SelectBottomSheet
+                        items={racas}
+                        value={idRaca}
+                        onChange={(value) => setIdRaca(value)}
+                        title="Selecionar raça"
+                        placeholder="Selecione raça"
                         />
                     </View>
                 </View>
@@ -422,16 +326,25 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                 {/* --- Parentesco --- */}
                 <Text style={styles.sectionTitle}>Parentesco (Brinco)</Text>
                 <View style={styles.listContainer}>
-                    <InputWithFloatingLabel 
-                        label="Brinco do Pai (Macho)" 
-                        value={brincoPai} 
-                        onChangeText={setBrincoPai} 
-                    />
-                    <InputWithFloatingLabel 
-                        label="Brinco da Mãe (Fêmea)" 
-                        value={brincoMae} 
-                        onChangeText={setBrincoMae} 
-                    />
+                    <View style={styles.row}>
+                    <View style={styles.halfInput}>
+                        <Text style={styles.label}>Brinco do Pai</Text>
+                        <TextInput
+                            style={styles.inputBase}
+                            value={brincoPai}
+                            onChangeText={setBrincoPai}
+                            placeholder="Digite o brinco do Pai"/>
+                    </View>
+                    
+                    <View style={styles.halfInput}>
+                        <Text style={styles.label}>Brinco da Mãe</Text>
+                        <TextInput
+                            style={styles.inputBase}
+                            value={brincoMae}
+                            onChangeText={setBrincoMae}
+                            placeholder="Digite o brinco da Mãe"/>
+                    </View>
+                </View>
                 </View>
 
                 {/* Footer (Botão de ação) */}
@@ -444,7 +357,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                 </View>
 
             </BottomSheetScrollView>
-        </BottomSheet>
+        </BottomSheetModal>
     );
 };
 
@@ -453,6 +366,16 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
 // ==========================================================
 
 const styles = StyleSheet.create({
+
+    halfInput: {
+        flex: 1,
+    },
+    row: { 
+        flexDirection: "row", 
+        justifyContent: "space-between", 
+        marginBottom: 0, // O espaçamento está dentro dos Floating Labels (inputContainer)
+        gap: 16,
+    },
     // Estilos do BottomSheet
     sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
     handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
@@ -508,7 +431,7 @@ const styles = StyleSheet.create({
     listContainer: {
         backgroundColor: mergedColors.white.base,
         borderRadius: 16,
-        marginHorizontal: 16,
+        marginHorizontal: 10,
         padding: 16,
         overflow: "visible", 
         zIndex: 100, 
@@ -545,5 +468,21 @@ const styles = StyleSheet.create({
         flex: 1, 
         justifyContent: "center", 
         alignItems: "center" 
+    },
+    label: {
+        fontSize: 14,
+        color: mergedColors.text.secondary,
+        fontWeight: "600",
+        marginBottom: 4,
+    },
+    dropdownLabel: {
+        fontSize: 14,
+        color: mergedColors.text.secondary,
+        fontWeight: "600",
+        marginBottom: 4,
+    },
+    inputDisabled: {
+        backgroundColor: "#f5f5f5",
+        color: "#777",
     },
 });

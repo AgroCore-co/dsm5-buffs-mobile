@@ -1,147 +1,105 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react"; // Adicionado useMemo
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
 import { colors } from "../../styles/colors";
-import { ConfirmarAlteracaoStatusModal } from "../ModalAlterarStatus";
 import bufaloService from "../../services/bufaloService";
-import Pen  from "../../../assets/images/pen.svg";
-import { ConfirmModal } from "../ModalDeleteConfirm";
+import Pen from "../../../assets/images/pen.svg";
+import { ConfirmModal } from "../ModalStatus";
 import { formatarDataBR } from "../../utils/date";
+import SelectBottomSheet from "../SelectBottomSheet";
 
-// Definição do tipo para o grupo retornado pela API
-// ID_GRUPO E NOME_GRUPO são strings (UUID/Nome)
 interface Grupo {
-    id_grupo: string; // Tipo conforme o grupoService/API
-    nome_grupo: string; // Tipo conforme o grupoService/API
+    id_grupo: string;
+    nome_grupo: string;
     color: string;
 }
 
 export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: () => void }) => {
     
-    // ... (Lógica de Estado Existente)
     const maturidadeMap: Record<string, string> = {
         B: "Bezerro", N: "Novilha", T: "Touro", V: "Vaca",
     };
+    
     const maturidadeTexto = maturidadeMap[detalhes.nivelMaturidade] || detalhes.nivelMaturidade;
-    const[isEnabled, setIsEnabled] = useState(Boolean(detalhes?.status));
+    
+    const [isEnabled, setIsEnabled] = useState(Boolean(detalhes?.status));
     const [modalVisible, setModalVisible] = useState(false);
     const [novoStatus, setNovoStatus] = useState<boolean | null>(null);
     const [grupos, setGrupos] = useState<Grupo[]>([]);
     const [grupoAtualId, setGrupoAtualId] = useState<string | null>(detalhes?.id_grupo || null);
-    const [openDropdown, setOpenDropdown] = useState(false);
     const [novoGrupoSelecionado, setNovoGrupoSelecionado] = useState<string | null>(detalhes?.id_grupo || null);
 
     const [modalMudarGrupoVisible, setModalMudarGrupoVisible] = useState(false);
     const [idGrupoParaMudar, setIdGrupoParaMudar] = useState<string | null>(null);
     const [nomeGrupoParaMudar, setNomeGrupoParaMudar] = useState('');
-    // ... (FUNÇÃO AUXILIAR EXISTENTE)
+
     const toggleSwitch = () => {
         const valorPretendido = !isEnabled;
         setNovoStatus(valorPretendido);
         setModalVisible(true);
     };
     
-    // --- FUNÇÃO DE SERVIÇO PARA GRUPOS (Ajustada para esperar id_propriedade como number, se for o caso) ---
     useEffect(() => {
         const fetchGrupos = async () => {
             try {
-                // Removemos a lógica incorreta de parseInt.
-                // Usamos o ID da propriedade DIRETAMENTE como STRING (UUID).
                 const idPropriedade: string | null | undefined = detalhes.idPropriedade;
-                // Verifica se a string (UUID) do ID da propriedade existe e não está vazia.
                 if (idPropriedade) {
-                    // ⚠️ AQUI, bufaloService.getGrupos deve estar configurado para aceitar STRING.
-                    // Se você não o alterou na etapa anterior, certifique-se de que ele chama o grupoService corretamente.
                     const gruposApi: Grupo[] = await bufaloService.getGrupos(idPropriedade);
                     setGrupos(gruposApi);
-                } else {
                 }
             } catch (err) {
+                console.error("Erro ao buscar grupos:", err);
             }
         };
         fetchGrupos();
     }, [detalhes.idPropriedade]);
 
-
     const confirmarMudancaGrupo = useCallback(async () => {
-        setModalMudarGrupoVisible(false); // Fecha o modal primeiro
+        setModalMudarGrupoVisible(false);
 
         if (idGrupoParaMudar === null) return;
         
         try {
-            // Executa a ação
             await bufaloService.moverBufaloDeGrupo(detalhes.idBufalo, idGrupoParaMudar);
-            // Atualiza os estados de sucesso
             setGrupoAtualId(idGrupoParaMudar);
             setNovoGrupoSelecionado(idGrupoParaMudar);
             Alert.alert("Sucesso", `Movido para o grupo "${nomeGrupoParaMudar}"!`);
         } catch (error) {
             console.error("Erro ao alterar grupo:", error);
             Alert.alert("Erro", "Não foi possível alterar o grupo. Tente novamente.");
-            // Volta para o grupo anterior em caso de falha
             setNovoGrupoSelecionado(grupoAtualId); 
         } finally {
-            // Limpa os estados auxiliares
             setIdGrupoParaMudar(null);
             setNomeGrupoParaMudar('');
         }
-    }, [detalhes.id_bufalo, idGrupoParaMudar, nomeGrupoParaMudar, grupoAtualId]);
+    }, [detalhes.idBufalo, idGrupoParaMudar, nomeGrupoParaMudar, grupoAtualId]);
 
-
-    // --- NOVA FUNÇÃO PARA ALTERAR O GRUPO (Ajustada para usar a nova rota e tipos) ---
-    const handleMudarGrupo = useCallback(async (idGrupo: string | null) => {
-        setOpenDropdown(false); // Fecha o dropdown
-
-        if (idGrupo === grupoAtualId || idGrupo === null) {
-            return;
-        }
+    const handleMudarGrupo = useCallback(async (idGrupo: string) => {
+        if (idGrupo === grupoAtualId) return;
 
         const novoNomeGrupo = grupos.find(g => g.id_grupo === idGrupo)?.nome_grupo || 'o grupo selecionado';
 
-        // PREPARA E ABRE O MODAL CUSTOMIZADO
         setIdGrupoParaMudar(idGrupo);
         setNomeGrupoParaMudar(novoNomeGrupo);
         setModalMudarGrupoVisible(true);
-        
-        // Mantém o dropdown mostrando o grupo atual até a confirmação
         setNovoGrupoSelecionado(grupoAtualId); 
 
     }, [grupoAtualId, grupos]);
 
-
-    // Mapeia os grupos para o formato do DropDownPicker (Ajustado para usar nome_grupo/id_grupo)
     const grupoItems = useMemo(() => {
         return grupos.map(g => ({
-            label: g.nome_grupo, // Usar nome_grupo
-            value: g.id_grupo, // Usar id_grupo (string)
+            label: g.nome_grupo,
+            value: g.id_grupo,
         }));
     }, [grupos]);
 
-    // Busca o nome do grupo atual para exibição
-    const nomeGrupoAtual = useMemo(() => {
-        // 1️⃣ Prioridade: grupo carregado da lista de grupos
-        const grupo = grupos.find(g => g.id_grupo === grupoAtualId);
-        if (grupo) {
-            return grupo.nome_grupo;
-        }
-
-        // 2️⃣ Fallback: grupo vindo direto da API (se existir)
-        if (detalhes?.grupo?.nomeGrupo) {
-            return detalhes.grupo.nomeGrupo;
-        }
-
-        // 3️⃣ Último fallback
-        return '-';
-    }, [grupos, grupoAtualId, detalhes]);
-    // ... (FUNÇÕES DE STATUS EXISTENTES)
     const confirmarAlteracaoStatus = async () => {
         if (novoStatus === null) return;
-        // ... (lógica de confirmação de status original)
         try {
             await bufaloService.updateBufalo(detalhes.idBufalo, { status: novoStatus });
             setIsEnabled(novoStatus);
             detalhes.status = novoStatus;
         } catch (error) {
+            console.error(error);
         } finally {
             setModalVisible(false);
         }
@@ -154,7 +112,6 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
     return (
         <>
             <View style={styles.infoCard}>
-                {/* Header com nome, categoria e status */}
                 <View style={styles.infoHeader}>
                     <View>
                         <View style={styles.nameRow}>
@@ -171,10 +128,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
                         <TouchableOpacity onPress={onEdit} style={styles.editButton}>
                             <Pen width={20} height={20} fill={colors.brown.base} />
                         </TouchableOpacity>
-                        <View style={[
-                            styles.statusBadge,
-                            { backgroundColor: isEnabled ? colors.green.active : colors.red.inactive },
-                        ]}>
+                        <View style={[styles.statusBadge]}>
                             <View style={[
                                 styles.statusDot,
                                 { backgroundColor: isEnabled ? colors.green.extra : colors.red.extra },
@@ -195,7 +149,6 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
                 </View>
 
                 <View style={styles.infoGrid}>
-                    {/* Linha 1 */}
                     <View style={styles.Row}>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Nascimento</Text>
@@ -206,7 +159,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
                             <Text style={styles.infoValue}>{maturidadeTexto ?? '-'}</Text>
                         </View>
                     </View>
-                    {/* Linha 2 */}
+
                     <View style={styles.Row}>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Sexo</Text>
@@ -217,34 +170,25 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
                             <Text style={styles.infoValue}>{detalhes?.origem ?? '-'}</Text>
                         </View>
                     </View>
-                    {/* Linha 3 (Raça e GRUPO EDITÁVEL) */}
-                    <View style={[styles.Row, {zIndex: openDropdown ? 1000 : 1}]}>
+
+                    <View style={styles.Row}>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Raça</Text>
                             <Text style={styles.infoValue}>{detalhes?.racaNome ?? '-'}</Text>
                         </View>
                         
-                        {/* ITEM DE GRUPO COM DROP-DOWN */}
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Grupo</Text>
-                            <DropDownPicker
-                                open={openDropdown}
-                                setOpen={setOpenDropdown}
-                                value={novoGrupoSelecionado}
-                                setValue={setNovoGrupoSelecionado}
+                            <SelectBottomSheet
                                 items={grupoItems}
-                                placeholder={nomeGrupoAtual}
-                                // Usa `handleMudarGrupo` ao selecionar
-                                onSelectItem={(item) => handleMudarGrupo(item.value as string)}
-                                style={styles.dropdownStyle}
-                                containerStyle={styles.dropdownContainer}
-                                dropDownContainerStyle={styles.dropdownListContainer}
-                                textStyle={styles.dropdownText}
-                                listMode="SCROLLVIEW"
+                                value={novoGrupoSelecionado}
+                                onChange={handleMudarGrupo}
+                                title="Selecionar Grupo"
+                                placeholder={detalhes?.grupo?.nomeGrupo || "Sem grupo"}
                             />
                         </View>
                     </View>
-                    {/* Linha 4 */}
+
                     <View style={styles.Row}>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Pai</Text>
@@ -261,137 +205,107 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
             <ConfirmModal
                 visible={modalMudarGrupoVisible}
                 title="Confirmar Mudança de Grupo"
-                // Usa o nome do grupo que foi preparado no handleMudarGrupo
                 message={`Deseja realmente mover o animal para o grupo "${nomeGrupoParaMudar}"?`}
-                onConfirm={confirmarMudancaGrupo} // Chama a função que executa a API
+                onConfirm={confirmarMudancaGrupo}
                 onCancel={() => {
                     setModalMudarGrupoVisible(false);
-                    // Volta o DropDownPicker para o grupo atual
                     setNovoGrupoSelecionado(grupoAtualId); 
                 }}
-                confirmText="Mover"
-            />
+                confirmText="Mover"/>
 
-            <ConfirmarAlteracaoStatusModal
+            <ConfirmModal
                 visible={modalVisible}
-                novoStatus={novoStatus ?? false}
-                onClose={cancelarAlteracao}
+                title="Alterar status"
+                message={`Deseja mudar o status desse animal para ${novoStatus ? "ATIVO" : "INATIVO"}?`}
                 onConfirm={confirmarAlteracaoStatus}
-            />
+                onCancel={cancelarAlteracao}
+                confirmText={novoStatus ? "Ativar" : "Inativar"}
+                variant={novoStatus ? "success" : "danger"}/>
         </>
     );
 };
 
-// ... (Estilos permanecem inalterados, exceto a correção de estilo no final)
-
 const styles = StyleSheet.create({
-    infoCard: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 12,
-        elevation: 2,
-    },
-    infoHeader: { 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
-    },
-    nameRow: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 8 
-    },
-    nameText: { 
-        fontSize: 20, 
-        fontWeight: '700', 
-        color: '#1A1A1A' 
-    },
-    brincoText: { 
-        fontSize: 14, 
-        color: '#6B7280', 
-        marginTop: 2 
-    },
-    categoryBadge: {
-        backgroundColor: '#FEF3C7',
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 12,
-    },
-    categoryText: { 
-        fontSize: 12, 
-        fontWeight: '600', 
-        color: '#92400E' 
-    },
-    statusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 16,
-    },
-    statusDot: { 
-        width: 8, 
-        height: 8, 
-        borderRadius: 4, 
-        marginRight: 4 
-    },
-    statusText: { 
-        fontSize: 12, 
-        fontWeight: '500' 
-    },
-    infoGrid: { 
-        flexDirection: 'column', // Alterado para column para facilitar o Dropdown
-        marginTop: 12, 
-        gap: 4 // Espaçamento entre linhas
-    },
-    Row: { 
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    infoItem: { 
-        width: '48%', // Garante que dois itens cabem na largura
-        // Removido marginBottom para usar o espaçamento do infoGrid
-    },
-    infoLabel: { 
-        fontSize: 12, 
-        color: '#6B7280',
-        marginBottom: 4,
-    },
-    infoValue: { 
-        fontSize: 14, 
-        fontWeight: '500', 
-        color: '#1A1A1A', 
-        // Removido marginTop: 2 para usar o marginBottom do label
-    },
-    editButton: {
-        padding: 5,
-    },
-    
-    // --- ESTILOS DO DROPDOWN PARA O CAMPO GRUPO ---
-    dropdownContainer: {
-        width: '100%',
-        minHeight: 30, // Altura mínima para caber no infoItem
-        marginBottom: 4,
-    },
-    dropdownStyle: {
-        backgroundColor: colors.white.base,
-        borderColor: colors.gray.disabled,
-        minHeight: 30,
-        paddingHorizontal: 4,
-    },
-    dropdownListContainer: {
-        borderColor: colors.gray.disabled,
-        backgroundColor: colors.white.base,
-        elevation: 5,
-        zIndex: 1000,
-    },
-    dropdownText: {
-        fontSize: 14,
-        fontWeight: '500', // Corrigido o erro de sintaxe aqui
-    },
+    infoCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 12,
+        elevation: 2, 
+        zIndex: 1, // Valor baixo para não sobrepor o modal
+    },
+    infoHeader: { 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center' 
+    },
+    nameRow: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        gap: 8 
+    },
+    nameText: { 
+        fontSize: 20, 
+        fontWeight: '700', 
+        color: '#1A1A1A' 
+    },
+    brincoText: { 
+        fontSize: 14, 
+        color: '#6B7280', 
+        marginTop: 2 
+    },
+    categoryBadge: {
+        backgroundColor: '#FEF3C7',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 12,
+    },
+    categoryText: { 
+        fontSize: 12, 
+        fontWeight: '600', 
+        color: '#92400E' 
+    },
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+    },
+    statusDot: { 
+        width: 8, 
+        height: 8, 
+        borderRadius: 4, 
+        marginRight: 4 
+    },
+    statusText: { 
+        fontSize: 12, 
+        fontWeight: '500' 
+    },
+    infoGrid: { 
+        marginTop: 12, 
+        gap: 4 
+    },
+    Row: { 
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    infoItem: { 
+        width: '48%', 
+    },
+    infoLabel: { 
+        fontSize: 12, 
+        color: '#6B7280',
+        marginBottom: 4,
+    },
+    infoValue: { 
+        fontSize: 14, 
+        fontWeight: '500', 
+        color: '#1A1A1A', 
+    },
+    editButton: {
+        padding: 5,
+    },
 });

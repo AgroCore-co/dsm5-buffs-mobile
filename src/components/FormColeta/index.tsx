@@ -194,12 +194,12 @@ export const ColetaAddBottomSheet: React.FC<
       const dtColetaISO = dayjs(dtColeta).toISOString();
 
       const payload: ColetaRegistroPayload = {
-        id_industria: idIndustria,
-        id_propriedade: String(propriedadeId), // Converter para string/UUID
-        resultado_teste: resultadoTeste,
+        idIndustria: idIndustria,
+        idPropriedade: String(propriedadeId), // Converter para string/UUID
+        resultadoTeste: resultadoTeste,
         observacao: observacao || undefined,
         quantidade: parseFloat(quantidade),
-        dt_coleta: dtColetaISO,
+        dtColeta: dtColetaISO,
       };
       
       // 3. Chamada à API

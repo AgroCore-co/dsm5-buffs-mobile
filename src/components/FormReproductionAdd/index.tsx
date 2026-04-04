@@ -227,12 +227,12 @@ export const ReproducaoAddBottomSheet: React.FC<
             "F"
         );
         
-        if (!bufalaFemea || !bufalaFemea.id_bufalo) { // Assumindo que o ID é 'id_bufalo' no objeto retornado
+        if (!bufalaFemea || !bufalaFemea.idBufalo) { // Assumindo que o ID é 'id_bufalo' no objeto retornado
             brincoInvalido = tagBufala;
             return showToast(`Erro: Búfala receptora (Tag: ${brincoInvalido}) não encontrada, não é fêmea, ou o ID interno está faltando.`, true);
         }
         // 🎯 CAPTURA O UUID DA FÊMEA
-        idBufalaFemeaUUID = bufalaFemea.id_bufalo; 
+        idBufalaFemeaUUID = bufalaFemea.idBufalo; 
 
         // --- 2. Validação e Obtenção do UUID do Búfalo (Macho) para Monta Natural ---
         if (tipoInseminacao === "Monta Natural") { // Usando o valor CORRETO
@@ -246,12 +246,12 @@ export const ReproducaoAddBottomSheet: React.FC<
                 "M"
             );
             
-            if (!bufaloMacho || !bufaloMacho.id_bufalo) {
+            if (!bufaloMacho || !bufaloMacho.idBufalo) {
                 brincoInvalido = tagBufalo;
                 return showToast(`Erro: Búfalo macho (Tag: ${brincoInvalido}) não encontrado, não é macho, ou o ID interno está faltando.`, true);
             }
             // 🎯 CAPTURA O UUID DO MACHO
-            idBufaloMachoUUID = bufaloMacho.id_bufalo; 
+            idBufaloMachoUUID = bufaloMacho.idBufalo; 
             
             // Limpa sêmen/óvulo, pois é Monta Natural
             idSemenUsado = null;
@@ -264,18 +264,18 @@ export const ReproducaoAddBottomSheet: React.FC<
 
         // --- 3. Preparação do Payload Final ---
         const payload = {
-            id_propriedade: propriedadeSelecionada,
+            idPropriedade: propriedadeSelecionada,
             // 🎯 ENVIANDO OS UUIDs (corrigindo o erro 1 e 2)
-            id_bufalo: idBufaloMachoUUID,      // UUID do Touro (se Monta Natural)
-            id_bufala: idBufalaFemeaUUID,      // UUID da Búfala
+            idBufalo: idBufaloMachoUUID,      // UUID do Touro (se Monta Natural)
+            idBufala: idBufalaFemeaUUID,      // UUID da Búfala
             
-            id_semen: idSemenUsado,            // ID do Sêmen
-            id_doadora: idOvuloUsado,          // ID do Óvulo (assumindo que id_doadora = id_ovulo na API)
+            idSemen: idSemenUsado,            // ID do Sêmen
+            idDoadora: idOvuloUsado,          // ID do Óvulo (assumindo que id_doadora = id_ovulo na API)
             
             // 🎯 ENVIANDO O VALOR CORRETO (corrigindo o erro 3)
-            tipo_inseminacao: tipoInseminacao, 
+            tipoInseminacao: tipoInseminacao, 
             status: status,
-            dt_evento: new Date().toISOString().split("T")[0], 
+            dtEvento: new Date().toISOString().split("T")[0], 
         };
         // ... (restante da chamada da API)
         await createReproducao(payload);

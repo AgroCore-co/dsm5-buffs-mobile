@@ -14,7 +14,7 @@ interface DemarcacaoPiquete extends Omit<Piquete, 'id' | 'color'> {
 
 interface DemarcacaoPiqueteSheetProps {
     onClose: () => void;
-    propriedadeId: number;
+    propriedadeId: string;
 }
 
 export const DemarcacaoPiqueteSheet: React.FC<DemarcacaoPiqueteSheetProps> = ({ onClose, propriedadeId }) => {

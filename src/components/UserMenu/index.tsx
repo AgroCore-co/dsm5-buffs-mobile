@@ -18,7 +18,7 @@ export const UserMenu = () => {
     <>
       {/* Botão do usuário */}
       <TouchableOpacity onPress={() => setVisible(true)} style={styles.button}>
-        <User width={20} height={20} style={{ margin: 6 }} />
+        <User width={26} height={26} style={{ marginTop: 6 }} />
       </TouchableOpacity>
 
       {/* Menu suspenso */}
@@ -47,7 +47,7 @@ export const UserMenu = () => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: colors.yellow.dark,
+    backgroundColor: colors.yellow.button,
     borderRadius: 50,
     flexDirection: "row",
     position: "absolute",

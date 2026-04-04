@@ -80,16 +80,16 @@ const handleCloseSheet = () => {
                 ...p,
                 color: p.grupoCor,
               }))} currentLocation={currentLocation}            />
-<TouchableOpacity 
+            <TouchableOpacity 
                 onPress={handleOpenSheet} // Chamando a função para abrir
                 style={{
                   position: 'absolute',
-                  bottom: 60,
+                  bottom: 20,
                   right: 16,
-                  backgroundColor: colors.yellow.base,
-                  borderRadius: 24,
-                  paddingHorizontal: 16,
-                  height: 56,
+                  backgroundColor: colors.yellow.dark,
+                  borderRadius: 30,
+                  paddingHorizontal: 20,
+                  height: 65,
                   flexDirection: 'row',
                   alignItems: 'center',
                   shadowColor: "#000",
@@ -99,7 +99,6 @@ const handleCloseSheet = () => {
                   elevation: 5
               }}>
             <Plus width={24} height={24} />
-            <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#111813' }}>Nova Área</Text>
           </TouchableOpacity>
           </ScrollView>
         {isSheetOpen && propriedadeSelecionada && (<DemarcacaoPiqueteSheet onClose={handleCloseSheet} propriedadeId={propriedadeSelecionada} />)}

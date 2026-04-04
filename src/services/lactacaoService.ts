@@ -59,12 +59,12 @@ export interface LactacaoRegistroPayload {
 }
 
 export interface ColetaRegistroPayload {
-  id_industria: string;
-  id_propriedade: string;
-  resultado_teste: boolean;
+  idIndustria: string;
+  idPropriedade: string;
+  resultadoTeste: boolean;
   observacao?: string;
   quantidade: number;
-  dt_coleta: string;
+  dtColeta: string;
 }
 
 export interface EstoqueRegistroPayload {
@@ -105,9 +105,12 @@ export const getCiclosLactacao = async (
     const ciclosFormatados = ciclos.map((c) => ({
       idCicloLactacao: c.idCicloLactacao,
       idBufala: c.idBufala,
-      nome: c.bufalo?.nome ?? "Não informado",
-      brinco: c.bufalo?.brinco ?? "-",
+      cicloAtual: c.cicloAtual,
+      nome: c.bufala?.nome ?? "Não informado",
+      brinco: c.bufala?.brinco ?? "-",
       status: c.status,
+      raca: c.bufala?.raca ?? "Não informado",
+      diasEmLactacao: c.diasEmLactacao,
       dtSecagemPrevista: c.dtSecagemPrevista
         ? formatarDataBR(c.dtSecagemPrevista)
         : "—",
@@ -137,7 +140,7 @@ export const getEstatisticasLactacao = async (propriedadeId: string) => {
     }
 
     return await apiFetch(
-      `/lactacao/propriedade/${propriedadeId}/estatistica`
+      `/lactacao/propriedade/${propriedadeId}/estatisticas`
     );
   } catch (error) {
     console.error("Erro ao buscar estatísticas de lactação:", error);
@@ -177,7 +180,7 @@ export const getIndustriasPorPropriedade = async (propriedadeId: string) => {
 
 export const registrarLactacaoApi = async (payload: LactacaoRegistroPayload) => {
   try {
-    return await apiFetch("/lactacao", {
+    return await apiFetch("/ordenhas", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -189,7 +192,8 @@ export const registrarLactacaoApi = async (payload: LactacaoRegistroPayload) => 
 
 export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {
   try {
-    return await apiFetch("/coletas", {
+    console.log('📦 PAYLOAD FINAL / SWAGGER:', JSON.stringify(payload, null, 2));
+    return await apiFetch("/retiradas", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -201,7 +205,7 @@ export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {
 
 export const registrarEstoqueApi = async (payload: EstoqueRegistroPayload) => {
   try {
-    return await apiFetch("/estoque-leite", {
+    return await apiFetch("/producao-diaria", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -217,7 +221,7 @@ export const encerrarLactacao = async (idCiclo: string | number) => {
 
     const hoje = new Date().toISOString().split("T")[0];
 
-    return await apiFetch(`/ciclos-lactacao/${idCiclo}`, {
+    return await apiFetch(`/lactacao/${idCiclo}`, {
       method: "PATCH",
       body: JSON.stringify({
         dt_secagem_real: hoje,
@@ -227,5 +231,46 @@ export const encerrarLactacao = async (idCiclo: string | number) => {
   } catch (error) {
     console.error("Erro ao encerrar lactação:", error);
     throw new Error("Falha ao encerrar lactação.");
+  }
+};
+
+/* =========================
+   GET — PRODUÇÃO / ESTOQUE ATUAL
+========================= */
+
+export const getProducaoDiariaAtual = async (propriedadeId: string) => {
+  try {
+    if (!propriedadeId) {
+      throw new Error("ID da propriedade é obrigatório.");
+    }
+
+    const response: {
+      data: {
+        quantidade: string;
+        dt_registro: string;
+      }[];
+    } = await apiFetch(
+      `/producao-diaria/propriedade/${propriedadeId}?page=1&limit=1`
+    );
+
+    const registro = response?.data?.[0];
+
+    if (!registro) {
+      return {
+        quantidade: 0,
+        dataAtualizacao: "N/D",
+      };
+    }
+
+    return {
+      quantidade: Number(registro.quantidade),
+      dataAtualizacao: formatarDataBR(registro.dt_registro),
+    };
+  } catch (error) {
+    console.error("Erro ao buscar produção diária:", error);
+    return {
+      quantidade: 0,
+      dataAtualizacao: "N/D",
+    };
   }
 };

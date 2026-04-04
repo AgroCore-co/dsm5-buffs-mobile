@@ -79,30 +79,39 @@ export const SanitarioBottomSheet: React.FC<SanitarioBottomSheetProps> = ({ item
     };
 
     const toggleEdit = () => {
-        if (isEditing) {
-            const idMedicao = formData.idMedicacao;
-            const dosagem = formData.dosagem;
-            const unidade_medida = formData.unidadeMedida;
-            const necessitaRetorno = formData.necessitaRetorno;
-            const dtRetorno = formData.dtRetorno;
+      if (isEditing) {
+        // 1️⃣ idSanit SEMPRE separado
+        const idSanit = formData.idSanit;
 
-            const payloadApi = {
-                idMedicao: idMedicao  || null,
-                dosagem: dosagem || 0,              
-                unidade_medida: unidade_medida || null,
-                necessitaRetorno: necessitaRetorno || null,
-                dtRetornov: dtRetorno || null,
-            };
-            
-            const cleanedPayload = Object.fromEntries(
-                Object.entries(payloadApi).filter(([_, value]) => value !== null && value !== undefined)
-            );
-            
-            console.log("PAYLOAD Sanitário LIMPO PARA API:", cleanedPayload);
-            onEditSave({ idSanit: formData.idSanit, ...cleanedPayload }); 
-        }
-        setIsEditing(!isEditing);
+        // 2️⃣ só os campos que podem mudar
+        const payloadParcial: Partial<SanitarioItem> = {
+          idMedicacao: medicacaoSelecionada ?? undefined,
+          dosagem: formData.dosagem,
+          unidadeMedida: formData.unidadeMedida,
+          necessitaRetorno: formData.necessitaRetorno,
+          dtRetorno: formData.dtRetorno,
+        };
+
+        // 3️⃣ remove undefined / null
+        const payloadLimpo = Object.fromEntries(
+          Object.entries(payloadParcial).filter(
+            ([_, value]) => value !== null && value !== undefined
+          )
+        );
+
+        // 4️⃣ monta o objeto FINAL (AGORA COM idSanit)
+        const payloadFinal: SanitarioItem = {
+          idSanit,
+          ...(payloadLimpo as Omit<SanitarioItem, "idSanit">),
+        };
+
+        console.log("📤 Payload FINAL (FRONT):", payloadFinal);
+        onEditSave(payloadFinal);
+      }
+
+      setIsEditing(!isEditing);
     };
+
     
     const handleDelete = () => {
         setIsDeleteModalVisible(true);

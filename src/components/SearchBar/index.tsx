@@ -1,32 +1,11 @@
-// src/components/FiltroRebanho.tsx
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { colors } from "../../styles/colors";
 import YellowButton from "../Button";
 import bufaloService from "../../services/bufaloService";
 
-const mapMaturidade = (valor: string | null) => {
-  switch (valor) {
-    case "Bezerro":
-      return "B";
-    case "Novilha":
-      return "N";
-    case "Vaca":
-      return "V";
-    case "Touro":
-      return "T";
-    default:
-      return undefined;
-  }
-};
-
+// Tipagem idêntica à sua
 type Filtros = {
   brinco?: string;
   sexo?: "M" | "F";
@@ -35,287 +14,137 @@ type Filtros = {
   id_raca?: string;
 };
 
-export default function FiltroRebanho({
-  filtros = {},
-  onFiltrar,
-}: {
-  filtros?: Filtros;
+interface Props {
+  filtros: Filtros;
   onFiltrar: (f: Filtros) => void;
-}) {
-  const categorias = ["Sexo", "Raça", "Maturidade", "Status"];
+  onClose: () => void;
+}
 
-  // dados externos
+export default function FiltroRebanhoBottomSheet({ filtros, onFiltrar, onClose }: Props) {
+  const sheetRef = useRef<BottomSheet>(null);
+  const snapPoints = useMemo(() => ["60%", "90%"], []);
+
   const [racas, setRacas] = useState<any[]>([]);
+  const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>("Sexo");
+  const [sexo, setSexo] = useState<string | null>(null);
+  const [raca, setRaca] = useState<string | null>(null);
+  const [maturidade, setMaturidade] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
 
-  // estados locais por categoria (permitem múltiplos filtros simultâneos)
-  const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
-  const [sexoSelecionado, setSexoSelecionado] = useState<string | null>(null); // "Macho" | "Fêmea"
-  const [racaSelecionada, setRacaSelecionada] = useState<string | null>(null); // nome da raça
-  const [maturidadeSelecionada, setMaturidadeSelecionada] = useState<string | null>(null);
-  const [statusSelecionado, setStatusSelecionado] = useState<string | null>(null); // "Ativo" | "Inativo"
-  const [search, setSearch] = useState<string>("");
-
-  // busca raças
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await bufaloService.getRacas();
-        // espera array [{ id_raca?, id?, nome }]
-        setRacas(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Erro ao carregar raças:", err);
-      }
-    })();
-  }, []);
-
-  // inicializa estados locais a partir da prop filtros (persistência)
-  useEffect(() => {
-    if (!filtros) return;
-
-    if (filtros.brinco) setSearch(filtros.brinco);
-    if (filtros.sexo) setSexoSelecionado(filtros.sexo === "M" ? "Macho" : "Fêmea");
-    if (filtros.nivel_maturidade) {
-      const mapReverse: Record<string, string> = { B: "Bezerro", N: "Novilha", V: "Vaca", T: "Touro" };
-      setMaturidadeSelecionada(mapReverse[filtros.nivel_maturidade] ?? null);
-    }
-    if (filtros.status !== undefined) setStatusSelecionado(filtros.status ? "Ativo" : "Inativo");
-    if (filtros.id_raca) {
-      const r = racas.find((x) => (x.id_raca ?? x.id) === filtros.id_raca);
-      setRacaSelecionada(r?.nome ?? null);
-    }
-    // não setamos categoriaAtiva aqui pra não abrir nada automaticamente; usuário decide.
-  }, [filtros, racas]);
-
-  const opcoesPorCategoria: Record<string, string[]> = {
+  const categorias = ["Sexo", "Raça", "Maturidade", "Status"];
+  const opcoes: Record<string, string[]> = {
     Sexo: ["Macho", "Fêmea"],
-    Raça: racas.map((r) => r.nome).filter(Boolean),
+    Raça: racas.map((r) => r.nome),
     Maturidade: ["Bezerro", "Novilha", "Vaca", "Touro"],
     Status: ["Ativo", "Inativo"],
   };
 
-  const getIdDaRaca = (nomeRaca: string | null) => {
-    if (!nomeRaca || racas.length === 0) return undefined;
-    const racaEncontrada = racas.find((r) => r.nome === nomeRaca);
-    return racaEncontrada ? (racaEncontrada.id_raca ?? racaEncontrada.id) : undefined;
-  };
+  useEffect(() => {
+    bufaloService.getRacas().then(data => setRacas(Array.isArray(data) ? data : []));
+  }, []);
 
-  const limparFiltros = () => {
-    setSearch("");
-    setCategoriaAtiva(null);
-    setSexoSelecionado(null);
-    setRacaSelecionada(null);
-    setMaturidadeSelecionada(null);
-    setStatusSelecionado(null);
-    onFiltrar({}); // limpa no pai também
-  };
+  useEffect(() => {
+    // Quando o modal abre, preenchemos os estados internos com o que já existe no "pai"
+    if (filtros.sexo) setSexo(filtros.sexo === "M" ? "Macho" : "Fêmea");
 
-  // alterna seleção da opção clicada (toggle)
-  const handleSelect = (opcao: string) => {
-    switch (categoriaAtiva) {
-      case "Sexo":
-        setSexoSelecionado((prev) => (prev === opcao ? null : opcao));
-        break;
-      case "Raça":
-        setRacaSelecionada((prev) => (prev === opcao ? null : opcao));
-        break;
-      case "Maturidade":
-        setMaturidadeSelecionada((prev) => (prev === opcao ? null : opcao));
-        break;
-      case "Status":
-        setStatusSelecionado((prev) => (prev === opcao ? null : opcao));
-        break;
+    if (filtros.nivel_maturidade) {
+      const reverseMap: any = { B: "Bezerro", N: "Novilha", V: "Vaca", T: "Touro" };
+      setMaturidade(reverseMap[filtros.nivel_maturidade]);
     }
-  };
 
-  // monta objeto final e envia para o pai
-  const aplicarFiltro = () => {
+    if (filtros.status !== undefined) setStatus(filtros.status ? "Ativo" : "Inativo");
+
+    if (filtros.id_raca && racas.length > 0) {
+      const r = racas.find(x => (x.id_raca ?? x.id) === filtros.id_raca);
+      if (r) setRaca(r.nome);
+    }
+  }, [filtros, racas]);
+
+  const aplicar = () => {
     const payload: Filtros = {};
-
-    if (search && search.trim().length) payload.brinco = search.trim();
-    if (sexoSelecionado) payload.sexo = sexoSelecionado === "Macho" ? "M" : "F";
-    if (maturidadeSelecionada) payload.nivel_maturidade = mapMaturidade(maturidadeSelecionada) as any;
-    if (statusSelecionado !== null)
-      payload.status = statusSelecionado === "Ativo" ? true : statusSelecionado === "Inativo" ? false : undefined;
-    if (racaSelecionada) payload.id_raca = getIdDaRaca(racaSelecionada);
-
-    onFiltrar(payload);
-  };
-
-  // selecionada atual (para visual)
-  const currentSelected = (() => {
-    switch (categoriaAtiva) {
-      case "Sexo":
-        return sexoSelecionado;
-      case "Raça":
-        return racaSelecionada;
-      case "Maturidade":
-        return maturidadeSelecionada;
-      case "Status":
-        return statusSelecionado;
-      default:
-        return null;
+    if (sexo) payload.sexo = sexo === "Macho" ? "M" : "F";
+    if (maturidade) {
+      const map: any = { Bezerro: "B", Novilha: "N", Vaca: "V", Touro: "T" };
+      payload.nivel_maturidade = map[maturidade];
     }
-  })();
+    if (status) payload.status = status === "Ativo";
+    if (raca) {
+      const r = racas.find(x => x.nome === raca);
+      payload.id_raca = r?.id_raca ?? r?.id;
+    }
+    onFiltrar(payload);
+    onClose();
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Filtrar Rebanho</Text>
-        <YellowButton title="Limpar" onPress={limparFiltros} />
-      </View>
+    <BottomSheet
+      ref={sheetRef}
+      index={0}
+      snapPoints={snapPoints}
+      enablePanDownToClose
+      onClose={onClose}
+      backdropComponent={(props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />}
+      backgroundStyle={{ backgroundColor: "#F8F7F5" }}
+    >
+      <BottomSheetScrollView contentContainerStyle={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Filtros Avançados</Text>
+          <TouchableOpacity onPress={() => { setSexo(null); setRaca(null); setMaturidade(null); setStatus(null); }}>
+            <Text style={{ color: colors.red.base }}>Limpar</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.searchWrapper}>
-        <TextInput
-          style={styles.input}
-          placeholder="Buscar por brinco..."
-          placeholderTextColor={colors.gray.base}
-          value={search}
-          onChangeText={setSearch}
-          returnKeyType="search"
-        />
-      </View>
-
-      <Text style={styles.subtitle}>CATEGORIA DO FILTRO</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollChips}>
-        {categorias.map((cat) => {
-          const ativo = cat === categoriaAtiva;
-          return (
+        <Text style={styles.label}>CATEGORIAS</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+          {categorias.map(cat => (
             <TouchableOpacity
               key={cat}
-              style={[styles.chip, ativo && styles.chipAtivo]}
-              onPress={() => setCategoriaAtiva((prev) => (prev === cat ? null : cat))}
+              style={[styles.chip, categoriaAtiva === cat && styles.chipAtivo]}
+              onPress={() => setCategoriaAtiva(cat)}
             >
-              <Text style={[styles.chipText, ativo && styles.chipTextAtivo]}>{cat}</Text>
+              <Text style={[styles.chipText, categoriaAtiva === cat && styles.chipTextAtivo]}>{cat}</Text>
             </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+          ))}
+        </ScrollView>
 
-      {categoriaAtiva && (
-        <>
-          <Text style={styles.subtitle}>OPÇÕES DE {categoriaAtiva.toUpperCase()}</Text>
-          <View style={styles.optionsContainer}>
-            {opcoesPorCategoria[categoriaAtiva]?.map((opcao) => {
-              const selecionada = opcao === currentSelected;
-              return (
-                <TouchableOpacity
-                  key={opcao}
-                  style={[styles.optionButton, selecionada && styles.optionButtonActive]}
-                  onPress={() => handleSelect(opcao)}
-                >
-                  <Text style={[styles.optionText, selecionada && styles.optionTextActive]}>{opcao}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </>
-      )}
-      <YellowButton title="Aplicar Filtro" onPress={aplicarFiltro} />
-    </View>
+        <View style={styles.optionsGrid}>
+          {opcoes[categoriaAtiva!]?.map(opcao => {
+            const isSel = [sexo, raca, maturidade, status].includes(opcao);
+            return (
+              <TouchableOpacity
+                key={opcao}
+                style={[styles.opt, isSel && styles.optAtivo]}
+                onPress={() => {
+                  if (categoriaAtiva === "Sexo") setSexo(sexo === opcao ? null : opcao);
+                  if (categoriaAtiva === "Raça") setRaca(raca === opcao ? null : opcao);
+                  if (categoriaAtiva === "Maturidade") setMaturidade(maturidade === opcao ? null : opcao);
+                  if (categoriaAtiva === "Status") setStatus(status === opcao ? null : opcao);
+                }}
+              >
+                <Text style={[styles.optText, isSel && styles.optTextAtivo]}>{opcao}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <YellowButton title="Aplicar Filtros" onPress={aplicar} />
+      </BottomSheetScrollView>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1, 
-    padding: 16, 
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.gray.disabled,
-    shadowColor: colors.black.base,
-    shadowOpacity: 0.05,
-    shadowOffset: { 
-      width: 0, 
-      height: 2 
-    },
-    shadowRadius: 4,
-    elevation: 2, 
-    zIndex: 1000
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.black.base,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.gray.base,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  scrollChips: {
-    flexGrow: 0,
-    marginBottom: 16,
-  },
-  chip: {
-    width: 120,
-    alignItems: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 2,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 12,
-    marginRight: 8,
-  },
-  chipAtivo: {
-    backgroundColor: colors.yellow.base,
-  },
-  chipText: {
-    color: colors.black.base,
-    fontWeight: "500",
-    fontSize: 16,
-  },
-  chipTextAtivo: {
-    color: colors.brown.base,
-    fontWeight: "700",
-  },
-  searchWrapper: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 48,
-    justifyContent: "center",
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: colors.gray.disabled,
-  },
-  input: {
-    fontSize: 16,
-    color: colors.gray.base,
-  },
-  optionsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 24,
-  },
-  optionButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 12,
-    flexGrow: 1,
-    alignItems: "center",
-    minWidth: "45%",
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  optionButtonActive: {
-    backgroundColor: colors.yellow.base,
-  },
-  optionText: {
-    color: colors.black.base,
-    fontWeight: "500",
-  },
-  optionTextActive: {
-    color: colors.brown.base,
-    fontWeight: "700",
-  },
+  container: { padding: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  title: { fontSize: 20, fontWeight: 'bold' },
+  label: { fontSize: 12, color: '#666', marginBottom: 10, fontWeight: '600' },
+  chip: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#EEE', borderRadius: 12, marginRight: 8 },
+  chipAtivo: { backgroundColor: colors.yellow.base },
+  chipText: { fontWeight: '500' },
+  chipTextAtivo: { color: colors.brown.base },
+  optionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 30 },
+  opt: { width: '47%', padding: 12, backgroundColor: '#FFF', borderRadius: 12, borderWidth: 1, borderColor: '#EEE', alignItems: 'center' },
+  optAtivo: { borderColor: colors.yellow.base, backgroundColor: '#FFF9E7' },
+  optText: { color: '#444' },
+  optTextAtivo: { fontWeight: 'bold', color: colors.brown.base }
 });

@@ -199,8 +199,8 @@ export const moverBufaloDeGrupo = async (
   idNovoGrupo: string
 ) => {
   const payload = {
-    ids_bufalos: [idBufalo],
-    id_novo_grupo: idNovoGrupo,
+    idsBufalos: [idBufalo],
+    idNovoGrupo: idNovoGrupo,
     motivo: "Mudança manual de grupo via tela de animal",
   };
 

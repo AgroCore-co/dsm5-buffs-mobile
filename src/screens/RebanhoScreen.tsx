@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, FlatList, ActivityIndicator} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, FlatList, ActivityIndicator, TextInput} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FloatingAction } from 'react-native-floating-action';
@@ -11,15 +11,12 @@ import Plus from '../../assets/images/plus.svg';
 import Scanner from '../../assets/images/qr-scan.svg';
 import { usePropriedade } from '../context/PropriedadeContext';
 import bufaloService from '../services/bufaloService';
-import { FormBufalo } from '../components/FormBufalo';
-import { Modal as CustomModal  } from '../components/Modal';
 import Button from '../components/Button';
 import { CardBufalo } from '../components/CardBufaloRebanho';
-import AgroCore from '../icons/agroCore';
 import FiltroRebanho from '../components/SearchBar';
 import { CadastrarBufaloForm } from '../components/CriaBufaloBottomSheet';
 import BuffaloLoader from '../components/BufaloLoader';
-
+import IconFiltro from '../../assets/images/agrocore.svg';
 type Animal = {
   id: string;
   nome: string;
@@ -64,6 +61,9 @@ export const RebanhoScreen = () => {
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [filtros, setFiltros] = useState<Filtros>({});
   const [selectedZootec, setSelectedZootec] = useState<any>(null);
+
+  const [showFiltro, setShowFiltro] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const fetchBufalosFiltrados = async (
     filtrosAplicados: any = {},
@@ -173,6 +173,21 @@ export const RebanhoScreen = () => {
       navigation.navigate('NfcScannerScreen');
     }
   };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setFiltros(prev => ({
+        ...prev,
+        brinco: searchText.trim() || undefined
+      }));
+    }, 800); 
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchText]);
+
+  const handleQuickSearch = (text: string) => {
+    setSearchText(text);
+  };
   
   if (initialLoading) {
     return (
@@ -209,11 +224,23 @@ export const RebanhoScreen = () => {
           }
 
           ListHeaderComponent={
-            <View style={styles.containetSearch}>
-              <FiltroRebanho
-                onFiltrar={(f) => setFiltros(f)}
-                filtros={filtros}
-              />
+            <View style={styles.card}>
+              <View style={styles.searchBarRow}>
+                <View style={styles.searchContainer}>
+                  <TextInput 
+                    placeholder="Buscar brinco..." 
+                    value={searchText}
+                    onChangeText={handleQuickSearch}
+                    style={styles.searchInput}
+                  />
+                </View>
+                <TouchableOpacity 
+                  style={styles.filterButton} 
+                  onPress={() => setShowFiltro(true)}
+                >
+                  <IconFiltro width={24} height={24} fill={colors.brown.base} />
+                </TouchableOpacity>
+              </View>
             </View>
           }
 
@@ -295,6 +322,20 @@ export const RebanhoScreen = () => {
             onClose={() => setSelectedZootec(null)} 
           />
         )}
+
+        {showFiltro && (
+        <FiltroRebanho 
+          filtros={filtros}
+          onFiltrar={(filtrosDoModal) => {
+            const novoFiltroCompleto = {
+              ...filtrosDoModal,
+              brinco: searchText 
+            };
+            setFiltros(novoFiltroCompleto);
+          }}
+          onClose={() => setShowFiltro(false)}
+        />
+      )}
     </View>
   );
 };
@@ -303,9 +344,27 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1
    },
+  card: {
+    flex: 1, 
+    paddingVertical: 16, 
+    paddingHorizontal: 10,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.gray.disabled,
+    shadowColor: colors.black.base,
+    shadowOpacity: 0.05,
+    shadowOffset: { 
+      width: 0, 
+      height: 2 
+    },
+    shadowRadius: 4,
+    elevation: 2, 
+    zIndex: 1000
+  },
   containetSearch: { 
     flex: 1, 
-    marginBottom: 12,
    },
   header: { 
     height: 80, 
@@ -331,7 +390,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.yellow.dark, 
     borderRadius: 50 
   },
-
   pageInfo: {
     marginHorizontal: 12,
     fontWeight: "600",
@@ -376,8 +434,36 @@ const styles = StyleSheet.create({
   },
 
   inlineLoader: {
-  height: 200,
-  justifyContent: "center",
-  alignItems: "center",
-},
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  searchBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 4,
+  },
+  searchContainer: {
+    flex: 1,
+    height: 50,
+    backgroundColor: colors.white.base,
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    justifyContent: 'center',
+  },
+  searchInput: { 
+    fontSize: 16, 
+  },
+  filterButton: {
+    width: 50,
+    height: 50,
+    backgroundColor: colors.yellow.base,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });

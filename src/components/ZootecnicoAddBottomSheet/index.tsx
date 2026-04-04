@@ -17,6 +17,7 @@ import { DatePickerModal } from "../DatePickerModal";
 import dayjs from "dayjs";
 import YellowButton from "../Button"; // Assumindo que o YellowButton é o componente de botão padrão
 import { formatarDataBR } from "../../utils/date";
+import SelectBottomSheet from "../SelectBottomSheet";
 
 // ==========================================================
 // --- CONFIGURAÇÃO DE CORES (Padrão Unificado) ---
@@ -60,114 +61,6 @@ const initialFormData: ZootecnicoPayload = {
     tipoPesagem: '',
 };
 
-// ==========================================================
-// --- Componente de Input com Floating Label (UNIFICADO) ---
-// ==========================================================
-interface FloatingLabelInputProps {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    keyboardType?: "default" | "numeric" | "email-address" | "phone-pad";
-    multiline?: boolean;
-    style?: any;
-    editable?: boolean;
-}
-
-// Estilos de suporte para o Floating Label (Definidos no final, mas replicados aqui para o componente funcionar)
-const floatingStyles = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12,
-        paddingTop: 8,
-        position: "relative",
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: mergedColors.white.base,
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-    // Estilo não usado diretamente aqui, mas parte do padrão
-    inputContainerMultiline: {
-        height: 120,
-    },
-});
-
-const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
-    label,
-    value,
-    onChangeText,
-    keyboardType = "default",
-    multiline = false,
-    style,
-    editable = true,
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const focusAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.timing(focusAnim, { toValue: 1, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        if (!value) {
-            Animated.timing(focusAnim, { toValue: 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-        }
-    };
-    
-    useEffect(() => {
-        Animated.timing(focusAnim, { toValue: value ? 1 : 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    }, [value]);
-
-    const labelStyle = {
-        top: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [18, -12] }),
-        fontSize: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 12] }),
-        color: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [mergedColors.gray.base, isFocused ? mergedColors.primary.base : mergedColors.gray.base], 
-        }),
-    };
-
-    const borderColor = isFocused ? mergedColors.primary.base : mergedColors.border;
-    const backgroundColor = editable ? mergedColors.white.base : mergedColors.gray.claro;
-    
-    return (
-        <View style={[
-            floatingStyles.inputContainer, 
-            multiline && { height: 120 }, // Ajuste de altura para multiline
-            style
-        ]}>
-            <Animated.Text style={[floatingStyles.label, labelStyle]}>
-                {label}
-            </Animated.Text>
-            <TextInput
-                style={[
-                    styles.inputBase, 
-                    { 
-                        borderColor: borderColor, 
-                        backgroundColor: backgroundColor,
-                        color: editable ? mergedColors.text.primary : mergedColors.gray.base,
-                        height: multiline ? 100 : 50, 
-                        paddingTop: multiline ? 12 : 15,
-                        textAlignVertical: multiline ? 'top' : 'center',
-                    }
-                ]}
-                value={value}
-                onChangeText={onChangeText}
-                keyboardType={keyboardType}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                multiline={multiline}
-                editable={editable}
-                placeholderTextColor="transparent"
-            />
-        </View>
-    );
-};
-// ==========================================================
 
 export const ZootecnicoAddBottomSheet: React.FC<ZootecnicoAddBottomSheetProps> = ({ id_bufalo, onClose, onAddSave}) => {
     const sheetRef = useRef<BottomSheet>(null);
@@ -258,20 +151,45 @@ return (
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Novo Registro Zootécnico</Text>
                 </View>
+                    <Text style={styles.sectionTitle}>Coleta de dados</Text>
+                    <View style={styles.listContainer}>
+                        {/* Data de Registro (Ajustado ao padrão dateFieldContainer) */}
+                        <View style={styles.dateFieldContainer}>
+                            <Text style={styles.listLabel}>Data Registro:</Text>
+                            <TouchableOpacity style={styles.dateDisplayButton} onPress={() => setShowDatePicker(true)}>
+                                <Text style={styles.dateDisplayValue}>
+                                    {formatarDataBR(formData.dtRegistro)}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    {/* INPUT: Tipo Pesagem */}
+                     <Text style={styles.label}>Tipo Pesagem</Text>
+                        <SelectBottomSheet
+                            items={[
+                                { label: "Semanal", value: "Semanal" },
+                                { label: "Quinzenal", value: "Quinzenal" },
+                                { label: "Mensal", value: "Mensal" },
+                                { label: "Semestral", value: "Semestral" },
+                            ]}
+                            value={formData.tipoPesagem ?? ""}
+                            onChange={(t) => handleChange("tipoPesagem", t)}
+                            title="Selecionar o tipo de pesagem"
+                            placeholder="Digite o tipo de pesagem"/>
+                    </View>                
 
 
                 {/* Lista */}
+                <Text style={styles.sectionTitle}>Métricas Corporais</Text>
                 <View style={styles.listContainer}>
-                    <Text style={styles.sectionTitle}>Métricas Corporais</Text>
-                    
-                        {/* INPUT: Peso (com Floating Label) */}
-                        <InputWithFloatingLabel
-                            label="Peso (kg)"
-                            value={String(formData.peso ?? "")}
-                            onChangeText={(t) => handleChange("peso", t)}
-                            keyboardType="numeric"
-                        />
-                    
+                     {/* INPUT: Peso (com Floating Label) */}
+                     <Text style={styles.label}>Peso (kg)</Text>
+                     <TextInput
+                         style={styles.inputBase}
+                         value={String(formData.peso ?? "")}
+                         onChangeText={(t) => handleChange("peso", t)}
+                         keyboardType="numeric"
+                         placeholder="Digite o peso do animal"/>                   
+                         
                     {/* Condição Corporal */}
                         <Text style={styles.listLabel}>Cond. Corporal:</Text>
                         <View style={styles.radioGroupRow}>
@@ -290,47 +208,34 @@ return (
                             </TouchableOpacity>
                         ))}
                         </View>
-                    
+                    </View>
+
                     <Text style={styles.sectionTitle}>Características Corporais</Text>
+                    <View style={styles.listContainer}>
                     {/* INPUT: Cor Pelagem (com Floating Label) */}
-                        <InputWithFloatingLabel
-                            label="Cor Pelagem"
-                            value={formData.corPelagem ?? ""}
-                            onChangeText={(t) => handleChange("corPelagem", t)}
-                        />
+                     <Text style={styles.label}>Cor Pelagem</Text>
+                     <TextInput
+                         style={styles.inputBase}
+                         value={formData.corPelagem ?? ""}
+                         onChangeText={(t) => handleChange("corPelagem", t)}
+                         placeholder="Digite a cor da pelagem"/>    
 
                     {/* INPUT: Formato Chifre (com Floating Label) */}
-                        <InputWithFloatingLabel
-                            label="Formato Chifre"
-                            value={formData.formatoChifre ?? ""}
-                            onChangeText={(t) => handleChange("formatoChifre", t)}
-                        />
+                     <Text style={styles.label}>Formato Chifre</Text>
+                     <TextInput
+                         style={styles.inputBase}
+                         value={formData.formatoChifre ?? ""}
+                         onChangeText={(t) => handleChange("formatoChifre", t)}
+                         placeholder="Digite o formato do chifre"/>  
 
                     {/* INPUT: Porte Corporal (com Floating Label) */}
-                        <InputWithFloatingLabel
-                            label="Porte Corporal"
-                            value={formData.porteCorporal ?? ""}
-                            onChangeText={(t) => handleChange("porteCorporal", t)}
-                        />
-                    
-                    <Text style={styles.sectionTitle}>Adicional</Text>
-                    {/* INPUT: Tipo Pesagem (com Floating Label) */}
-                        <InputWithFloatingLabel
-                            label="Tipo Pesagem"
-                            value={formData.tipoPesagem ?? ""}
-                            onChangeText={(t) => handleChange("tipoPesagem", t)}
-                        />
-                        
-                        {/* Data de Registro (Ajustado ao padrão dateFieldContainer) */}
-                        <View style={styles.dateFieldContainer}>
-                            <Text style={styles.listLabel}>Data Registro:</Text>
-                            <TouchableOpacity style={styles.dateDisplayButton} onPress={() => setShowDatePicker(true)}>
-                                <Text style={styles.dateDisplayValue}>
-                                    {formatarDataBR(formData.dtRegistro)}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                </View>
+                     <Text style={styles.label}>Porte Corporal</Text>
+                     <TextInput
+                         style={styles.inputBase}
+                         value={formData.porteCorporal ?? ""}
+                         onChangeText={(t) => handleChange("porteCorporal", t)}
+                         placeholder="Digite o porte corporal"/> 
+                    </View>
 
                 {/* Footer */}
                 <View style={styles.footer}>
@@ -352,27 +257,6 @@ return (
     </BottomSheetScrollView>
   </BottomSheet>
 )};
-
-// ==========================================================
-// --- ESTILOS UNIFICADOS ---
-// ==========================================================
-// Estilos de suporte para o Floating Label
-const floatingStylesFinal = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12,
-        paddingTop: 8,
-        position: "relative",
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: mergedColors.white.base,
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-});
-
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
@@ -415,6 +299,8 @@ const styles = StyleSheet.create({
         borderColor: mergedColors.border,
         borderRadius: 8,
         paddingHorizontal: 12,
+        marginTop: 5,
+        marginBottom: 12,
         fontSize: 16,
         color: mergedColors.text.primary,
         backgroundColor: mergedColors.white.base,
@@ -441,11 +327,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingVertical: 12,
-        marginBottom: 8,
-        borderTopWidth: 1,
-        borderTopColor: mergedColors.border,
-        marginTop: 8, // Espaço antes do primeiro elemento
+        marginBottom: 12,
     },
     dateDisplayButton: {
         flexDirection: "row",
@@ -519,5 +401,11 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderColor: mergedColors.border,
         marginTop: 16,
+    },
+    label: {
+        fontSize: 14,
+        color: mergedColors.text.secondary,
+        fontWeight: "600",
+        marginBottom: 4,
     },
 });

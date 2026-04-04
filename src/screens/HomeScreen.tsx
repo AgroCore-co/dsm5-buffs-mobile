@@ -1,6 +1,6 @@
 import React, { useState, useEffect} from "react";
-import { View, ScrollView, StyleSheet, RefreshControl, Text, ActivityIndicator } from "react-native";
-import Propriedades from "../components/Dropdown";
+import { View, FlatList, StyleSheet, RefreshControl, Text, ActivityIndicator } from "react-native";
+import Propriedades from "../components/SelectPropriedade";
 import DashPropriedade from "../components/DashPropriedade";
 import { colors } from "../styles/colors";
 import BuffsLogo from '../../assets/images/logoBuffs.svg'; 
@@ -15,7 +15,6 @@ import { NotificacoesButton } from "../components/NotificacoesButton";
 
 export const HomeScreen = () => {
   const { propriedadeSelecionada } = usePropriedade();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [propriedades, setPropriedades] = useState<any[]>([]); 
   const [dashboard, setDashboard] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -83,31 +82,34 @@ export const HomeScreen = () => {
           </View>
       </View>
       <MainLayout>
-        <ScrollView 
-          scrollEnabled={!dropdownOpen} // trava o scroll quando dropdown está aberto
+        <FlatList
+          data={[{}]}
+          keyExtractor={(_, index) => index.toString()}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          >
-          <Propriedades dropdownOpen={dropdownOpen} setDropdownOpen={setDropdownOpen} prop={propriedades}/>
-          {loading || !dashboard ? (
-            <View style={styles.loading}>
-              <BuffaloLoader />
-            </View>
-          ) : (
+          ListHeaderComponent={
             <>
-            <DashPropriedade
-              total={count.bufalosAtivos}
-              machos={countsSex.machos}
-              femeas={countsSex.femeas}
-              bezerros={countsMat.bezerros}
-              novilhas={countsMat.novilhas}
-              vacas={countsMat.vacas}
-              touros={countsMat.touros}
-            />
+              <Propriedades prop={propriedades} />
+              {loading || !dashboard ? (
+                <View style={styles.loading}>
+                  <BuffaloLoader />
+                </View>
+              ) : (
+                <DashPropriedade
+                  total={count.bufalosAtivos}
+                  machos={countsSex.machos}
+                  femeas={countsSex.femeas}
+                  bezerros={countsMat.bezerros}
+                  novilhas={countsMat.novilhas}
+                  vacas={countsMat.vacas}
+                  touros={countsMat.touros}
+                />
+              )}
             </>
-          )}
-        </ScrollView>
+          }
+          renderItem={null}
+        />
       </MainLayout>
     </View>
   );

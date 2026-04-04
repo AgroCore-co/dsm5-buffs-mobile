@@ -159,18 +159,6 @@ export default function AlertasPendentes({
         }
       }}
     >
-      <View
-        style={[
-          styles.priority,
-          {
-            backgroundColor:
-              item.prioridade === "ALTA"
-                ? colors.red.inactive
-                : colors.yellow.warning,
-          },
-        ]}
-      />
-
       <View style={styles.cardContent}>
         <Text style={styles.title}>{item.motivo}</Text>
         <Text style={styles.desc}>{item.observacao}</Text>
@@ -180,7 +168,7 @@ export default function AlertasPendentes({
 
           <View style={styles.date}>
             <CalendarIcon size={14} fill={colors.brown.base} />
-            <Text>{formatarData(item.data_alerta)}</Text>
+            <Text>{formatarData(item.dataAlerta)}</Text>
           </View>
         </View>
 
@@ -258,8 +246,8 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     backgroundColor: colors.white.base,
-    borderRadius: 14,
-    marginBottom: 16,
+    borderRadius: 10,
+    marginBottom: 5,
     borderWidth: 1,
     borderColor: colors.gray.disabled,
     overflow: "hidden",

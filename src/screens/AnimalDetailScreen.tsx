@@ -22,6 +22,7 @@ import { ZootecnicoAddBottomSheet } from "../components/ZootecnicoAddBottomSheet
 import Plus from '../../assets/images/plus.svg';
 import BuffaloLoader from "../components/BufaloLoader";
 import { Portal } from "@gorhom/portal";
+import ArrowLeftIcon from "../icons/arrowLeft";
 
 type RootStackParamList = {
   AnimalDetail: { id: string };
@@ -30,7 +31,7 @@ type RootStackParamList = {
 type NivelMaturidade = 'B' | 'N' | 'V' | 'T';
 
 interface BufaloDetalhes {
-    id_bufalo: string;
+    idBufalo: string;
     nome: string;
     brinco: string;
     sexo: 'F' | 'M';
@@ -134,13 +135,13 @@ export const AnimalDetailScreen = () => {
 
   const handleSaveZootecnico = async (data: any) => {
     console.log("Salvando alterações do registro Zootec:", data);
-    const { id_zootec, ...payload } = data;
-    if (!id_zootec) {
+    const { idZootec, ...payload } = data;
+    if (!idZootec) {
         console.error("ID do registro zootécnico não encontrado.");
         return;
     }
     try {
-        await zootecnicoService.update(id_zootec, payload); 
+        await zootecnicoService.update(idZootec, payload); 
         setSelectedZootec(null); 
         await fetchData(pageZootec, pageSanit);
     } catch (error) {
@@ -148,13 +149,13 @@ export const AnimalDetailScreen = () => {
     }
   };
 
-  const handleDeleteZootecnico = async (id_zootec: any) => {
+  const handleDeleteZootecnico = async (idZootec: any) => {
     try {
-      if (!id_zootec) {
+      if (!idZootec) {
         console.error("ID do registro zootécnico para exclusão não encontrado.");
         return;
       }
-      await zootecnicoService.delete(id_zootec); 
+      await zootecnicoService.delete(idZootec); 
       setSelectedZootec(null); 
       setPageZootec(1);
       await fetchData(1, pageSanit); 
@@ -165,17 +166,20 @@ export const AnimalDetailScreen = () => {
 
   const handleSaveSanitario = async (data: any) => {
     console.log("Salvando alterações do registro Sanit:", data);
-    const { id_sanit, ...payload } = data;
-    if (!id_sanit) {
-        console.error("ID do registro sanitario não encontrado.");
-        return;
+
+    const { idSanit, ...payload } = data;
+
+    if (!idSanit) {
+      console.error("ID do registro sanitario não encontrado.");
+      return;
     }
+
     try {
-        await sanitarioService.update(id_sanit, payload); 
-        setSelectedSanit(null); 
-        await fetchData(pageSanit, pageZootec);
+      await sanitarioService.update(idSanit, payload);
+      setSelectedSanit(null);
+      await fetchData(pageSanit, pageZootec);
     } catch (error) {
-        console.error("Erro ao atualizar histórico Sanitário:", error);
+      console.error("Erro ao atualizar histórico Sanitário:", error);
     }
   };
 
@@ -283,7 +287,7 @@ export const AnimalDetailScreen = () => {
       <View style={styles.header}>
         <View style={{ alignItems: 'center', flexDirection: 'row', alignContent: 'center', marginTop: 20, gap: 60 }}>
           <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <Back width={25} height={25} style={{ margin: 6 }} />
+            <ArrowLeftIcon width={24} height={24} />
           </TouchableOpacity>
           <Text style={styles.header1Text}>Prontuário: {detalhes?.brinco || 'N/A'}</Text>
         </View>
@@ -359,7 +363,7 @@ export const AnimalDetailScreen = () => {
             <ZootecnicoBottomSheet 
                 // A chave força a remontagem quando um NOVO item é selecionado, 
                 // garantindo que o index={0} seja respeitado na montagem.
-                key={selectedZootec.id_zootec}
+                key={selectedZootec.idZootec}
                 item={selectedZootec} 
                 onClose={() => setSelectedZootec(null)} 
                 onEditSave={handleSaveZootecnico}
@@ -378,17 +382,16 @@ export const AnimalDetailScreen = () => {
         />    
         )}
 
+      </MainLayout> 
+
         {!!isEditingInfo && detalhes && (
-          <Portal>
             <AnimalEditBottomSheet 
+              key="edit-info-sheet"
               item={detalhes as BufaloDetalhes} 
               onClose={() => setIsEditingInfo(false)} 
               onEditSave={handleSaveInfo}
             />
-          </Portal>
         )}
-
-      </MainLayout> 
 
       {showAddButton && !isAnyBottomSheetOpen && (
           <View style={styles.addButtonContainer}>
@@ -428,6 +431,7 @@ const styles = StyleSheet.create({
       height: 48,
       justifyContent: "center",
       alignItems: "center",
+      marginTop: 10
     },
     headerArrow: {
       fontSize: 28,

@@ -15,7 +15,7 @@ import Bucket from "../../assets/images/bucket.svg";
 import Truck from "../../assets/images/truck-side.svg";
 import Plus from "../../assets/images/plus.svg";
 
-import { getCiclosLactacao, getIndustriasPorPropriedade } from "../services/lactacaoService";
+import { getCiclosLactacao, getEstatisticasLactacao, getIndustriasPorPropriedade, getProducaoDiariaAtual } from "../services/lactacaoService";
 import { ColetaAddBottomSheet } from "../components/FormColeta";
 import { CardLactacao } from "../components/CardBufaloLactacao";
 import { usePropriedade } from "../context/PropriedadeContext";
@@ -24,7 +24,6 @@ import { LactacaoAddBottomSheet } from "../components/FormLactacao";
 import { FloatingAction } from "react-native-floating-action";
 import { EstoqueAddBottomSheet } from "../components/FormEstoque";
 import BuffaloLoader from "../components/BufaloLoader";
-
 import { formatarDataBR } from "../utils/date";
 
 export interface AnimalLac {
@@ -33,9 +32,8 @@ export interface AnimalLac {
   nome: string;
   diasEmLactacao: number;
   secagemPrevista?: string;
-  ciclo?: number;
+  cicloAtual?: number;
   producaoTotal?: number;
-  mediaDiaria?: number;
   status: string;
   raca?: string;
   idCicloLactacao?: string;
@@ -89,25 +87,50 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
       brinco: c.brinco,
       status: c.status,
       secagemPrevista: c.dtSecagemPrevista,
-      diasEmLactacao: 0,
+      diasEmLactacao: c.diasEmLactacao,
       producaoTotal: 0,
-      mediaDiaria: 0,
-      raca: "—",
+      raca: c.raca,
       idCicloLactacao: c.idCicloLactacao,
+      cicloAtual: c.cicloAtual,
     }));
 
     setAnimais(animaisFormatados);
     setPaginaAtual(meta.page);
     setTotalPaginas(meta.totalPages);
-    setTotalLactando(meta.totalItems);
-
   } catch (error) {
     console.error("Erro ao buscar ciclos:", error);
   } finally {
     setInitialLoading(false);
     setListLoading(false);
   }
-};
+};  
+
+  const fetchProducaoAtual = async () => {
+    if (!propriedadeSelecionada) return;
+
+    try {
+      const { quantidade, dataAtualizacao } =
+        await getProducaoDiariaAtual(propriedadeSelecionada);
+
+      setQuantidadeAtual(quantidade);
+      setDataFormatada(dataAtualizacao);
+    } catch (error) {
+      console.error("Erro ao buscar produção diária:", error);
+    }
+  };
+
+
+  const fetchEstatisticas = async () => {
+    if (!propriedadeSelecionada) return;
+
+    try {
+      const stats = await getEstatisticasLactacao(propriedadeSelecionada);
+
+      setTotalLactando(stats.ciclos_ativos ?? 0);
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas:", error);
+    }
+  };
 
 
   /* =======================
@@ -127,16 +150,24 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
   useEffect(() => {
     if (propriedadeSelecionada) {
       fetchCiclos(1, true);
+      fetchEstatisticas();
+      fetchProducaoAtual();
       fetchIndustrias();
     }
   }, [propriedadeSelecionada]);
 
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchCiclos();
-    await fetchIndustrias();
+    await Promise.all([
+      fetchCiclos(1),
+      fetchEstatisticas(),
+      fetchProducaoAtual(),
+      fetchIndustrias(),
+    ]);
     setRefreshing(false);
   };
+
 
   const animaisPaginados = animais.slice(
     (paginaAtual - 1) * itensPorPagina,

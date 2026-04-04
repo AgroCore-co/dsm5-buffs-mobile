@@ -8,15 +8,14 @@ import { formatarDataBR } from "../../utils/date";
 export const SanitarioCard = ({ item, onDelete, onPress }: any) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
     <View style={styles.iconContainer}>
-      <Sanit width={20} height={20} />
     </View>
 
     {/* Bloco de Texto Principal */}
     <View style={styles.textContainer}>
-      <Text style={styles.textData}>{formatarDataBR(item?.dtAplicacao)}</Text>
+      <Text style={styles.textData}>Registrado em: {formatarDataBR(item?.dtAplicacao)}</Text>
 
       <Text style={styles.textInfoPrincipal} numberOfLines={1}>
-        {item.doenca ?? "Sem diagnóstico"}
+        Ocorrência: {item.doenca ?? "Sem diagnóstico"}
       </Text>
 
       <Text style={styles.textInfoSecundaria} numberOfLines={1}>
@@ -36,7 +35,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white.base,
     padding: 16,
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
@@ -53,8 +52,8 @@ const styles = StyleSheet.create({
     }),
   },
   iconContainer: {
-    width: 48,
-    height: 48,
+    width: 10, 
+    height: 10,
     borderRadius: 24,
     backgroundColor: colors.yellow.base,
     alignItems: "center",

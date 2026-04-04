@@ -19,6 +19,7 @@ import dayjs from "dayjs";
 import DropDownPicker from "react-native-dropdown-picker"; 
 import sanitarioService from "../../services/sanitarioService"; 
 import YellowButton from "../Button"; // Assumindo o componente de botão padrão
+import SelectBottomSheet from "../SelectBottomSheet";
 
 // ==========================================================
 // --- CONFIGURAÇÃO DE CORES (Padrão Unificado) ---
@@ -44,7 +45,6 @@ interface SanitarioPayload {
     doenca?: string;
     necessita_retorno?: boolean;
     dt_retorno?: string;
-    observacao?: string;
 }
 
 interface SanitarioAddBottomSheetProps {
@@ -61,83 +61,8 @@ const initialFormData: Omit<SanitarioPayload, 'id_bufalo'> = {
     doenca: '',
     necessita_retorno: false,
     dt_retorno: undefined,
-    observacao: '',
     id_medicao: undefined,
 };
-
-// ==========================================================
-// --- Componente de Input com Floating Label (UNIFICADO) ---
-// ==========================================================
-interface FloatingLabelInputProps {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    keyboardType?: "default" | "numeric" | "email-address" | "phone-pad" | "url";
-    multiline?: boolean;
-    style?: any; 
-}
-
-const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
-    label, value, onChangeText, keyboardType = "default", multiline = false, style,
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    // Usa 'floatingStylesLocal' e 'styles.inputBase' definidos no final
-    const focusAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.timing(focusAnim, { toValue: 1, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        if (!value) {
-            Animated.timing(focusAnim, { toValue: 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-        }
-    };
-    
-    useEffect(() => {
-        Animated.timing(focusAnim, { toValue: value ? 1 : 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    }, [value]);
-
-    const labelStyle = {
-        top: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [18, -12] }),
-        fontSize: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 12] }),
-        color: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [mergedColors.gray.base, isFocused ? mergedColors.primary.base : mergedColors.gray.base], 
-        }),
-    };
-
-    const borderColor = isFocused ? mergedColors.primary.base : mergedColors.border;
-    
-    return (
-        <View style={[floatingStylesLocal.inputContainer, multiline && floatingStylesLocal.inputContainerMultiline, style]}>
-            <Animated.Text style={[floatingStylesLocal.label, labelStyle]}>
-                {label}
-            </Animated.Text>
-            <TextInput
-                style={[
-                    styles.inputBase, 
-                    { 
-                        borderColor: borderColor, 
-                        height: multiline ? 100 : 50, 
-                        paddingTop: multiline ? 12 : 15,
-                        textAlignVertical: multiline ? 'top' : 'center',
-                    }
-                ]}
-                value={value}
-                onChangeText={onChangeText}
-                keyboardType={keyboardType}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                multiline={multiline}
-                placeholderTextColor="transparent"
-            />
-        </View>
-    );
-};
-// --- Fim Componente de Input com Floating Label ---
 
 
 export const SanitarioAddBottomSheet: React.FC<SanitarioAddBottomSheetProps> = ({ id_bufalo, onAddSave, onClose, propriedadeId}) => {
@@ -225,9 +150,7 @@ export const SanitarioAddBottomSheet: React.FC<SanitarioAddBottomSheetProps> = (
             unidade_medida: formData.unidade_medida,
             doenca: formData.doenca,
             necessita_retorno: formData.necessita_retorno,
-            // Inclui dt_retorno apenas se necessário e preenchido
             dt_retorno: (formData.necessita_retorno && formData.dt_retorno) ? formData.dt_retorno : undefined, 
-            observacao: formData.observacao,
         };
         
         // Remove campos vazios, nulos ou indefinidos do payload
@@ -312,64 +235,63 @@ return (
                 <View style={styles.listContainer}>
 
                     {/* Doença (FLOATING LABEL) */}
-                    <InputWithFloatingLabel
-                        label="Doença (Opcional)"
-                        value={formData.doenca ?? ""}
-                        onChangeText={(t) => handleChange("doenca", t)}
-                    />
+                     <Text style={styles.label}>Doença (Opcional)</Text>
+                     <TextInput
+                         style={styles.inputBase}
+                         value={formData.doenca ?? ""}
+                         onChangeText={(t) => handleChange("doenca", t)}
+                         placeholder="Digite a doenca do animal"/>      
                     
                     {/* Medicação (Dropdown) */}
-                    <View style={styles.dropdownItem}>
-                        <Text style={styles.listLabelDropdown}>Medicação:</Text>
-                        <View style={{ flex: 1, zIndex: openMedicacao ? 4000 : 1 }}>
-                            {loadingMedicacoes ? (
-                                <Text style={styles.listValue}>Carregando medicações...</Text>
-                            ) : (
-                                <DropDownPicker
-                                    open={openMedicacao}
-                                    setOpen={setOpenMedicacao}
-                                    value={medicacaoSelecionada}
-                                    setValue={setMedicacaoSelecionada}
-                                    items={medicacoes}
-                                    placeholder="Selecione a Medicação"
-                                    style={styles.dropdownStyle}
-                                    dropDownContainerStyle={styles.dropdownContainerStyle}
-                                    listMode="MODAL"
-                                    // ZIndex para garantir que ele esteja acima do conteúdo
-                                    zIndex={openMedicacao ? 4000 : 1}
-                                    zIndexInverse={openMedicacao ? 1 : 4000}
-                                />
-                            )}
-                        </View>
-                    </View>
+                        <Text style={styles.dropdownLabel}>Medicação:</Text>
+                        <SelectBottomSheet
+                        items={medicacoes}
+                        value={medicacaoSelecionada}
+                        onChange={(value) => setMedicacaoSelecionada(value)}
+                        title="Selecionar medicação"
+                        placeholder="Selecione medicação"
+                        />
 
                     {/* Dosagem (Campos lado a lado com FLOATING LABEL) */}
                     <View style={styles.dosagemGroup}>
                         {/* Dosagem (Input 1) */}
-                        <InputWithFloatingLabel
-                            label="Dosagem"
-                            value={String(formData.dosagem ?? "")}
-                            onChangeText={(t) => handleChange("dosagem", t)}
-                            keyboardType="numeric"
-                            style={styles.dosagemInput}
-                        />
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.label}>Dosagem</Text>
+                            <TextInput
+                                style={styles.inputBase}
+                                value={String(formData.dosagem ?? "")}
+                                onChangeText={(t) => handleChange("dosagem", t)}
+                                keyboardType="numeric"
+                                placeholder="Digite a dosagem aplicada"/>    
+                        </View>
                         {/* Unidade de Medida (Input 2) */}
-                        <InputWithFloatingLabel
-                            label="Unidade Md."
+                        <View style={{ flex: 1 }}>
+                        <Text style={styles.label}>Unidade Md.</Text>
+                        <TextInput
+                            style={styles.inputBase}
                             value={formData.unidade_medida ?? ""}
                             onChangeText={(t) => handleChange("unidade_medida", t)}
-                            style={styles.unidadeInput}
-                        />
+                            placeholder="Digite a unidade de medida"/>  
+                        </View>
                     </View>
 
                     {/* Necessita retorno (SWITCH ESTILIZADO) */}
-                    <View style={styles.switchItem}>
-                        <Text style={styles.listLabel}>Necessita retorno:</Text>
+                    <View style={[
+                        styles.switchContainer,
+                        formData.necessita_retorno && styles.switchActive
+                    ]}>
+                        <Text style={styles.switchText}>
+                            Necessita retorno
+                        </Text>
+
                         <Switch
                             value={Boolean(formData.necessita_retorno)}
                             onValueChange={(v) => handleChange("necessita_retorno", v)}
-                            thumbColor={mergedColors.white.base}
-                            trackColor={{ false: mergedColors.border, true: mergedColors.primary.base }}
+                            thumbColor="#FFF"
+                            trackColor={{
+                                false: "#E5E7EB",
+                                true: mergedColors.primary.base
+                            }}
                         />
                     </View>
 
@@ -388,15 +310,6 @@ return (
                         </TouchableOpacity>
                       </View>
                     )}
-
-                    {/* Observação (FLOATING LABEL e multiline) */}
-                    <InputWithFloatingLabel
-                        label="Observação (Opcional)"
-                        value={formData.observacao ?? ""}
-                        onChangeText={(t) => handleChange("observacao", t)}
-                        multiline={true}
-                        style={styles.observacaoInput}
-                    />
                 </View>
 
                 {/* Footer (Botão de ação) */}
@@ -428,28 +341,6 @@ return (
   </BottomSheet>
 )};
 
-// ==========================================================
-// --- ESTILOS UNIFICADOS (Baseados no seu padrão) ---
-// ==========================================================
-// Estilos de suporte para o Floating Label
-const floatingStylesLocal = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12, 
-        paddingTop: 8, 
-        position: "relative",
-    },
-    inputContainerMultiline: {
-        height: 120, 
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: mergedColors.white.base, 
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-});
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
@@ -492,10 +383,12 @@ const styles = StyleSheet.create({
         borderColor: mergedColors.border,
         borderRadius: 8,
         paddingHorizontal: 12,
+        marginTop: 5,
+        marginBottom: 12,
         fontSize: 16,
         color: mergedColors.text.primary,
         backgroundColor: mergedColors.white.base,
-        minHeight: 50,
+        minHeight: 50, // Adicionado para garantir altura mínima
     },
 
     // --- Estilos da Lista e Itens ---
@@ -505,7 +398,9 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         padding: 16,
         overflow: "visible",
+        zIndex: 100, // ZIndex para garantir que o floating label apareça
     },
+
     listContainerHeader: { // Para o item de data fora do listContainer principal (Data Aplicação)
         backgroundColor: mergedColors.white.base,
         borderRadius: 16,
@@ -566,7 +461,7 @@ const styles = StyleSheet.create({
     // --- Dosagem Group (Campos Lado a Lado) ---
     dosagemGroup: {
         flexDirection: "row",
-        gap: 16,
+        gap: 10,
         marginBottom: 12,
     },
     dosagemInput: {
@@ -617,7 +512,7 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderColor: mergedColors.border,
         marginTop: 16,
-        backgroundColor: mergedColors.white.base,
+
     },
     footerBtn: {
         // Estilos do botão replicados para quando o YellowButton não é usado diretamente
@@ -635,5 +530,38 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: mergedColors.text.primary,
         fontSize: 16,
+    },
+    label: {
+        fontSize: 14,
+        color: mergedColors.text.secondary,
+        fontWeight: "600",
+        marginBottom: 4,
+    },
+    dropdownLabel: {
+        fontSize: 14,
+        color: mergedColors.text.secondary,
+        fontWeight: "600",
+        marginBottom: 4,
+    },
+    switchContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: 14,
+        borderRadius: 12,
+        backgroundColor: "#F9FAFB",
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+    },
+
+    switchActive: {
+        backgroundColor: "#FFF8E1",
+        borderColor: mergedColors.primary.base,
+    },
+
+    switchText: {
+        fontSize: 16,
+        color: mergedColors.text.primary,
     },
 });
