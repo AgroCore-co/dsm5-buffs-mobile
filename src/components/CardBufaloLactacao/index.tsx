@@ -15,7 +15,6 @@ export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress, onS
   const isLactando = animal.status === "Em Lactação";
   const [isEnabled, setIsEnabled] = useState(isLactando);
   const [modalVisible, setModalVisible] = useState(false);
-  console.log("Animal no CardLactacao:", animal);
   const toggleSwitch = () => {
     setModalVisible(true);
   };
@@ -59,7 +58,7 @@ export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress, onS
           <Switch
             value={isEnabled}
             onValueChange={toggleSwitch}
-            trackColor={{ false: colors.gray.claro, true: colors.gray.claro }}
+            trackColor={{ false: colors.gray.disabled, true: colors.gray.disabled }}
             thumbColor={isEnabled ? colors.green.extra : colors.red.extra}
           />
         </View>
@@ -155,12 +154,13 @@ const styles = StyleSheet.create({
   },
   chipLabel: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: '700', 
     color: "#374151",
     marginRight: 4,
   },
   chipValue: {
     fontSize: 13,
+    fontWeight: '500', 
     color: "#374151",
   },
   footer: {
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 16,
+    borderRadius: 12,
     minHeight: 40,
     gap: 4,
     alignSelf: "flex-start", // 👈 evita esticar

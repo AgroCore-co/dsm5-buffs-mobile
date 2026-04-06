@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors } from "../../styles/colors";
+import TextTitle from "../TextTitle";
 
 interface DashLactationProps {
   totalArmazenado: number; // quantidade de leite total produzido
@@ -16,32 +17,35 @@ export default function DashLactation({
   return (
     <View style={styles.card}>
       {/* Título */}
-      <Text style={styles.title}>Resumo da Produção de Leite</Text>
+      <View style={styles.header}>
+        <TextTitle>Resumo da Produção de Leite</TextTitle>
+      </View>
 
       {/* Linha principal */}
       <View style={styles.row}>
         {/* Total Produzido */}
         <View style={styles.infoBox}>
-          <Text style={styles.label}>Total Produzido</Text>
-          <Text style={styles.value}>{totalArmazenado} Litros</Text>
+          <Text style={styles.label}>TOTAL PRODUZIDO</Text>
+          <Text style={styles.value}>{totalArmazenado} LITROS</Text>
         </View>
 
         {/* Vacas em Lactação */}
         <View style={[styles.infoBox, styles.borderbox]}>
-          <Text style={styles.label}>Vacas em Lactação</Text>
-          <Text style={styles.value}>{vacasLactando} Vacas</Text>
+          <Text style={styles.label}>VACAS EM LACTAÇÃO</Text>
+          <Text style={styles.value}>{vacasLactando} VACAS</Text>
         </View>
       </View>
 
       {/* Rodapé */}
-      <Text style={styles.footerText}>
-        Última Atualização: {dataAtualizacao}
-      </Text>
+      <Text style={styles.footerText}>Última Atualização: {dataAtualizacao}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  header: {
+    marginBottom: 10,
+  },
   card: {
     flex: 1, 
     padding: 16, 
@@ -61,9 +65,9 @@ const styles = StyleSheet.create({
     zIndex: 1000
   },
   title: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: colors.brown.base,
     marginBottom: 12,
   },
   row: {
@@ -80,14 +84,15 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.gray.base,
     marginBottom: 4,
+    fontWeight: '600',
   },
   value: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.black.base,
+    fontSize: 20,
+    fontWeight: "500",
+    color: colors.brown.base,
   },
   footerText: {
     fontSize: 11,

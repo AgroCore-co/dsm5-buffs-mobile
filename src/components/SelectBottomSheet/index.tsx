@@ -5,6 +5,8 @@ import {
   BottomSheetView,
   BottomSheetBackdrop 
 } from "@gorhom/bottom-sheet";
+import { colors } from "../../styles/colors";
+import ArrowBackIcon from "../../../assets/images/arrow-back.svg";
 
 interface Item {
   label: string;
@@ -28,9 +30,9 @@ export default function SelectBottomSheet({
 }: Props) {
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const snapPoints = useMemo(() => ["30%", "50%"], []);
-
+    const safeItems = items ?? [];
     const open = useCallback(() => {
-        bottomSheetRef.current?.present();
+      bottomSheetRef.current?.present();
     }, []);
 
     const close = useCallback(() => {
@@ -42,12 +44,12 @@ export default function SelectBottomSheet({
 
       const normalizedValue = value.trim().toUpperCase();
 
-      const found = items.find(
+      const found = safeItems.find(
         (i) => i.value.trim().toUpperCase() === normalizedValue
       );
 
       return found?.label || placeholder;
-    }, [value, items, placeholder]);
+    }, [value, safeItems, placeholder]);
 
     const renderBackdrop = useCallback(
         (props: any) => (
@@ -65,6 +67,7 @@ return (
     <View> 
         <TouchableOpacity onPress={open} style={styles.input}>
             <Text style={styles.inputText}>{selectedLabel}</Text>
+              <ArrowBackIcon style={styles.icon} width={40} height={20}/>
         </TouchableOpacity>
         <BottomSheetModal
             ref={bottomSheetRef}
@@ -73,12 +76,17 @@ return (
             snapPoints={snapPoints}
             backdropComponent={renderBackdrop}
             enablePanDownToClose={true}
-            backgroundStyle={{ backgroundColor: "#fff" }}>
+            backgroundStyle={{ backgroundColor: colors.white.base }}>
             <BottomSheetView style={styles.sheetContainer}>
                 <Text style={styles.title}>{title}</Text>
                 <FlatList
-                    data={items}
-                    keyExtractor={(item) => item.value}
+                  data={safeItems}
+                  keyExtractor={(item) => item.value}
+                  ListEmptyComponent={
+                    <Text style={{ textAlign: "center", marginTop: 20 }}>
+                      Nenhuma opção disponível
+                    </Text>
+                  }
                     renderItem={({ item }) => {
                       const isSelected = item.value === value;
 
@@ -110,22 +118,28 @@ const styles = StyleSheet.create({
     height: 50,
     borderWidth: 1,
     borderRadius: 12,
-    justifyContent: "center",
+    flexDirection: "row",          // 👈 IMPORTANTE
+    alignItems: "center",          // 👈 centraliza vertical
+    justifyContent: "space-between", // 👈 separa texto e ícone
     paddingHorizontal: 12,
-    backgroundColor: "#fff",
-    borderColor: "#ccc",
+    backgroundColor: colors.white.base,
+    borderColor: colors.gray.disabled,
+  },
+  icon: {
+    transform: [{ rotate: "270deg" }], // vira dropdown
+    opacity: 0.6,
   },
   inputText: {
     fontSize: 16,
   },
   sheetContainer: {
     flex: 1,
-    padding: 16,
+    padding: 2,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 12,
+    margin: 12,
   },
   item: {
     padding: 16,
@@ -136,9 +150,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   itemSelected: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: colors.yellow.warning,
   },
   itemTextSelected: {
     fontWeight: "bold",
+    color: colors.brown.base,
   },
 });

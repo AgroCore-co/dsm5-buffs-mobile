@@ -7,22 +7,26 @@ import {
   Platform // Importamos o Platform para o 'shadow'
 } from "react-native";
 import { colors } from "../../styles/colors"; 
-import Zootec from "../../../assets/images/statistics.svg"
 import { formatarDataBR } from "../../utils/date";
+import Calendar from '../../../assets/images/calendar-clock.svg';
 
 
 export const ZootecnicoCard = ({ item, onDelete, onPress }: any) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
-    <View style={styles.iconContainer}>
-    </View>
+    <View style={styles.iconContainer}/>
 
     {/* Bloco de Texto Principal */}
     <View style={styles.textContainer}>
-      <Text style={styles.textData}>Registrado em: {formatarDataBR(item?.dtRegistro)}</Text>
-      <Text style={styles.textInfoPrincipal} numberOfLines={1}>Peso: {item.peso} kg | Condição Coporal: {item.condicaoCorporal}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 5}}>
+        <Calendar width={12} height={12} fill={colors.brown.base} style={{marginTop: 2}}/>
+        <Text style={styles.textData}>
+          DATA REGISTRO: {formatarDataBR(item?.dtRegistro)}
+        </Text>
+      </View>
+      <Text style={styles.textInfoPrincipal} numberOfLines={1}>PESO: {item.peso} kg | PORTE: {item.porteCorporal} </Text>
       
       <Text style={styles.textInfoSecundaria} numberOfLines={1}>
-        Pelagem: {item.corPelagem} | Porte: {item.porteCorporal} | Tipo: {item.tipoPesagem}
+        PELAGEM: {item.corPelagem} | CC: {item.condicaoCorporal} | TIPO: {item.tipoPesagem}
       </Text>
     </View>
   </TouchableOpacity>
@@ -50,8 +54,8 @@ const styles = StyleSheet.create({
     }),
   },
   iconContainer: {
-    width: 10, 
-    height: 10,
+    width: 20, 
+    height: 5,
     borderRadius: 24,
     backgroundColor: colors.yellow.base,
     alignItems: "center",
@@ -64,19 +68,23 @@ const styles = StyleSheet.create({
     gap: 4, 
   },
   textData: {
-    fontSize: 16, 
-    fontWeight: "bold", 
-    color: colors.black.base
+    fontSize: 14, 
+    fontWeight: '700', 
+    color: colors.brown.base
   },
   textInfoPrincipal: {
-    fontSize: 14, 
-    fontWeight: "500", 
-    color: colors.black.base
+    fontSize: 13, 
+    fontWeight: '500', 
+    color: colors.brown.base,
+    textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   textInfoSecundaria: {
     fontSize: 12, 
-    fontWeight: "400", 
-    color: colors.gray.text
+    fontWeight: '400', 
+    color: colors.gray.text,
+    textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   deleteButton: {
     flexShrink: 0,
@@ -84,8 +92,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   deleteText: {
-    color: "#E53E3E",
+    color: colors.red.base,
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 });

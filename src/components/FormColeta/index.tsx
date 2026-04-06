@@ -23,6 +23,7 @@ import { colors } from "../../styles/colors";
 import { DatePickerModal } from "../DatePickerModal"; 
 import YellowButton from "../Button"; 
 import { Industria, ColetaRegistroPayload, registrarColetaApi } from "../../services/lactacaoService"; 
+import SelectBottomSheet from "../SelectBottomSheet";
 
 // ------------------------------------------------------------------
 // --- PROPS E INTERFACES ---
@@ -35,14 +36,6 @@ interface ColetaAddBottomSheetProps {
   propriedadeId: string | number; // O ID da propriedade (assumido string/number)
 }
 
-interface FloatingLabelInputProps {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    keyboardType?: "default" | "numeric" | "email-address" | "phone-pad" | "url";
-    multiline?: boolean;
-    style?: any; 
-}
 
 const defaultColors = {
     primary: { base: "#FAC638" }, 
@@ -52,98 +45,6 @@ const defaultColors = {
     white: { base: "#FFF" }
 };
 const mergedColors = { ...defaultColors, ...colors };
-
-const floatingStyles = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12, 
-        paddingTop: 8, 
-        position: "relative",
-    },
-    inputContainerMultiline: {
-        height: 120, 
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: mergedColors.white.base, 
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-});
-// --------------------------------------------------
-
-const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
-    label,
-    value,
-    onChangeText,
-    keyboardType = "default",
-    multiline = false,
-    style,
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const focusAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.timing(focusAnim, { toValue: 1, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        if (!value) {
-            Animated.timing(focusAnim, { toValue: 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-        }
-    };
-    
-    useEffect(() => {
-        Animated.timing(focusAnim, { toValue: value ? 1 : 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    }, [value]);
-
-    const labelStyle = {
-        top: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [18, -12], 
-        }),
-        fontSize: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [16, 12],
-        }),
-        color: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ["#6B7280", isFocused ? (mergedColors.primary.base || "#FAC638") : "#6B7280"], 
-        }),
-    };
-
-    const borderColor = isFocused ? (mergedColors.primary.base || "#FAC638") : (mergedColors.border || "#E5E7EB");
-    
-    return (
-        <View style={[floatingStyles.inputContainer, multiline && floatingStyles.inputContainerMultiline, style]}>
-            <Animated.Text style={[floatingStyles.label, labelStyle]}>
-                {label}
-            </Animated.Text>
-            <TextInput
-                style={[
-                    styles.inputBase, 
-                    { 
-                        borderColor: borderColor, 
-                        height: multiline ? 100 : 50, 
-                        paddingTop: multiline ? 12 : 15,
-                        textAlignVertical: multiline ? 'top' : 'center',
-                    }
-                ]}
-                value={value}
-                onChangeText={onChangeText}
-                keyboardType={keyboardType}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                multiline={multiline}
-                placeholderTextColor="transparent"
-            />
-        </View>
-    );
-};
-// ------------------------------------------------------------------
 
 export const ColetaAddBottomSheet: React.FC<
   ColetaAddBottomSheetProps
@@ -250,34 +151,30 @@ export const ColetaAddBottomSheet: React.FC<
         <Text style={styles.sectionTitle}>Dados da Coleta</Text>
 
         <View style={styles.listContainer}>
+          <View style={{ marginBottom: 12 }}>
             {/* Dropdown de Indústrias */}
-            <View style={styles.dropdownItem}>
-                <Text style={styles.listLabelDropdown}>Indústria:</Text>
-                <DropDownPicker
-                    open={openIndustria}
-                    value={idIndustria}
-                    items={industriaItems}
-                    setOpen={setOpenIndustria}
-                    setValue={setIdIndustria}
-                    placeholder="Selecione a Indústria"
-                    style={styles.dropdownStyle}
-                    containerStyle={{ flex: 1, zIndex: 3000 }} 
-                    listMode="SCROLLVIEW"
-                    dropDownContainerStyle={styles.dropdownContainerStyle}
+            <Text style={styles.label}>Indústria:</Text>
+            <SelectBottomSheet
+                items={industriaItems}
+                value={idIndustria}
+                onChange={(value) => setIdIndustria(value)}
+                title="Selecionar Industria"
+                placeholder="Selecione uma indústria"
                 />
-            </View>
+          </View>
             
             {/* Quantidade */}
-            <InputWithFloatingLabel
-                label="Quantidade Coletada (L)"
+            <Text style={styles.label}>Quantidade Coletada (L)</Text>
+            <TextInput
+                style={styles.inputBase}
                 value={quantidade}
                 onChangeText={setQuantidade}
                 keyboardType="numeric"
-            />
+                placeholder="Digite a quantidade coletada (L)"/>
             
             {/* Data da Coleta */}
             <View style={styles.dateFieldContainer}>
-                <Text style={styles.listLabel}>Data Coleta:</Text>
+                <Text style={styles.label}>Data Coleta:</Text>
                 <TouchableOpacity 
                     onPress={() => setShowDatePicker(true)}
                     style={styles.dateDisplayButton}
@@ -290,7 +187,7 @@ export const ColetaAddBottomSheet: React.FC<
 
             {/* Resultado do Teste (RÁDIO BUTTONS) */}
             <View style={styles.radioGroupContainer}>
-                <Text style={styles.listLabel}>Resultado do Teste:</Text>
+                <Text style={styles.label}>Resultado do Teste:</Text>
                 <View style={styles.radioGroupRow}>
                     {[
                         { label: 'Aprovado', value: true },
@@ -313,14 +210,13 @@ export const ColetaAddBottomSheet: React.FC<
             </View>
 
             {/* Observação */}
-            <InputWithFloatingLabel
-                label="Observações (Opcional)"
+            <Text style={styles.label}>Observações (Opcional)</Text>
+            <TextInput
+                style={styles.inputBase}
                 value={observacao}
                 onChangeText={setObservacao}
                 multiline={true}
-                style={styles.observacaoInput}
-            />
-
+                placeholder="Digite as observações (opcional)"/>
         </View>  
 
         {/* Footer (Botão de ação) */}
@@ -385,14 +281,15 @@ const styles = StyleSheet.create({
     },
     // Estilo base do input, usado pelo Floating Label
     inputBase: {
-        width: "100%",
+        height: 50,
         borderWidth: 1,
+        borderRadius: 12,
+        justifyContent: "center",
         borderColor: mergedColors.border,
-        borderRadius: 8,
         paddingHorizontal: 12,
         fontSize: 16,
         color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: mergedColors.white.base
     },
 
     // --- Estilos da Lista e Itens ---
@@ -434,8 +331,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         paddingVertical: 12,
-        marginBottom: 12,
-        borderTopWidth: 1,
+        marginVertical: 12,
         borderTopColor: mergedColors.border,
     },
     dateDisplayButton: {
@@ -537,5 +433,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#111827",
     fontWeight: "600",
+  },
+  label: {
+    fontSize: 14,
+    color: mergedColors.text.secondary,
+    fontWeight: "600",
+    marginBottom: 4,
   },
 });

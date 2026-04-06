@@ -10,8 +10,6 @@ import bufaloService from "../services/bufaloService";
 import zootecnicoService from "../services/zootecnicoService";
 import sanitarioService from "../services/sanitarioService";
 import { MainLayout } from "../layouts/MainLayout";
-import Back from '../../assets/images/arrow.svg';
-import AgroCore from '../../src/icons/agroCore'; 
 import Button from "../components/Button";
 import { ZootecnicoBottomSheet } from "../components/ZootecnicoBottomSheet"; 
 import { SanitarioBottomSheet } from "../components/SanitarioBottomSheet";
@@ -21,8 +19,8 @@ import { SanitarioAddBottomSheet } from "../components/SanitarioAddBottomSheet";
 import { ZootecnicoAddBottomSheet } from "../components/ZootecnicoAddBottomSheet";
 import Plus from '../../assets/images/plus.svg';
 import BuffaloLoader from "../components/BufaloLoader";
-import { Portal } from "@gorhom/portal";
 import ArrowLeftIcon from "../icons/arrowLeft";
+import { piqueteService } from "../services/piqueteService";
 
 type RootStackParamList = {
   AnimalDetail: { id: string };
@@ -45,8 +43,8 @@ interface BufaloDetalhes {
 }
 
 interface Grupo {
-    id_grupo: string; // Tipo conforme o grupoService/API
-    nome_grupo: string; // Tipo conforme o grupoService/API
+    id_grupo: string; 
+    nome_grupo: string; 
     color: string;
 }
 
@@ -96,8 +94,14 @@ export const AnimalDetailScreen = () => {
       const sanitResp = await sanitarioService.getHistorico(id, pageSanitToLoad, PAGE_SIZE);
       setTotalPagesSanit(sanitResp.meta?.totalPages ?? 1);
 
+      const lotes = await piqueteService.getAll(base.idPropriedade);
+      const loteDoAnimal = lotes.find(
+        (lote) => lote.idGrupo === base.idGrupo
+      );
+
       setDetalhes({
         ...base,
+        coords: loteDoAnimal || [],
         dadosZootecnicos: zootResp.data || [],
         dadosSanitarios: sanitResp.data || [],
       });
@@ -285,7 +289,7 @@ export const AnimalDetailScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={{ alignItems: 'center', flexDirection: 'row', alignContent: 'center', marginTop: 20, gap: 60 }}>
+        <View style={{ alignItems: 'center', flexDirection: 'row', alignContent: 'center', marginTop: 10, gap: 40 }}>
           <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
             <ArrowLeftIcon width={24} height={24} />
           </TouchableOpacity>
@@ -306,7 +310,7 @@ export const AnimalDetailScreen = () => {
 
         <View style={styles.cardContainer}>
           
-          {tab === "info" && detalhes && <AnimalInfoCard detalhes={detalhes} onEdit={() => setIsEditingInfo(true)} />}
+          {tab === "info" && detalhes && <AnimalInfoCard detalhes={detalhes} onEdit={() => setIsEditingInfo(true)} onRefresh={fetchData} />}
           
           {tab === "zootec" && (
             <FlatList
@@ -427,26 +431,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray.disabled 
   },
   headerButton: {
-      width: 48,
-      height: 48,
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: 10
-    },
-    headerArrow: {
-      fontSize: 28,
-      fontWeight: '300',
-      color: colors.brown.base,
-    },
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10
+  },
+  headerArrow: {
+    fontSize: 28,
+    fontWeight: '300',
+    color: colors.brown.base,
+  },
   cardContainer: {
-    borderTopWidth: 2, 
-    borderColor: colors.gray.disabled, 
     paddingTop: 16, 
     marginTop: 10,
     flex: 1
   },
   header: { 
-    height: 80, 
+    height: 60, 
     backgroundColor: colors.yellow.base, 
     justifyContent: 'center', 
     paddingLeft: 16 

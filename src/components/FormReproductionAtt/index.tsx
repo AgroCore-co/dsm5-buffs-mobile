@@ -5,8 +5,6 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Animated,
-  Easing,
   Platform as RNPlatform,
   ToastAndroid,
   Alert,
@@ -21,6 +19,7 @@ import { usePropriedade } from "../../context/PropriedadeContext";
 import { colors } from "../../styles/colors";
 import { updateReproducao, ReproducaoUpdatePayload, createCicloLactacao, registrarParto } from "../../services/reproducaoService";
 import YellowButton from "../Button";
+import SelectBottomSheet from "../SelectBottomSheet";
 
 // Configuração de cores (Inalterado)
 const defaultColors = {
@@ -32,120 +31,6 @@ const defaultColors = {
     red: { base: "#EF4444" }
 };
 const mergedColors = { ...defaultColors, ...colors };
-
-// ==========================================================
-// --- FLOATING LABEL INPUT COMPONENT (Inalterado) ---
-// ==========================================================
-
-interface FloatingLabelInputProps {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    editable?: boolean;
-    style?: any; 
-}
-
-const floatingStyles = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12, 
-        paddingTop: 8, 
-        position: "relative",
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: mergedColors.white.base, 
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-    inputBase: {
-        width: "100%",
-        borderWidth: 1,
-        borderColor: mergedColors.border,
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
-        height: 50, 
-        paddingTop: 15,
-        textAlignVertical: 'center',
-    },
-});
-
-const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
-    label,
-    value,
-    onChangeText,
-    editable = true,
-    style,
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const focusAnim = useRef(new Animated.Value(value ? 1 : 0)).current; 
-
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.timing(focusAnim, { toValue: 1, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        if (!value) {
-            Animated.timing(focusAnim, { toValue: 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-        }
-    };
-    
-    useEffect(() => {
-        Animated.timing(focusAnim, { toValue: value ? 1 : 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    }, [value]);
-
-    const labelStyle = {
-        top: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [18, -12], 
-        }),
-        fontSize: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [16, 12],
-        }),
-        color: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [mergedColors.gray.base, isFocused ? mergedColors.primary.base : mergedColors.gray.base], 
-        }),
-    };
-
-    const borderColor = isFocused ? mergedColors.primary.base : mergedColors.border;
-    const backgroundColor = editable ? mergedColors.white.base : mergedColors.gray.claro;
-    
-    return (
-        <View style={[floatingStyles.inputContainer, style]}>
-            <Animated.Text style={[floatingStyles.label, labelStyle]}>
-                {label}
-            </Animated.Text>
-            <TextInput
-                style={[
-                    floatingStyles.inputBase, 
-                    { 
-                        borderColor: borderColor, 
-                        backgroundColor: backgroundColor,
-                        color: editable ? mergedColors.text.primary : mergedColors.gray.base,
-                    }
-                ]}
-                value={value}
-                onChangeText={onChangeText}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                editable={editable}
-                placeholderTextColor="transparent"
-            />
-        </View>
-    );
-};
-
-// ==========================================================
-// --- COMPONENTE PRINCIPAL (BOTTOM SHEET) ---
-// ==========================================================
 
 interface ReproducaoAttBottomSheetProps {
   initialData: any;
@@ -185,10 +70,7 @@ export const ReproducaoAttBottomSheet: React.FC<
     { label: "Aborto", value: "Aborto" },
   ], []);
 
-  // ⚠️ Removida a variável isTipoPartoDisabled
-
   const handleChange = (field: "status" | "tipo_parto", value: string) => {
-    // ⚠️ Removida a lógica de limpeza/cheque de regra de negócio
     setForm({ ...form, [field]: value });
   };
 
@@ -243,7 +125,6 @@ export const ReproducaoAttBottomSheet: React.FC<
         return;
       }
 
-      // 🟡 DEMAIS STATUS (PATCH)
       await updateReproducao(reproducaoId, {
         status: form.status,
       });
@@ -293,45 +174,34 @@ export const ReproducaoAttBottomSheet: React.FC<
         <View style={styles.listContainer}>
             
             {/* Campo Não Editável: Data do Evento */}
-            <InputWithFloatingLabel
-                label="Data do Evento"
+            <Text style={styles.label}>Data do Evento</Text>
+            <TextInput
+                style={[styles.inputBase, styles.inputDisabled]}
                 value={initialData?.dtEvento || "-"}
                 onChangeText={() => {}}
-                editable={false}
-            />
-            
+                editable={false}/>
+         
             {/* Dropdown Status (Inalterado) */}
             <View style={{ zIndex: zIndexStatus, marginBottom: 12 }}>
-                <Text style={styles.dropdownLabel}>Status:</Text>
-                <DropDownPicker
-                    open={openStatus}
-                    value={form.status}
+                <Text style={styles.label}>Status:</Text>
+                <SelectBottomSheet
                     items={statusItems}
-                    setOpen={setOpenStatus}
-                    setValue={(val: any) => handleChange("status", val())}
+                    value={form.status}
+                    onChange={(val: any) => handleChange("status", val)}
+                    title="Selecione o Status"
                     placeholder="Selecione o Status"
-                    style={styles.dropdownStyle}
-                    containerStyle={styles.dropdownContainerStyle} 
-                    dropDownContainerStyle={styles.dropdownContainerStyle}
-                    listMode="SCROLLVIEW"
                 />
             </View>
 
             {/* Dropdown Tipo de Parto (Removida a lógica de desabilitação) */}
             <View style={{ zIndex: zIndexParto, marginBottom: 12 }}>
-                <Text style={styles.dropdownLabel}>Tipo Parto:</Text>
-                <DropDownPicker
-                    open={openParto}
-                    value={form.tipo_parto}
+                <Text style={styles.label}>Tipo Parto:</Text>
+                <SelectBottomSheet
                     items={partoItems}
-                    setOpen={setOpenParto}
-                    setValue={(val: any) => handleChange("tipo_parto", val())}
+                    value={form.tipo_parto}
+                    onChange={(val: any) => handleChange("tipo_parto", val)}
+                    title="Selecione o Tipo de Parto"
                     placeholder="Selecione o Tipo de Parto"
-                    style={styles.dropdownStyle}
-                    containerStyle={styles.dropdownContainerStyle} 
-                    dropDownContainerStyle={styles.dropdownContainerStyle}
-                    listMode="SCROLLVIEW"
-                    // ⚠️ Removido o disabled={isTipoPartoDisabled}
                 />
             </View>
             
@@ -344,7 +214,6 @@ export const ReproducaoAttBottomSheet: React.FC<
             </TouchableOpacity>
             <YellowButton title="Salvar" onPress={handleSave} />
         </View>
-
       </BottomSheetScrollView>
     </BottomSheet>
   );
@@ -433,4 +302,26 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 16,
     },
+    label: {
+      fontSize: 14,
+      color: mergedColors.text.secondary,
+      fontWeight: "600",
+      marginBottom: 4,
+    },
+    inputBase: {
+      height: 50,
+      borderWidth: 1,
+      borderRadius: 12,
+      justifyContent: "center",
+      borderColor: mergedColors.border,
+      paddingHorizontal: 12,
+      fontSize: 16,
+      color: mergedColors.text.primary,
+      backgroundColor: mergedColors.white.base,
+      marginBottom: 12
+    },
+    inputDisabled: {
+        backgroundColor: "#f5f5f5",
+        color: "#777",
+    },  
 });

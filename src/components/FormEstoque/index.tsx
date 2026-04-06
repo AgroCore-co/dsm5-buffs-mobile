@@ -35,91 +35,15 @@ interface EstoqueAddBottomSheetProps {
   onClose: () => void;
   propriedadeId: string | number;
 }
-
-// ------------------------------------------------------------------
-// --- Componente de Input com Floating Label (REPLICADO PARA FUNCIONAR) ---
-// Você pode remover esta seção e importar se tiver o componente InputWithFloatingLabel em outro arquivo.
-// --- Definições de Cores e Estilos para o Input ---
 const defaultColors = {
-    primary: { base: "#FAC638" }, 
+    primary: { base: "#FAC638" },
     gray: { base: "#6B7280", claro: "#F8F7F5" },
     text: { primary: "#111827", secondary: "#4B5563" },
     border: "#E5E7EB",
     white: { base: "#FFF" }
 };
+
 const mergedColors = { ...defaultColors, ...colors };
-
-interface FloatingLabelInputProps {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    keyboardType?: "default" | "numeric" | "email-address" | "phone-pad" | "url";
-    multiline?: boolean;
-    style?: any; 
-}
-// OBSERVAÇÃO: É necessário ter os estilos `floatingStyles` e `styles.inputBase` definidos 
-// para o InputWithFloatingLabel funcionar. Eles estão no final do componente.
-const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
-    label, value, onChangeText, keyboardType = "default", multiline = false, style,
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const focusAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.timing(focusAnim, { toValue: 1, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        if (!value) {
-            Animated.timing(focusAnim, { toValue: 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-        }
-    };
-    
-    useEffect(() => {
-        Animated.timing(focusAnim, { toValue: value ? 1 : 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    }, [value]);
-
-    const labelStyle = {
-        top: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [18, -12] }),
-        fontSize: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 12] }),
-        color: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ["#6B7280", isFocused ? (mergedColors.primary.base || "#FAC638") : "#6B7280"], 
-        }),
-    };
-
-    const borderColor = isFocused ? (mergedColors.primary.base || "#FAC638") : (mergedColors.border || "#E5E7EB");
-    
-    return (
-        <View style={[floatingStyles.inputContainer, multiline && floatingStyles.inputContainerMultiline, style]}>
-            <Animated.Text style={[floatingStyles.label, labelStyle]}>
-                {label}
-            </Animated.Text>
-            <TextInput
-                style={[
-                    styles.inputBase, 
-                    { 
-                        borderColor: borderColor, 
-                        height: multiline ? 100 : 50, 
-                        paddingTop: multiline ? 12 : 15,
-                        textAlignVertical: multiline ? 'top' : 'center',
-                    }
-                ]}
-                value={value}
-                onChangeText={onChangeText}
-                keyboardType={keyboardType}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                multiline={multiline}
-                placeholderTextColor="transparent"
-            />
-        </View>
-    );
-};
-// ------------------------------------------------------------------
-
 
 export const EstoqueAddBottomSheet: React.FC<
   EstoqueAddBottomSheetProps
@@ -226,13 +150,14 @@ export const EstoqueAddBottomSheet: React.FC<
 
         <View style={styles.listContainer}>
             {/* Quantidade (FLOATING LABEL) */}
-            <InputWithFloatingLabel
-                label="Quantidade de Leite (Litros)"
+            <Text style={styles.label}>Quantidade de Leite (Litros)</Text>
+            <TextInput
+                style={styles.inputBase}
                 value={quantidade}
                 onChangeText={setQuantidade}
                 keyboardType="numeric"
-            />
-            
+                placeholder="Digite a quantidade de leite no estoque"/>
+           
             {/* Data do Registro */}
             <View style={styles.dateFieldContainer}>
                 <Text style={styles.listLabel}>Data Registro:</Text>
@@ -247,14 +172,13 @@ export const EstoqueAddBottomSheet: React.FC<
             </View>
 
             {/* Observação (FLOATING LABEL e multiline) */}
-            <InputWithFloatingLabel
-                label="Observações (Opcional)"
+            <Text style={styles.label}>Observações (Opcional)</Text>
+            <TextInput
+                style={styles.inputBase}
                 value={observacao}
                 onChangeText={setObservacao}
                 multiline={true}
-                style={styles.observacaoInput}
-            />
-
+                placeholder="Digite as observações (opcional)"/>
         </View>  
 
         {/* Footer (Botão de ação) */}
@@ -279,28 +203,6 @@ export const EstoqueAddBottomSheet: React.FC<
     </BottomSheet>
   );
 };
-
-// ------------------------------------------------------------------
-// --- ESTILOS UNIFICADOS (Baseados no seu exemplo Sanitario) ---
-// ------------------------------------------------------------------
-const floatingStyles = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12, 
-        paddingTop: 8, 
-        position: "relative",
-    },
-    inputContainerMultiline: {
-        height: 120, 
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: mergedColors.white.base, 
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-});
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
@@ -421,5 +323,11 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: mergedColors.text.primary,
         fontSize: 16,
+    },
+    label: {
+        fontSize: 14,
+        color: mergedColors.text.secondary,
+        fontWeight: "600",
+        marginBottom: 4,
     },
 });

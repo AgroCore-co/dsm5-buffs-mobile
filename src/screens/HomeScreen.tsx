@@ -71,13 +71,13 @@ export const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-          <View style={{alignItems: 'center'}}>
-            <BuffsLogo width={90} height={90} />
+          <View style={{alignItems: 'center', top: -5}}>
+            <BuffsLogo width={100} height={100} />
           </View>
-          <View style={{position: 'absolute', right: 60, top: 30}}>
+          <View style={{position: 'absolute', right: 60, top: 10}}>
             <UserMenu />
           </View>
-          <View style={{position: 'absolute', left: 70, top: 0}}>
+          <View style={{position: 'absolute', left: 70, top: -20}}>
             <NotificacoesButton />
           </View>
       </View>
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#222'
   },
   header: {
-    height: 80,
+    height: 60,
     backgroundColor: colors.yellow.base,
     justifyContent: 'center',
     paddingLeft: 16,

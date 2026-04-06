@@ -1,6 +1,7 @@
 import { apiFetch } from "../lib/apiClient";
 
 export interface Piquete {
+  idGrupo: any;
   id: string;
   nome: string;
   coords: { latitude: number; longitude: number }[];
@@ -10,15 +11,15 @@ export interface Piquete {
 }
 
 export interface NovoPiqueteDTO {
-  nome_lote: string;
-  id_propriedade: string;
-  id_grupo: string;
-  tipo_lote: string; 
+  nomeLote: string;
+  idPropriedade: string;
+  idGrupo: string;
+  tipoLote: string; 
   status: string;   
   descricao?: string;
-  qtd_max: number;
-  area_m2: number;
-  geo_mapa: {
+  qtdMax: number;
+  areaM2: number;
+  geoMapa: {
     type: "Polygon";
     coordinates: number[][][];
   };
@@ -30,16 +31,17 @@ export const piqueteService = {
 
     return response.map((item: any) => {
       const coords =
-        item.geo_mapa?.coordinates?.[0]?.map((c: number[]) => ({
+        item.geoMapa?.coordinates?.[0]?.map((c: number[]) => ({
           latitude: c[1],
           longitude: c[0],
         })) ?? [];
 
       return {
-        id: item.id_lote,
-        nome: item.nome_lote,
+        id: item.idLote,
+        nome: item.nomeLote,
         coords,
-        grupoNome: item.grupo?.nome_grupo ?? "",
+        idGrupo: item.grupo?.idGrupo ?? null,
+        grupoNome: item.grupo?.nomeGrupo ?? "",
         grupoCor: item.grupo?.color ?? "#000000", // fallback para preto
       } as Piquete;
     });
@@ -47,12 +49,12 @@ export const piqueteService = {
   async create(novoPiquete: NovoPiqueteDTO): Promise<Piquete> {
       const body = {
         ...novoPiquete,
-        geo_mapa: {
+        geoMapa: {
           type: "Polygon",
           coordinates: [
             [
-              ...novoPiquete.geo_mapa.coordinates[0],
-              novoPiquete.geo_mapa.coordinates[0][0],
+              ...novoPiquete.geoMapa.coordinates[0],
+              novoPiquete.geoMapa.coordinates[0][0],
             ],
           ],
         },
@@ -64,16 +66,16 @@ export const piqueteService = {
       });
 
       const coords =
-        response.geo_mapa?.coordinates?.[0]?.map((c: number[]) => ({
+        response.geoMapa?.coordinates?.[0]?.map((c: number[]) => ({
           latitude: c[1],
           longitude: c[0],
         })) ?? [];
 
       return {
-        id: response.id_lote,
-        nome: response.nome_lote,
+        id: response.idLote,
+        nome: response.nomeLote,
         coords,
-        grupoNome: response.grupo?.nome_grupo ?? "",
+        grupoNome: response.grupo?.nomeGrupo ?? "",
         grupoCor: response.grupo?.color ?? "#000000",
         color: response.grupo?.color ?? "#000000",
       } as Piquete;

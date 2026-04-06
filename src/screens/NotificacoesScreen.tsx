@@ -59,7 +59,7 @@ export const NotificacoesScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#222",
+    backgroundColor: colors.brown.base,
   },
 
   header: {

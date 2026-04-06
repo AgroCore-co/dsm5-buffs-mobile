@@ -4,7 +4,8 @@ export const colors = {
         button: "#FFCF78",
         dark: "#F2B84D",
         static: "#F59E0B",
-        warning: "#fae39dff"
+        warning: "#fae39dff",
+        fundo: "#fae39d4b"
     },
     white: {
         base: "#FFF"

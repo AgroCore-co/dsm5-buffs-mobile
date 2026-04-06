@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, FlatList } from 'react-native';
 import { MainLayout } from '../layouts/MainLayout';
 import { useDimensions } from '../utils/useDimensions';
 import { colors } from '../styles/colors';
@@ -21,6 +21,7 @@ export const PiquetesScreen = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { location: currentLocation, loading: gpsLoading, error: gpsError } = useGpsLocation();
   const { propriedadeSelecionada } = usePropriedade();
+
   useEffect(() => {
     const fetchPiquetes = async () => {
       try {
@@ -36,6 +37,8 @@ export const PiquetesScreen = () => {
 
     fetchPiquetes();
   }, []);
+
+  
   
   const onRefresh = async () => {
     setRefreshing(true);
@@ -50,10 +53,11 @@ export const PiquetesScreen = () => {
     setIsSheetOpen(true);
   };
 
-const handleCloseSheet = () => {
-    setIsSheetOpen(false);
-    onRefresh(); 
-  };
+  const handleCloseSheet = () => {
+      setIsSheetOpen(false);
+      onRefresh(); 
+    };
+
 
   if (loading) {
     return (
@@ -62,68 +66,80 @@ const handleCloseSheet = () => {
       </View>
     );
   }
+  
 
-  return (
-    <View style={styles.container}>
-      {/* Header */}
+return (
+  <View style={styles.container}>
       <View style={styles.header}>
-        <View style={{ alignItems: 'center' }}>
-          <Text style={styles.header1Text}>Lotes/Piquetes</Text>
-        </View>
+        <Text style={styles.header1Text}>PIQUETES</Text>
       </View>
-
       <MainLayout>
-          <ScrollView style={{ flex: 1, top: 30 }} refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+        <FlatList
+          data={[{ key: 'map' }]} // fake data
+          keyExtractor={(item) => item.key}
+          renderItem={() => (
             <MapLeaflet
               piquetes={piquetes.map(p => ({
                 ...p,
                 color: p.grupoCor,
-              }))} currentLocation={currentLocation}            />
-            <TouchableOpacity 
-                onPress={handleOpenSheet} // Chamando a função para abrir
-                style={{
-                  position: 'absolute',
-                  bottom: 20,
-                  right: 16,
-                  backgroundColor: colors.yellow.dark,
-                  borderRadius: 30,
-                  paddingHorizontal: 20,
-                  height: 65,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 4,
-                  elevation: 5
-              }}>
-            <Plus width={24} height={24} />
+              }))}
+              currentLocation={currentLocation}
+            />
+          )}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }
+        />
+
+        {/* FAB */}
+        {!isSheetOpen && (
+          <TouchableOpacity 
+            onPress={handleOpenSheet}
+            style={styles.fab}
+          >
+            <Text style={styles.buttonText}>
+              ADICIONAR NOVO PIQUETE
+            </Text>
           </TouchableOpacity>
-          </ScrollView>
-        {isSheetOpen && propriedadeSelecionada && (<DemarcacaoPiqueteSheet onClose={handleCloseSheet} propriedadeId={propriedadeSelecionada} />)}
+        )}
+
+        {/* SHEET */}
+        {isSheetOpen && propriedadeSelecionada && (
+          <DemarcacaoPiqueteSheet 
+            onClose={handleCloseSheet} 
+            propriedadeId={propriedadeSelecionada} 
+          />
+        )}
       </MainLayout>
-    </View>
-  );
+  </View>
+);
 };
 
 const styles = StyleSheet.create({
   header: {
-    height: 80,
+    height: 60,
     backgroundColor: colors.yellow.base,
     justifyContent: 'center',
-    paddingLeft: 16,
+  },
+  header1Text: {
+    marginTop: 10,
+    fontSize: 25,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: colors.brown.base,
+  },
+  buttonText: {
+    fontSize: 12,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: colors.brown.base,
   },
   button: {
     backgroundColor: colors.yellow.dark,
     borderRadius: 50,
-  },
-  header1Text: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 30,
-    color: colors.brown.base,
   },
   headerButtons: {
     marginTop: 25,
@@ -149,5 +165,28 @@ const styles = StyleSheet.create({
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center" 
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    height: 80,
+    backgroundColor: colors.yellow.base,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    backgroundColor: colors.yellow.base,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 5,
+    zIndex: 10,
   },
 });

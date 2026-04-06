@@ -13,7 +13,7 @@ interface Grupo {
     color: string;
 }
 
-export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: () => void }) => {
+export const AnimalInfoCard = ({ detalhes, onEdit, onRefresh }: { detalhes: any, onEdit: () => void, onRefresh: () => void }) => {
     
     const maturidadeMap: Record<string, string> = {
         B: "Bezerro", N: "Novilha", T: "Touro", V: "Vaca",
@@ -63,6 +63,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
             setGrupoAtualId(idGrupoParaMudar);
             setNovoGrupoSelecionado(idGrupoParaMudar);
             Alert.alert("Sucesso", `Movido para o grupo "${nomeGrupoParaMudar}"!`);
+            onRefresh();
         } catch (error) {
             console.error("Erro ao alterar grupo:", error);
             Alert.alert("Erro", "Não foi possível alterar o grupo. Tente novamente.");
@@ -108,7 +109,6 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
     const cancelarAlteracao = () => {
         setModalVisible(false);
     };
-
     return (
         <>
             <View style={styles.infoCard}>
@@ -140,7 +140,7 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
                                 {isEnabled ? 'Ativo' : 'Inativo'}
                             </Text>
                             <Switch
-                                trackColor={{ false: colors.gray.claro, true: colors.gray.claro }}
+                                trackColor={{ false: colors.gray.disabled, true: colors.gray.disabled }}
                                 thumbColor={isEnabled ? colors.green.extra : colors.red.extra}
                                 onValueChange={toggleSwitch}
                                 value={isEnabled} />
@@ -151,34 +151,44 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
                 <View style={styles.infoGrid}>
                     <View style={styles.Row}>
                         <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>Nascimento</Text>
+                            <Text style={styles.infoLabel}>DT. NASCIMENTO</Text>
                             <Text style={styles.infoValue}>{formatarDataBR(detalhes?.dtNascimento)}</Text>
                         </View>
                         <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>Maturidade</Text>
+                            <Text style={styles.infoLabel}>MATURIDADE</Text>
                             <Text style={styles.infoValue}>{maturidadeTexto ?? '-'}</Text>
                         </View>
-                    </View>
-
+                    </View>       
                     <View style={styles.Row}>
                         <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>Sexo</Text>
+                            <Text style={styles.infoLabel}>SEXO</Text>
                             <Text style={styles.infoValue}>{detalhes?.sexo === 'F' ? 'Fêmea' : 'Macho'}</Text>
                         </View>
                         <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>Origem</Text>
+                            <Text style={styles.infoLabel}>ORIGEM</Text>
                             <Text style={styles.infoValue}>{detalhes?.origem ?? '-'}</Text>
                         </View>
                     </View>
 
                     <View style={styles.Row}>
                         <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>Raça</Text>
+                            <Text style={styles.infoLabel}>RAÇA</Text>
                             <Text style={styles.infoValue}>{detalhes?.racaNome ?? '-'}</Text>
                         </View>
-                        
+                    </View>
+                    <View style={styles.Row}>
                         <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>Grupo</Text>
+                            <Text style={styles.infoLabel}>PAI</Text>
+                            <Text style={styles.infoValue}>{detalhes?.paiNome ?? '-'}</Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>MÃE</Text>
+                            <Text style={styles.infoValue}>{detalhes?.maeNome ?? '-'}</Text>
+                        </View>
+                    </View>
+                    <View style={[styles.Row, { marginTop: 30 }]}>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>GRUPO</Text>
                             <SelectBottomSheet
                                 items={grupoItems}
                                 value={novoGrupoSelecionado}
@@ -187,16 +197,9 @@ export const AnimalInfoCard = ({ detalhes, onEdit }: { detalhes: any, onEdit: ()
                                 placeholder={detalhes?.grupo?.nomeGrupo || "Sem grupo"}
                             />
                         </View>
-                    </View>
-
-                    <View style={styles.Row}>
                         <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>Pai</Text>
-                            <Text style={styles.infoValue}>{detalhes?.paiNome ?? '-'}</Text>
-                        </View>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>Mãe</Text>
-                            <Text style={styles.infoValue}>{detalhes?.maeNome ?? '-'}</Text>
+                            <Text style={styles.infoLabel}>LOCALIZAÇÃO</Text>
+                            <Text style={styles.infoValue2}>{detalhes?.coords?.nome || '-'}</Text>
                         </View>
                     </View>
                 </View>
@@ -299,11 +302,25 @@ const styles = StyleSheet.create({
         fontSize: 12, 
         color: '#6B7280',
         marginBottom: 4,
+        fontWeight: '500',
+    },
+    subtitle: { 
+        fontSize: 14, 
+        color: colors.gray.base,
+        marginBottom: 4,
+        fontWeight: '600',
     },
     infoValue: { 
         fontSize: 14, 
         fontWeight: '500', 
-        color: '#1A1A1A', 
+        color: colors.brown.base, 
+    },
+    infoValue2: { 
+        fontSize: 16, 
+        marginTop: 12,
+        marginLeft: 4,
+        fontWeight: '500', 
+        color: colors.brown.base, 
     },
     editButton: {
         padding: 5,

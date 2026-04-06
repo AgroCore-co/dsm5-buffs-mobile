@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native
 import { colors } from "../../styles/colors";
 import Sanit from "../../../assets/images/termometro.svg";
 import { formatarDataBR } from "../../utils/date";
+import Calendar from '../../../assets/images/calendar-clock.svg';
 
 
 export const SanitarioCard = ({ item, onDelete, onPress }: any) => (
@@ -12,19 +13,28 @@ export const SanitarioCard = ({ item, onDelete, onPress }: any) => (
 
     {/* Bloco de Texto Principal */}
     <View style={styles.textContainer}>
-      <Text style={styles.textData}>Registrado em: {formatarDataBR(item?.dtAplicacao)}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6}}>
+        <Text style={styles.textData}>
+          {item.doenca ?? "Sem diagnóstico"} |
+        </Text>
 
+        <Calendar width={12} height={12} fill={colors.brown.base} />
+
+        <Text style={styles.textData}>
+          {formatarDataBR(item?.dtAplicacao)}
+        </Text>
+      </View>
       <Text style={styles.textInfoPrincipal} numberOfLines={1}>
-        Ocorrência: {item.doenca ?? "Sem diagnóstico"}
+        MEDICAÇÃO: {item.nome_medicamento ?? "-"}
       </Text>
 
       <Text style={styles.textInfoSecundaria} numberOfLines={1}>
-        Medicação: {item.nome_medicamento ?? "-"} | Dosagem:{" "}
+        DOSAGEM:{" "}
         {item.dosagem ? `${item.dosagem} ${item.unidadeMedida}` : "-"}
       </Text>
 
       <Text style={styles.textInfoSecundaria} numberOfLines={1}>
-        Retorno: {item.necessitaRetorno ? "Sim" : "Não"}
+        RETORNO? - {item.necessitaRetorno ? "Sim" : "Não"}
       </Text>
     </View>
   </TouchableOpacity>
@@ -52,8 +62,8 @@ const styles = StyleSheet.create({
     }),
   },
   iconContainer: {
-    width: 10, 
-    height: 10,
+    width: 20, 
+    height: 5,
     borderRadius: 24,
     backgroundColor: colors.yellow.base,
     alignItems: "center",
@@ -66,19 +76,23 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   textData: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: colors.black.base,
+    fontSize: 14, 
+    fontWeight: '700', 
+    color: colors.brown.base,
+    textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   textInfoPrincipal: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: colors.black.base,
+    fontSize: 13, 
+    fontWeight: '500', 
+    color: colors.brown.base
   },
   textInfoSecundaria: {
-    fontSize: 12,
-    fontWeight: "400",
+    fontSize: 12, 
+    fontWeight: '400', 
     color: colors.gray.text,
+    textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   deleteButton: {
     flexShrink: 0,
@@ -86,8 +100,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   deleteText: {
-    color: "#E53E3E",
+    color: colors.red.base,
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 });

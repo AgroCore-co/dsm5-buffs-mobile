@@ -72,7 +72,7 @@ function MainTab() {
 
         // --- BARRA DE ABAS (TAB BAR) ---
         tabBarStyle: {
-          height: Platform.OS === "ios" ? 85 : 85,
+          height: Platform.OS === "ios" ? 85 : 70,
           paddingBottom: Platform.OS === "ios" ? 10 : 5,
           paddingTop: 5,
         },
@@ -87,7 +87,7 @@ function MainTab() {
         // --- CORES ATIVAS / INATIVAS ---
         tabBarActiveTintColor: colors.yellow.dark,
         tabBarInactiveTintColor: "gray",
-
+        tabBarHideOnKeyboard: true,
       }}>
       <Tab.Screen 
         name="Home" 

@@ -24,7 +24,6 @@ import { LactacaoAddBottomSheet } from "../components/FormLactacao";
 import { FloatingAction } from "react-native-floating-action";
 import { EstoqueAddBottomSheet } from "../components/FormEstoque";
 import BuffaloLoader from "../components/BufaloLoader";
-import { formatarDataBR } from "../utils/date";
 
 export interface AnimalLac {
   id: string;
@@ -207,7 +206,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Lactação</Text>
+        <Text style={styles.headerText}>LACTAÇÃO</Text>
       </View>
 
       <MainLayout>
@@ -287,7 +286,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
         actions={actions}
         onPressItem={handleActionPress}
         buttonSize={60}
-        color={colors.yellow.dark}
+        color={colors.yellow.base}
         floatingIcon={<Plus width={24} height={24} />}
       />
 
@@ -327,15 +326,15 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    height: 80,
+    height: 60,
     backgroundColor: colors.yellow.base,
     justifyContent: "center",
     alignItems: "center",
   },
   headerText: {
-    marginTop: 30,
-    fontSize: 20,
-    fontWeight: "bold",
+    marginTop: 10,
+    fontSize: 25,
+    fontWeight: "900", 
     color: colors.brown.base,
   },
   loadingContainer: {

@@ -38,94 +38,6 @@ interface LactacaoAddBottomSheetProps {
   propriedadeId: any;
 }
 
-// ------------------------------------------------------------------
-// --- Componente de Input com Floating Label (REPLICADO) ---
-// ------------------------------------------------------------------
-interface FloatingLabelInputProps {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    keyboardType?: "default" | "numeric" | "email-address" | "phone-pad" | "url";
-    multiline?: boolean;
-    style?: any; 
-}
-
-const InputWithFloatingLabel: React.FC<FloatingLabelInputProps> = ({
-    label,
-    value,
-    onChangeText,
-    keyboardType = "default",
-    multiline = false,
-    style,
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const focusAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.timing(focusAnim, { toValue: 1, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        if (!value) {
-            Animated.timing(focusAnim, { toValue: 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-        }
-    };
-    
-    useEffect(() => {
-        Animated.timing(focusAnim, { toValue: value ? 1 : 0, duration: 200, easing: Easing.bezier(0.4, 0.0, 0.2, 1), useNativeDriver: false }).start();
-    }, [value]);
-
-    const labelStyle = {
-        top: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [18, -12], 
-        }),
-        fontSize: focusAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [16, 12],
-        }),
-        color: focusAnim.interpolate({
-            inputRange: [0, 1],
-            // Usando a cor de destaque amarela
-            outputRange: ["#6B7280", isFocused ? (mergedColors.primary.base || "#FAC638") : "#6B7280"], 
-        }),
-    };
-
-    const borderColor = isFocused ? (mergedColors.primary.base || "#FAC638") : (mergedColors.border || "#E5E7EB");
-    
-    return (
-        <View style={[floatingStyles.inputContainer, multiline && floatingStyles.inputContainerMultiline, style]}>
-            <Animated.Text style={[floatingStyles.label, labelStyle]}>
-                {label}
-            </Animated.Text>
-            <TextInput
-                style={[
-                    styles.inputBase, 
-                    { 
-                        borderColor: borderColor, 
-                        height: multiline ? 100 : 50, 
-                        paddingTop: multiline ? 12 : 15,
-                        textAlignVertical: multiline ? 'top' : 'center',
-                    }
-                ]}
-                value={value}
-                onChangeText={onChangeText}
-                keyboardType={keyboardType}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                multiline={multiline}
-                placeholderTextColor="transparent"
-            />
-        </View>
-    );
-};
-// ------------------------------------------------------------------
-// --- Fim Componente de Input com Floating Label ---
-// ------------------------------------------------------------------
-
-
 export const LactacaoAddBottomSheet: React.FC<
   LactacaoAddBottomSheetProps
 > = ({ animais, onSuccess, onClose, propriedadeId }) => {
@@ -189,7 +101,6 @@ export const LactacaoAddBottomSheet: React.FC<
             dt_ordenha: dayjs(dtOrdenha).toISOString(), 
           };
 
-          // 🛑 SUBSTITUIR FUNÇÃO SIMULADA PELA REAL:
           await registrarLactacaoApi(payload); 
           
           showToast("Lactação registrada com sucesso!");
@@ -234,7 +145,7 @@ export const LactacaoAddBottomSheet: React.FC<
 
         {/* Informação da Búfala */}
         <View style={styles.listContainerHeader}>
-            <Text style={styles.listLabel}>Búfala:</Text>
+            <Text style={styles.listLabel}>BRINCO BÚFALA:</Text>
             <Text style={styles.dateDisplayValue}>
                 {animais[0].brinco}
             </Text>
@@ -244,12 +155,13 @@ export const LactacaoAddBottomSheet: React.FC<
 
         <View style={styles.listContainer}>
             {/* Quantidade de Ordenha (FLOATING LABEL) */}
-            <InputWithFloatingLabel
-                label="Quantidade de Ordenha (L)"
-                value={qtOrdenha}
-                onChangeText={setQtOrdenha}
-                keyboardType="numeric"
-            />
+            <Text style={styles.label}>Quantidade de Ordenha (L)</Text>
+            <TextInput
+              style={styles.inputBase}
+              value={qtOrdenha}
+              onChangeText={setQtOrdenha}
+              keyboardType="numeric"
+              placeholder="Digite a quantidade ordenhada"/> 
 
           {/* Período */}
           <View style={styles.radioGroupContainer}>
@@ -290,14 +202,13 @@ export const LactacaoAddBottomSheet: React.FC<
             </View>
 
             {/* Ocorrência (FLOATING LABEL e multiline) */}
-            <InputWithFloatingLabel
-                label="Ocorrência (Opcional)"
-                value={ocorrencia}
-                onChangeText={setOcorrencia}
-                multiline={true}
-                style={styles.observacaoInput}
-            />
-
+            <Text style={styles.label}>Ocorrência (Opcional)</Text>
+            <TextInput
+              style={styles.inputBase}
+              value={ocorrencia}
+              onChangeText={setOcorrencia}
+              multiline={true}
+              placeholder="Digite alguma observação"/> 
         </View>  
 
         {/* Footer (Botão de ação) */}
@@ -332,24 +243,7 @@ const defaultColors = {
 };
 const mergedColors = { ...defaultColors, ...colors };
 
-const floatingStyles = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 12, 
-        paddingTop: 8, 
-        position: "relative",
-    },
-    inputContainerMultiline: {
-        height: 120, 
-    },
-    label: {
-        position: "absolute",
-        left: 12,
-        backgroundColor: "#FFFFFF", 
-        paddingHorizontal: 4,
-        zIndex: 1,
-        fontWeight: "400",
-    },
-});
+
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
@@ -387,10 +281,11 @@ const styles = StyleSheet.create({
     },
     // Estilo base do input, usado pelo Floating Label
     inputBase: {
-        width: "100%",
+        height: 50,
         borderWidth: 1,
+        borderRadius: 12,
+        justifyContent: "center",
         borderColor: mergedColors.border,
-        borderRadius: 8,
         paddingHorizontal: 12,
         fontSize: 16,
         color: mergedColors.text.primary,
@@ -499,6 +394,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     radioGroupContainer: {
+        marginTop: 16,
         marginBottom: 16,
         paddingTop: 8,
         borderTopWidth: 1, // Adiciona separador acima, se necessário (ou remova)
@@ -538,5 +434,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#111827",
     fontWeight: "600",
+  },
+  label: {
+    fontSize: 14,
+    color: mergedColors.text.secondary,
+    fontWeight: "600",
+    marginBottom: 4,
   },
 });

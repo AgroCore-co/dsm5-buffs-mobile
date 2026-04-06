@@ -42,6 +42,9 @@ export const ReproducaoScreen = () => {
 
   const itensPorPagina = 10;
 
+  const isAnyBottomSheetOpen =
+    isAddBottomSheetVisible || isAttBottomSheetVisible;
+
   const [dashboardStats, setDashboardStats] =
     useState<ReproducaoDashboardStats>({
       totalEmAndamento: 0,
@@ -114,7 +117,7 @@ export const ReproducaoScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.header1Text}>Reprodução</Text>
+        <Text style={styles.header1Text}>REPRODUÇÃO</Text>
       </View>
 
       <MainLayout>
@@ -204,15 +207,17 @@ export const ReproducaoScreen = () => {
       </MainLayout>
 
       {/* FAB */}
-      <TouchableOpacity
-        onPress={() => {
-          setReproducaoSelecionada(null);
-          setIsAddBottomSheetVisible(true);
-        }}
-        style={styles.fabButtonContainer}
-      >
-        <Plus width={24} height={24} color="#FFF" />
-      </TouchableOpacity>
+      {!isAnyBottomSheetOpen && (
+        <TouchableOpacity
+          onPress={() => {
+            setReproducaoSelecionada(null);
+            setIsAddBottomSheetVisible(true);
+          }}
+          style={styles.fabButtonContainer}
+        >
+          <Plus width={24} height={24} color="#FFF" />
+        </TouchableOpacity>
+      )}
 
       {isAddBottomSheetVisible && (
         <ReproducaoAddBottomSheet
@@ -245,16 +250,16 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 
   header: {
-    height: 80,
+    height: 60,
     backgroundColor: colors.yellow.base,
     justifyContent: 'center',
   },
 
   header1Text: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    marginTop: 10,
+    fontSize: 25,
+    fontWeight: '900',
     textAlign: 'center',
-    marginTop: 30,
     color: colors.brown.base,
   },
 
@@ -279,7 +284,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.yellow.dark,
+    backgroundColor: colors.yellow.base,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,

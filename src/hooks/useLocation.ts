@@ -40,34 +40,58 @@ export const useGpsLocation = () => {
     };
 
     useEffect(() => {
-        const watchId = Geolocation.watchPosition(
-            (position) => {
-                setLocation({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                });
-                setLoading(false);
-                setError(null);
-            },
-            (err) => {
-                console.error(err);
-                setError("Não foi possível obter a localização. Verifique o GPS.");
-                setLoading(false);
-            },
-            {
-                enableHighAccuracy: true, 
-                distanceFilter: 5,
-                interval: 3000,
-                fastestInterval: 1000,
-            }
-        );
+        let watchId: number;
 
-        requestLocationPermission().then(granted => {
+        const startLocation = async () => {
+            const granted = await requestLocationPermission();
+
             if (!granted) {
                 setError("Permissão de localização negada.");
                 setLoading(false);
+                return;
             }
-        });
+
+            // localização rápida (imediata)
+            Geolocation.getCurrentPosition(
+                (position) => {
+                    setLocation({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                    setLoading(false);
+                },
+                (err) => {
+                    console.log("Erro inicial:", err);
+                },
+                {
+                    enableHighAccuracy: false,
+                    timeout: 5000,
+                    maximumAge: 10000,
+                }
+            );
+
+            watchId = Geolocation.watchPosition(
+                (position) => {
+                    setLocation({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                    setError(null);
+                },
+                (err) => {
+                    console.error(err);
+                    setError("Não foi possível obter a localização.");
+                },
+                {
+                    enableHighAccuracy: true,
+                    distanceFilter: 5,
+                    interval: 3000,
+                    fastestInterval: 1000,
+                }
+            );
+        };
+
+        startLocation();
 
         return () => {
             if (watchId) {

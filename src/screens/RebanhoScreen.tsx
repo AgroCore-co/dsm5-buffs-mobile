@@ -202,7 +202,7 @@ export const RebanhoScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={{ alignItems: 'center' }}>
-          <Text style={styles.header1Text}>Rebanho</Text>
+          <Text style={styles.header1Text}>REBANHO</Text>
         </View>
       </View>
 
@@ -311,7 +311,7 @@ export const RebanhoScreen = () => {
         actions={actions}
         onPressItem={handleActionPress}
         buttonSize={60}
-        color={colors.yellow.dark} 
+        color={colors.yellow.base} 
         floatingIcon={<Plus width={24} height={24} fill={'black'} />} 
         position="right" 
       />
@@ -367,16 +367,16 @@ const styles = StyleSheet.create({
     flex: 1, 
    },
   header: { 
-    height: 80, 
+    height: 60, 
     backgroundColor: colors.yellow.base, 
     justifyContent: 'center', 
     paddingLeft: 16 
   },
   header1Text: { 
-    fontSize: 20, 
-    fontWeight: "bold", 
+    marginTop: 10,
+    fontSize: 25,
+    fontWeight: "900", 
     textAlign: "center", 
-    marginTop: 30, 
     color: colors.brown.base 
   },
   headerButtons: { 

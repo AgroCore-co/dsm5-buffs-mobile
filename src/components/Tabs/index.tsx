@@ -42,8 +42,8 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    borderTopStartRadius: 10,
-    borderTopEndRadius: 10,
+    borderRadius: 10,
+    height: 50,
     backgroundColor: colors.white.base,
   },
   tabButton: {
@@ -56,7 +56,8 @@ const styles = StyleSheet.create({
     borderColor: colors.yellow.base,
   },
   tabText: {
-    fontSize: 14,
+    top: 5,
+    fontSize: 16,
     fontWeight: "600",
   },
   activeText: {

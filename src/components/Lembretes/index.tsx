@@ -24,6 +24,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NavigatorScreenParams } from "@react-navigation/native";
+import { ConfirmModal } from "../ModalStatus";
 
 type MainTabParamList = {
   Home: undefined;
@@ -180,7 +181,7 @@ export default function AlertasPendentes({
               setModalVisible(true);
             }}
           >
-            <Text style={styles.resolveText}>Marcar como visto</Text>
+            <Text style={styles.resolveText}>MARCAR COMO VISTO</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -189,24 +190,16 @@ export default function AlertasPendentes({
 
   return (
     <View style={{ flex: 1 }}>
-      <Modal visible={modalVisible} onClose={() => setModalVisible(false)}>
-        <View style={styles.modal}>
-          <Text style={styles.modalTitle}>Resolver alerta?</Text>
-          <Text style={styles.modalDesc}>
-            {alertaSelecionado?.motivo}
-          </Text>
-
-          <View style={styles.modalActions}>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text>Cancelar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={confirmarVisto}>
-              <Text style={{ fontWeight: "700" }}>Confirmar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <ConfirmModal
+        visible={modalVisible}
+        title="Resolver alerta?"
+        message={alertaSelecionado?.motivo || ""}
+        onConfirm={confirmarVisto}
+        onCancel={() => setModalVisible(false)}
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+        variant="success"
+      />
 
       <View style={styles.tabs}>
         <Tabs
@@ -262,7 +255,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   tag: {
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.yellow.warning,
     paddingHorizontal: 10,
     borderRadius: 10,
     fontSize: 11,
@@ -271,12 +264,14 @@ const styles = StyleSheet.create({
   date: { flexDirection: "row", alignItems: "center", gap: 4 },
   resolve: {
     marginTop: 14,
-    backgroundColor: "#22c55e",
+    backgroundColor: colors.yellow.base,
     paddingVertical: 8,
     borderRadius: 10,
     alignItems: "center",
+    width: '90%',
+    alignSelf: 'center'
   },
-  resolveText: { color: "white", fontWeight: "600" },
+  resolveText: { color: colors.brown.base, fontWeight: "700" },
   modal: { backgroundColor: "white", padding: 20, borderRadius: 16 },
   modalTitle: { fontSize: 16, fontWeight: "700", textAlign: "center" },
   modalDesc: { textAlign: "center", color: colors.gray.base },

@@ -22,24 +22,25 @@ export default function DashReproduction({
       {/* Cabeçalho */}
       <View style={styles.header}>
         <TextTitle>Resumo das Reprodução</TextTitle>
-        <Text style={styles.subtitle}>Última atualização: {formatarDataBR(ultimaData)}</Text>
       </View>
 
       {/* Primeira linha */}
       <View style={styles.row}>
-        <View style={[styles.item, { borderBottomWidth: 0.2 }]}>
+        <View style={styles.item}>
           <Text style={styles.value}>{emProcesso}</Text>
-          <Text style={styles.label}>Em Processo</Text>
+          <Text style={styles.label}>EM PROCESSO</Text>
         </View>
-        <View style={[styles.item, { borderBottomWidth: 0.2 }]}>
+        <View style={styles.item}>
           <Text style={styles.value}>{confirmadas}</Text>
-          <Text style={styles.label}>Sucesso</Text>
+          <Text style={styles.label}>SUCESSO</Text>
         </View>
-        <View style={[styles.item, { borderBottomWidth: 0.2 }]}>
+        <View style={styles.item}>
           <Text style={styles.value}>{falhas}</Text>
-          <Text style={styles.label}>Falhas</Text>
+          <Text style={styles.label}>FALHAS</Text>
         </View>
       </View>
+      
+      <Text style={styles.footerText}>Última atualização: {formatarDataBR(ultimaData)}</Text>
     </View>
   );
 }
@@ -78,8 +79,8 @@ const styles = StyleSheet.create({
   item: { 
     alignItems: "center", 
     flex: 1,
-    borderRightWidth: 0.2,
-    borderLeftWidth: 0.2,
+    borderRightWidth: 1,
+    borderLeftWidth: 1,
     borderColor: colors.gray.disabled,
   },
   value: { 
@@ -89,6 +90,13 @@ const styles = StyleSheet.create({
   },
   label: { 
     fontSize: 12, 
-    color: colors.gray.base 
+    color: colors.gray.base,
+    marginBottom: 4,
+    fontWeight: '600',
+  },
+  footerText: {
+    fontSize: 11,
+    color: colors.gray.base,
+    textAlign: "right",
   },
 });
