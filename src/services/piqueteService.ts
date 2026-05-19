@@ -3,13 +3,16 @@ import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
 
 export interface Piquete {
-  idGrupo: any;
+  idGrupo: string | null;
   id: string;
   nome: string;
   coords: { latitude: number; longitude: number }[];
   grupoNome: string;
   grupoCor: string;
   color: string;
+  areaM2?: number;
+  tipoLote?: string;
+  status?: string;
 }
 
 export interface NovoPiqueteDTO {
@@ -19,9 +22,9 @@ export interface NovoPiqueteDTO {
   tipoLote: string;
   status: string;
   descricao?: string;
-  qtdMax: number;
-  areaM2: number;
-  geoMapa: {
+  qtd_max: number;
+  area_m2: number;
+  geo_mapa: {
     type: "Polygon";
     coordinates: number[][][];
   };
@@ -41,6 +44,10 @@ function mapRawToPiquete(item: any): Piquete {
     idGrupo: item.grupo?.idGrupo ?? item.idGrupo ?? null,
     grupoNome: item.grupo?.nomeGrupo ?? "",
     grupoCor: item.grupo?.color ?? "#000000",
+    color: item.grupo?.color ?? "#000000",
+    areaM2: item.area_m2,
+    tipoLote: item.tipoLote,
+    status: item.status,
   } as Piquete;
 }
 
@@ -75,8 +82,21 @@ export const piqueteService = {
         idGrupo,
         grupoNome: item.grupo?.nomeGrupo ?? fallback?.nomeGrupo ?? '',
         grupoCor: item.grupo?.color ?? fallback?.color ?? '#000000',
+        color: item.grupo?.color ?? fallback?.color ?? '#000000',
+        areaM2: item.area_m2,
+        tipoLote: item.tipoLote,
+        status: item.status,
       } as Piquete;
     });
+  },
+
+  async findById(id: string): Promise<Piquete | null> {
+    const row = await queryFirst<{ _raw: string }>(
+      `SELECT _raw FROM lotes WHERE id = ?`,
+      [id],
+    );
+    if (!row) return null;
+    return mapRawToPiquete(JSON.parse(row._raw));
   },
 
   async create(novoPiquete: NovoPiqueteDTO): Promise<Piquete> {
@@ -112,5 +132,28 @@ export const piqueteService = {
     await enqueue("lotes", "CREATE", body);
 
     return mapRawToPiquete(record);
+  },
+
+  async update(id: string, data: Partial<NovoPiqueteDTO>): Promise<void> {
+    const now = new Date().toISOString();
+    const row = await queryFirst<{ _raw: string }>(
+      `SELECT _raw FROM lotes WHERE id = ?`,
+      [id],
+    );
+    const merged = { ...(row ? JSON.parse(row._raw) : {}), ...data, updatedAt: now };
+    await execute(
+      `UPDATE lotes SET _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
+      [JSON.stringify(merged), now, id],
+    );
+    await enqueue("lotes", "UPDATE", { id, ...data });
+  },
+
+  async delete(id: string): Promise<void> {
+    const now = new Date().toISOString();
+    await execute(
+      `UPDATE lotes SET deletedAt = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
+      [now, now, id],
+    );
+    await enqueue("lotes", "DELETE", { id });
   },
 };

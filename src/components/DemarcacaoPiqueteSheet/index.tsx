@@ -150,9 +150,9 @@ export const DemarcacaoPiqueteSheet: React.FC<DemarcacaoPiqueteSheetProps> = ({ 
                 tipoLote: "Pasto",
                 status: "ativo",
                 descricao: "",
-                qtdMax: quantidadeMaxAnimais,
-                areaM2: calcularArea(demarcacaoCoords),
-                geoMapa: {
+                qtd_max: quantidadeMaxAnimais,
+                area_m2: calcularArea(demarcacaoCoords),
+                geo_mapa: {
                     type: "Polygon" as const,
                     coordinates: [
                         demarcacaoCoords.map(c => [c.longitude, c.latitude])
