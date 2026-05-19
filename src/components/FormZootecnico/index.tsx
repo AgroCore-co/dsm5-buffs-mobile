@@ -47,16 +47,16 @@ const styles = StyleSheet.create({
   title: { fontWeight: "bold", fontSize: 18, marginBottom: 12, textAlign: "center" },
   input: {
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
   },
-  buttonText: { color: "#fff", fontWeight: "bold" },
+  buttonText: { color: colors.text.onDark, fontWeight: "bold" },
 });

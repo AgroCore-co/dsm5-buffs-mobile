@@ -20,14 +20,7 @@ import dayjs from "dayjs";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import SelectBottomSheet from "../SelectBottomSheet";
 
-const defaultColors = {
-    primary: { base: "#FAC638" },
-    gray: { base: "#6B7280", claro: "#F8F7F5" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" }
-};
-const mergedColors = { ...defaultColors, ...colors };
+
 
 interface CadastrarBufaloFormProps {
     onClose: () => void;
@@ -348,13 +341,13 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
-    sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
-    handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
+    sheetBackground: { backgroundColor: colors.bg.sheet, borderRadius: 24 },
+    handleIndicator: { backgroundColor: colors.border.light, height: 4, width: 36 },
 
     // Container principal
     container: {
         paddingBottom: 32,
-        backgroundColor: mergedColors.gray.claro,
+        backgroundColor: colors.bg.sheet,
     },
     header: {
         flexDirection: "row",
@@ -367,35 +360,35 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 20,
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
     sectionTitle: {
         fontWeight: "600",
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
         paddingBottom: 4,
     },
     // Estilo base do input, usado pelo Floating Label
     inputBase: {
         width: "100%",
         borderWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         borderRadius: 8,
         paddingHorizontal: 12,
         fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
+        color: colors.text.heading,
+        backgroundColor: colors.bg.card,
         minHeight: 50,
     },
 
     // --- Estilos de Layout ---
     listContainer: {
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 10,
         padding: 16,
@@ -417,19 +410,19 @@ const styles = StyleSheet.create({
     // --- Dropdown ---
     dropdownLabel: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },
     dropdownStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
         minHeight: 50,
         marginBottom: 12,
     },
     dropdownContainerStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
     },
 
     // --- Campo de Data Intuitivo ---
@@ -442,11 +435,11 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         marginTop: 8,
         borderBottomWidth: 1, // Adiciona uma linha sutil para separar
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
     },
     listLabel: {
         fontSize: 16,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         flex: 1,
     },
@@ -457,18 +450,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.gray.claro,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.sheet,
     },
     dateDisplayValue: {
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontWeight: "600",
     },
     parentescoTitle: {
         fontSize: 14,
         fontWeight: "600",
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         marginBottom: 4,
         marginTop: 4,
     },
@@ -482,7 +475,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },

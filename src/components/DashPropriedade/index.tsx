@@ -67,15 +67,15 @@ export default function DashPropriedade({
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 16, 
-    backgroundColor: colors.white.base,
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: colors.bg.card,
     borderRadius: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
-    shadowColor: colors.black.base,
+    borderColor: colors.border.default,
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -85,29 +85,29 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 16,
   },
-  subtitle: { 
-    fontSize: 14, 
-    color: colors.gray.base 
+  subtitle: {
+    fontSize: 14,
+    color: colors.text.muted
   },
   row: { 
     flexDirection: "row", 
     justifyContent: "space-around", 
     marginBottom: 16,
   },
-  item: { 
-    alignItems: "center", 
+  item: {
+    alignItems: "center",
     flex: 1,
     borderRightWidth: 0.2,
     borderLeftWidth: 0.2,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
   },
-  value: { 
-    fontSize: 20, 
-    fontWeight: "bold", 
-    marginBottom: 4 
+  value: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 4
   },
-  label: { 
-    fontSize: 12, 
-    color: colors.gray.base 
+  label: {
+    fontSize: 12,
+    color: colors.text.muted
   },
 });

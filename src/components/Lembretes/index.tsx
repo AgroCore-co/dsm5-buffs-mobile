@@ -168,7 +168,7 @@ export default function AlertasPendentes({
           <Text style={styles.tag}>{item.nicho}</Text>
 
           <View style={styles.date}>
-            <CalendarIcon size={14} fill={colors.brown.base} />
+            <CalendarIcon size={14} fill={colors.text.accent} />
             <Text>{formatarData(item.dataAlerta)}</Text>
           </View>
         </View>
@@ -225,7 +225,7 @@ export default function AlertasPendentes({
           loading ? (
             <ActivityIndicator
               size="large"
-              color={colors.yellow.base}
+              color={colors.brand.primary}
               style={{ marginVertical: 20 }}
             />
           ) : null
@@ -238,24 +238,24 @@ export default function AlertasPendentes({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: colors.white.base,
+    backgroundColor: colors.bg.card,
     borderRadius: 10,
     marginBottom: 5,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
     overflow: "hidden",
   },
   priority: { width: 6 },
   cardContent: { flex: 1, padding: 14 },
   title: { fontSize: 15, fontWeight: "700" },
-  desc: { fontSize: 13, color: colors.gray.base },
+  desc: { fontSize: 13, color: colors.text.muted },
   footer: {
     marginTop: 12,
     flexDirection: "row",
     justifyContent: "space-between",
   },
   tag: {
-    backgroundColor: colors.yellow.warning,
+    backgroundColor: colors.status.pendingBg,
     paddingHorizontal: 10,
     borderRadius: 10,
     fontSize: 11,
@@ -264,17 +264,17 @@ const styles = StyleSheet.create({
   date: { flexDirection: "row", alignItems: "center", gap: 4 },
   resolve: {
     marginTop: 14,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     paddingVertical: 8,
     borderRadius: 10,
     alignItems: "center",
     width: '90%',
     alignSelf: 'center'
   },
-  resolveText: { color: colors.brown.base, fontWeight: "700" },
-  modal: { backgroundColor: "white", padding: 20, borderRadius: 16 },
+  resolveText: { color: colors.text.accent, fontWeight: "700" },
+  modal: { backgroundColor: colors.bg.card, padding: 20, borderRadius: 16 },
   modalTitle: { fontSize: 16, fontWeight: "700", textAlign: "center" },
-  modalDesc: { textAlign: "center", color: colors.gray.base },
+  modalDesc: { textAlign: "center", color: colors.text.muted },
   modalActions: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -283,6 +283,6 @@ const styles = StyleSheet.create({
   tabs: {
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: colors.gray.disabled,
+    borderBottomColor: colors.border.default,
   },
 });

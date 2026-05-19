@@ -446,9 +446,9 @@ export const AnimalDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: colors.gray.disabled 
+  container: {
+    flex: 1,
+    backgroundColor: colors.border.default
   },
   headerButton: {
     width: 48,
@@ -460,38 +460,38 @@ const styles = StyleSheet.create({
   headerArrow: {
     fontSize: 28,
     fontWeight: '300',
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
   cardContainer: {
-    paddingTop: 16, 
+    paddingTop: 16,
     marginTop: 10,
     flex: 1
   },
-  header: { 
-    height: 60, 
-    backgroundColor: colors.yellow.base, 
-    justifyContent: 'center', 
-    paddingLeft: 16 
+  header: {
+    height: 60,
+    backgroundColor: colors.brand.primary,
+    justifyContent: 'center',
+    paddingLeft: 16
   },
-  header1Text: { 
-    fontSize: 20, 
-    fontWeight: "bold", 
-    color: colors.brown.base 
+  header1Text: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.text.accent
   },
   loadingContainer: { 
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center" 
   },
-  emptyText: { 
-    textAlign: "center", 
-    color: colors.gray.base, 
-    marginTop: 20 
+  emptyText: {
+    textAlign: "center",
+    color: colors.text.muted,
+    marginTop: 20
   },
   pageInfo: {
     marginHorizontal: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.text.body,
     textAlign: "center",
   },
   pagination: {
@@ -511,9 +511,9 @@ const styles = StyleSheet.create({
   floatingButton: {
     width: 60,
     height: 60,
-    borderRadius: 30, 
-    backgroundColor: colors.yellow.base, 
-    shadowColor: "#000",
+    borderRadius: 30,
+    backgroundColor: colors.brand.primary,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3.84,

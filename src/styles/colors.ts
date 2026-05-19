@@ -1,7 +1,7 @@
 export const colors = {
   // === MARCA ===
   brand: {
-    primary: "#FAC638",
+    primary: "#ffcf78",
     primaryLight: "rgba(250,198,56,0.25)",
     dark: "#F2B84D",
     static: "#F59E0B",
@@ -23,7 +23,7 @@ export const colors = {
 
   // === FUNDOS ===
   bg: {
-    screen: "#F6F3F4",
+    screen: "#f8fcfa",
     card: "#FFFFFF",
     sheet: "#F8F7F5",
     section: "#F7F8FA",

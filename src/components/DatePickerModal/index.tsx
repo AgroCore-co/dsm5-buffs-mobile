@@ -30,9 +30,9 @@ export function DatePickerModal({ visible, date, onClose, onSelectDate }: DatePi
           monthCaptionFormat="full"
           styles={{
             ...defaultStyles,
-            today: { borderColor: colors.yellow.dark, borderWidth: 2 }, // Add a border to today's date
-            selected: { backgroundColor: colors.yellow.dark }, // Highlight the selected day
-            selected_label: { color: colors.brown.base }, // Highlight the selected day label
+            today: { borderColor: colors.brand.dark, borderWidth: 2 }, // Add a border to today's date
+            selected: { backgroundColor: colors.brand.dark }, // Highlight the selected day
+            selected_label: { color: colors.text.accent }, // Highlight the selected day label
          }}
         />
 
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text.heading,
     marginBottom: 16,
   },
   footer: {
@@ -83,19 +83,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.bg.input,
     marginRight: 8,
   },
   confirmButton: {
-    backgroundColor: "#FAC638",
+    backgroundColor: colors.brand.primary,
     marginLeft: 8,
   },
   cancelText: {
-    color: "#6B7280",
+    color: colors.text.muted,
     fontWeight: "700",
   },
   confirmText: {
-    color: "#111827",
+    color: colors.text.heading,
     fontWeight: "700",
   },
 });

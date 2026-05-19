@@ -35,7 +35,7 @@ export const UserMenu = () => {
         >
           <View style={styles.menu}>
             <TouchableOpacity style={styles.menuButton} onPress={handleLogout}>
-              <Exit width={14} height={14} color={colors.red.base} />
+              <Exit width={14} height={14} color={colors.status.error} />
               <Text style={styles.menuText}>Sign Out</Text>
             </TouchableOpacity>
           </View>
@@ -47,7 +47,7 @@ export const UserMenu = () => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: colors.yellow.button,
+    backgroundColor: colors.brand.primary,
     borderRadius: 50,
     flexDirection: "row",
     position: "absolute",
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     height: 40,
     width: 40,
     justifyContent: 'center',
-    alignItems: 'center' 
+    alignItems: 'center'
   },
   overlay: {
     flex: 1,
@@ -66,10 +66,10 @@ const styles = StyleSheet.create({
   menu: {
     marginTop: 50,
     marginRight: 20,
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 8,
     padding: 10,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 16,
     fontWeight: "500",
-    color: colors.red.base,
+    color: colors.status.error,
     marginLeft: 8,
   },
 });

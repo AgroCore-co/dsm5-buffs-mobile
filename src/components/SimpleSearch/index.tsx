@@ -40,13 +40,13 @@ export default function SimpleSearch({ animais, onFiltered }: SearchOnlyProps) {
           placeholder="Buscar..."
           value={search}
           onChangeText={setSearch}
-          placeholderTextColor={colors.gray.base}
+          placeholderTextColor={colors.text.muted}
         />
         <TouchableOpacity
           style={styles.iconWrapper}
           onPress={() => console.log("Pesquisar", search)}
         >
-          <SearchIcon fill={colors.black.base} size={18}/>
+          <SearchIcon fill={colors.black} size={18}/>
         </TouchableOpacity>
       </View>
     </View>
@@ -69,12 +69,12 @@ const styles = StyleSheet.create({
   searchWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: colors.bg.subtle,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 50,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
     marginBottom: 12,
     overflow: "hidden",
   },
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 0.9,
     fontSize: 16,
-    color: colors.gray.base,
+    color: colors.text.muted,
   },
 
   iconWrapper: {

@@ -6,6 +6,7 @@ import {
   BottomSheetScrollView,
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
+import { colors } from "../../styles/colors";
 
 interface AppModalProps {
   title?: string;
@@ -54,14 +55,14 @@ export const AppModal = forwardRef<BottomSheetModal, AppModalProps>(
 );
 
 const styles = StyleSheet.create({
-  modalBackground: { backgroundColor: "#FFF", borderRadius: 24 },
-  indicator: { backgroundColor: "#D1D5DB" },
-  header: { 
-    paddingVertical: 16, 
-    alignItems: "center", 
-    borderBottomWidth: 1, 
-    borderBottomColor: "#EEE" 
+  modalBackground: { backgroundColor: colors.bg.card, borderRadius: 24 },
+  indicator: { backgroundColor: colors.border.light },
+  header: {
+    paddingVertical: 16,
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.bg.subtle
   },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: colors.text.heading },
   content: { padding: 16, paddingBottom: 40 },
 });

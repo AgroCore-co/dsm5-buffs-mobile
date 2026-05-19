@@ -65,12 +65,12 @@ function MainTab() {
                 // --- CABEÇALHO (HEADER) ---
         headerStyle: {
           height: Platform.OS === "ios" ? 90 : 80,
-          backgroundColor: colors.yellow.base,
+          backgroundColor: colors.brand.primary,
         },
         headerTitleStyle: {
           fontSize: 24,
           fontWeight: "bold",
-          color: colors.brown.base,
+          color: colors.text.accent,
         },
         headerTitleAlign: "left",
 
@@ -89,8 +89,8 @@ function MainTab() {
         },
 
         // --- CORES ATIVAS / INATIVAS ---
-        tabBarActiveTintColor: colors.yellow.dark,
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: colors.brand.dark,
+        tabBarInactiveTintColor: colors.text.muted,
         tabBarHideOnKeyboard: true,
       }}>
       <Tab.Screen 
@@ -99,10 +99,10 @@ function MainTab() {
         options={{
           headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
-            <Home 
+            <Home
               width={focused ? 30 : 20}         // maior quando ativo
               height={focused ? 30 : 20}        // maior quando ativo
-              stroke={focused ? colors.yellow.dark : 'gray'} // muda cor
+              stroke={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           ),
           headerTitle: () => <BuffsLogo width={80} height={80} />,
@@ -114,10 +114,10 @@ function MainTab() {
         options={{
           headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
-            <Bufalo 
+            <Bufalo
               width={focused ? 35 : 25}         // maior quando ativo
               height={focused ? 35 : 25}        // maior quando ativo
-              fill={focused ? colors.yellow.dark : 'gray'} // muda cor
+              fill={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           )
         }}/>
@@ -127,10 +127,10 @@ function MainTab() {
         options={{
           headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
-            <Lactation 
+            <Lactation
               width={focused ? 35 : 25}         // maior quando ativo
               height={focused ? 35 : 25}        // maior quando ativo
-              fill={focused ? colors.yellow.dark : 'gray'} // muda cor
+              fill={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           )
         }} />
@@ -142,7 +142,7 @@ function MainTab() {
           tabBarIcon: ({ focused, color, size }) => (
             <GlobeIcon
               size={focused ? 25 : 22}         // maior quando ativo
-              fill={focused ? colors.yellow.dark : 'gray'} // muda cor
+              fill={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           )
         }}/>
@@ -154,7 +154,7 @@ function MainTab() {
           tabBarIcon: ({ focused, color, size }) => (
             <Fance
               size={focused ? 25 : 22}         // maior quando ativo
-              fill={focused ? colors.yellow.dark : 'gray'} // muda cor
+              fill={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           )
         }}/>

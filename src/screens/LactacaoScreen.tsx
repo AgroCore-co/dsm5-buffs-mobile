@@ -181,14 +181,14 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
       icon: <Bucket width={18} height={18} />,
       name: "estoque",
       position: 1,
-      color: colors.yellow.base,
+      color: colors.brand.primary,
     },
     {
       text: "Registrar Coleta",
       icon: <Truck width={15} height={15} />,
       name: "coleta",
       position: 2,
-      color: colors.yellow.base,
+      color: colors.brand.primary,
     },
   ];
 
@@ -225,7 +225,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.yellow.base]}
+              colors={[colors.brand.primary]}
             />
           }
           ListHeaderComponent={
@@ -238,7 +238,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
           ListEmptyComponent={
             listLoading ? (
               <View style={styles.inlineLoader}>
-                <ActivityIndicator size="large" color={colors.yellow.base} />
+                <ActivityIndicator size="large" color={colors.brand.primary} />
                 <Text style={{ marginTop: 8 }}>
                   Atualizando lactação...
                 </Text>
@@ -288,7 +288,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
         actions={actions}
         onPressItem={handleActionPress}
         buttonSize={60}
-        color={colors.yellow.base}
+        color={colors.brand.primary}
         floatingIcon={<Plus width={24} height={24} />}
       />
 
@@ -329,15 +329,15 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     height: 60,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: "center",
     alignItems: "center",
   },
   headerText: {
     marginTop: 10,
     fontSize: 25,
-    fontWeight: "900", 
-    color: colors.brown.base,
+    fontWeight: "900",
+    color: colors.text.accent,
   },
   loadingContainer: {
     flex: 1,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   pageInfo: {
     marginHorizontal: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.text.body,
     textAlign: "center",
   },
 

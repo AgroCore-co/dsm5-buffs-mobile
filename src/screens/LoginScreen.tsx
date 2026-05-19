@@ -73,8 +73,8 @@ export const LoginScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20 },
-  input: { borderWidth: 1, borderColor: "#ccc", marginBottom: 10, padding: 10, borderRadius: 5 },
+  input: { borderWidth: 1, borderColor: colors.border.muted, marginBottom: 10, padding: 10, borderRadius: 5 },
   title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
-  error: { color: "red", marginBottom: 10 },
-  signupLink: { color: colors.black.base, marginTop: 10, textAlign: "center", fontSize: 12 },
+  error: { color: colors.status.error, marginBottom: 10 },
+  signupLink: { color: colors.black, marginTop: 10, textAlign: "center", fontSize: 12 },
 });

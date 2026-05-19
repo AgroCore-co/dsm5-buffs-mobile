@@ -76,7 +76,7 @@ return (
             snapPoints={snapPoints}
             backdropComponent={renderBackdrop}
             enablePanDownToClose={true}
-            backgroundStyle={{ backgroundColor: colors.white.base }}>
+            backgroundStyle={{ backgroundColor: colors.bg.card }}>
             <BottomSheetView style={styles.sheetContainer}>
                 <Text style={styles.title}>{title}</Text>
                 <FlatList
@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
     alignItems: "center",          // 👈 centraliza vertical
     justifyContent: "space-between", // 👈 separa texto e ícone
     paddingHorizontal: 12,
-    backgroundColor: colors.white.base,
-    borderColor: colors.gray.disabled,
+    backgroundColor: colors.bg.card,
+    borderColor: colors.border.default,
   },
   icon: {
     transform: [{ rotate: "270deg" }], // vira dropdown
@@ -144,16 +144,16 @@ const styles = StyleSheet.create({
   item: {
     padding: 16,
     borderBottomWidth: 1,
-    borderColor: "#eee",
+    borderColor: colors.bg.subtle,
   },
   itemText: {
     fontSize: 16,
   },
   itemSelected: {
-    backgroundColor: colors.yellow.warning,
+    backgroundColor: colors.status.pendingBg,
   },
   itemTextSelected: {
     fontWeight: "bold",
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
 });

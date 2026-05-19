@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
+import { colors } from "../../styles/colors";
 import bufaloService from "../../services/bufaloService";
 import { usePropriedade } from "../../context/PropriedadeContext";
 import YellowButton from "../Button";
@@ -213,19 +214,19 @@ export function FormBufalo({ onSuccess }: FormBufaloProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#fff" },
+  container: { padding: 16, backgroundColor: colors.bg.card },
   sectionTitle: {
     fontWeight: "600",
     fontSize: 14,
     marginVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: colors.bg.subtle,
     paddingBottom: 4,
   },
   inputFull: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.muted,
     borderRadius: 6,
     padding: 12,
     marginBottom: 12,

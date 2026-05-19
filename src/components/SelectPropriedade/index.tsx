@@ -48,12 +48,12 @@ export default function Propriedades({ prop }: PropriedadesProps) {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
-    shadowColor: colors.black.base,
+    borderColor: colors.border.default,
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: {
       width: 0,

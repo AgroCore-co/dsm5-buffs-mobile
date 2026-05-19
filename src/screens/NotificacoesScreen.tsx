@@ -59,19 +59,19 @@ export const NotificacoesScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.brown.base,
+    backgroundColor: colors.text.accent,
   },
 
   header: {
     height: 80,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 12,
     paddingTop: 20,
     borderBottomWidth: 1,
-    borderBottomColor: colors.yellow.dark,
+    borderBottomColor: colors.brand.dark,
   },
 
   headerButton: {
@@ -85,13 +85,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
 
   containerLoading: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: colors.bg.subtle,
   },
 });

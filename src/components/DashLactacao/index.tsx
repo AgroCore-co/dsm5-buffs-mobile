@@ -47,27 +47,27 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   card: {
-    flex: 1, 
-    padding: 16, 
-    backgroundColor: "#fff",
+    flex: 1,
+    padding: 16,
+    backgroundColor: colors.bg.card,
     borderRadius: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
-    shadowColor: colors.black.base,
+    borderColor: colors.border.default,
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
-    shadowOffset: { 
-      width: 0, 
-      height: 2 
+    shadowOffset: {
+      width: 0,
+      height: 2
     },
     shadowRadius: 4,
-    elevation: 2, 
+    elevation: 2,
     zIndex: 1000
   },
   title: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.brown.base,
+    color: colors.text.accent,
     marginBottom: 12,
   },
   row: {
@@ -80,23 +80,23 @@ const styles = StyleSheet.create({
   },
   borderbox: {
     borderLeftWidth: 2,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
     paddingLeft: 20,
   },
   label: {
     fontSize: 12,
-    color: colors.gray.base,
+    color: colors.text.muted,
     marginBottom: 4,
     fontWeight: '600',
   },
   value: {
     fontSize: 20,
     fontWeight: "500",
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
   footerText: {
     fontSize: 11,
-    color: colors.gray.base,
+    color: colors.text.muted,
     textAlign: "right",
   },
 });

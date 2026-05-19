@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useDimensions } from '../../utils/useDimensions';
 import { SyncStatusBanner } from '../../components/SyncStatusBanner';
+import { colors } from '../../styles/colors';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ interface MainLayoutProps {
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
   children,
-  backgroundColor = '#f6f3f4',
+  backgroundColor = colors.bg.screen,
 }) => {
   const { wp, hp } = useDimensions();
 

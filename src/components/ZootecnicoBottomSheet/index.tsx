@@ -92,8 +92,8 @@ return (
     index={0}
     snapPoints={snapPoints}
     onChange={handleSheetChange}
-    backgroundStyle={{ backgroundColor: "#F8F7F5", borderRadius: 24 }}
-    handleIndicatorStyle={{ backgroundColor: "#D1D5DB", height: 4, width: 36 }}
+    backgroundStyle={{ backgroundColor: colors.bg.sheet, borderRadius: 24 }}
+    handleIndicatorStyle={{ backgroundColor: colors.border.light, height: 4, width: 36 }}
     enablePanDownToClose={true}
         backdropComponent={(props) => (
         <BottomSheetBackdrop
@@ -254,7 +254,7 @@ return (
 const styles = StyleSheet.create({
   container: {
     paddingBottom: 32,
-    backgroundColor: colors.gray.claro,
+    backgroundColor: colors.bg.input,
   },
 
   handleWrapper: {
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#D1D5DB",
+    backgroundColor: colors.border.light,
   },
 
   header: {
@@ -278,15 +278,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text.heading,
   },
   mainCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: colors.bg.card,
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 12,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -301,24 +301,24 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text.heading,
   },
   cardSubtitle: {
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.text.muted,
   },
 
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text.heading,
     paddingHorizontal: 16,
     marginTop: 8,
     marginBottom: 4,
   },
 
   listContainer: {
-    backgroundColor: "#FFF",
+    backgroundColor: colors.bg.card,
     borderRadius: 16,
     marginHorizontal: 20,
     overflow: "hidden",
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.border.default,
   },
   listItemLast: {
     borderBottomWidth: 1,
@@ -337,17 +337,17 @@ const styles = StyleSheet.create({
   listIcon: {
     marginRight: 12,
     fontSize: 20,
-    color: "#6B7280",
+    color: colors.text.muted,
   },
   listLabel: {
     flex: 1,
     fontSize: 14,
     marginStart: 16,
-    color: "#6B7280",
+    color: colors.text.muted,
   },
   listValue: {
     fontSize: 14,
-    color: "#111827",
+    color: colors.text.heading,
     textAlign: "right",
     minWidth: 60,
   },
@@ -361,16 +361,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: "rgba(250,198,56,0.25)",
+    backgroundColor: colors.brand.primaryLight,
   },
   highlightTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#e71a1aff",
+    color: colors.status.error,
   },
   highlightValue: {
     fontSize: 14,
-    color: "#78350F",
+    color: colors.status.warningDark,
   },
 
   footer: {
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderTopWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.border.default,
     marginTop: 16,
   },
   footerBtn: {
@@ -390,19 +390,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   editBtn: {
-    backgroundColor: "#FAC638",
+    backgroundColor: colors.brand.primary,
   },
   deleteBtn: {
     borderWidth: 1,
-    borderColor: "#DC2626",
+    borderColor: colors.status.errorStrong,
   },
   deleteText: {
-    color: "#DC2626",
+    color: colors.status.errorStrong,
     fontWeight: "700",
   },
   editText: {
     fontWeight: "700",
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
   radioItem: {
     flexDirection: "row",
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: colors.gray.base,
+    borderColor: colors.text.muted,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 6,
@@ -422,19 +422,19 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#FAC638",
+    backgroundColor: colors.brand.primary,
   },
   radioLabel: {
     fontSize: 14,
-    color: "#111827",
+    color: colors.text.heading,
   },
-  inputFull: { 
-    width: "40%", 
-    borderWidth: 1, 
-    borderColor: colors.gray.base, 
-    borderRadius: 6, 
+  inputFull: {
+    width: "40%",
+    borderWidth: 1,
+    borderColor: colors.text.muted,
+    borderRadius: 6,
     marginBottom: 12,
-    backgroundColor: colors.white.base,
+    backgroundColor: colors.bg.card,
     justifyContent: 'center',
   },
 

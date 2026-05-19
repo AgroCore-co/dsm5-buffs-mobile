@@ -23,16 +23,7 @@ type MapMessage =
   | { type: string; data?: any };
 
 
-// Configuração de cores (Copiada do seu exemplo)
-const defaultColors = {
-    primary: { base: "#FAC638" }, 
-    gray: { base: "#6B7280", claro: "#F8F7F5", disabled: "#E5E7EB" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" },
-    red: { base: "#EF4444" }
-};
-const mergedColors = { ...defaultColors, ...colors };
+
 
 export const DemarcacaoPiqueteSheet: React.FC<DemarcacaoPiqueteSheetProps> = ({ onClose, propriedadeId }) => {
     const sheetRef = useRef<BottomSheet>(null);
@@ -242,13 +233,13 @@ export const DemarcacaoPiqueteSheet: React.FC<DemarcacaoPiqueteSheetProps> = ({ 
 
                     {gpsLoading ? (
                         <View style={{ marginVertical: 20, alignItems: 'center' }}>
-                            <ActivityIndicator size="large" color={colors.yellow.base} />
-                            <Text style={{ marginTop: 8, color: colors.gray.base }}>Carregando localização...</Text>
+                            <ActivityIndicator size="large" color={colors.brand.primary} />
+                            <Text style={{ marginTop: 8, color: colors.text.muted }}>Carregando localização...</Text>
                         </View>
                     ) : (
                         <>
                             <Text style={styles.sectionTitle}>Pontos Demarcados: {demarcacaoCoords.length}</Text>
-                            {gpsError && <Text style={{ color: 'red', marginBottom: 8 }}>Erro GPS: {gpsError}</Text>}
+                            {gpsError && <Text style={{ color: colors.status.error, marginBottom: 8 }}>Erro GPS: {gpsError}</Text>}
                             <Text style={styles.label}>Nome do Piquete</Text>
                             <TextInput
                                 placeholder="Digite o nome do Piquete"
@@ -306,13 +297,13 @@ const styles = StyleSheet.create({
     header: { 
         padding: 16, 
         borderBottomWidth: 1, 
-        borderBottomColor: "#eee" 
+        borderBottomColor: colors.bg.subtle 
     },
     title: { 
         fontWeight: "bold", 
         fontSize: 18, 
         textAlign: "center", 
-        color: colors.brown.base 
+        color: colors.text.accent 
     },
     scrollContent: { 
         flexGrow: 1, 
@@ -321,14 +312,14 @@ const styles = StyleSheet.create({
     formContainer: { 
         padding: 16, 
     },
-    sectionTitle: { fontWeight: "600", fontSize: 16, marginVertical: 8, color: colors.gray.base },
-    inputFull: { width: "100%", borderWidth: 1, borderColor: "#ccc", borderRadius: 6, padding: 12, marginBottom: 12 },
-    mapContainer: { height: 300, width: '100%', marginBottom: 16, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: colors.gray.disabled },
+    sectionTitle: { fontWeight: "600", fontSize: 16, marginVertical: 8, color: colors.text.muted },
+    inputFull: { width: "100%", borderWidth: 1, borderColor: colors.border.muted, borderRadius: 6, padding: 12, marginBottom: 12 },
+    mapContainer: { height: 300, width: '100%', marginBottom: 16, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: colors.border.default },
     row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12, gap: 10 },
-    actionButton: { flex: 2, backgroundColor: colors.yellow.base, borderRadius: 6, padding: 12, alignItems: 'center' },
-    clearButton: { flex: 1, backgroundColor: colors.brown.base, borderRadius: 6, padding: 12, alignItems: 'center' },
-    actionButtonText: { color: colors.brown.base, fontWeight: 'bold' },
-    actionButtonText2: { color: colors.yellow.base, fontWeight: 'bold' },
+    actionButton: { flex: 2, backgroundColor: colors.brand.primary, borderRadius: 6, padding: 12, alignItems: 'center' },
+    clearButton: { flex: 1, backgroundColor: colors.text.accent, borderRadius: 6, padding: 12, alignItems: 'center' },
+    actionButtonText: { color: colors.text.accent, fontWeight: 'bold' },
+    actionButtonText2: { color: colors.brand.primary, fontWeight: 'bold' },
     crosshair: {
         position: 'absolute',
         top: '50%',
@@ -345,30 +336,30 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: 2,
         height: 20,
-        backgroundColor: 'red',
+        backgroundColor: colors.status.error,
     },
 
     crosshairLineHorizontal: {
         position: 'absolute',
         width: 20,
         height: 2,
-        backgroundColor: 'red',
+        backgroundColor: colors.status.error,
     },
     inputBase: {
         height: 50,
         borderWidth: 1,
         borderRadius: 12,
         justifyContent: "center",
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         paddingHorizontal: 12,
         fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
+        color: colors.text.heading,
+        backgroundColor: colors.bg.card,
         marginBottom: 12
     },
     label: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },

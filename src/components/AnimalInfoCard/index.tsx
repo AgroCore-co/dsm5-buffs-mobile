@@ -126,22 +126,22 @@ export const AnimalInfoCard = ({ detalhes, onEdit, onRefresh }: { detalhes: any,
                     </View>
                     <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
                         <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-                            <Pen width={20} height={20} fill={colors.brown.base} />
+                            <Pen width={20} height={20} fill={colors.text.accent} />
                         </TouchableOpacity>
                         <View style={[styles.statusBadge]}>
                             <View style={[
                                 styles.statusDot,
-                                { backgroundColor: isEnabled ? colors.green.extra : colors.red.extra },
+                                { backgroundColor: isEnabled ? colors.status.success : colors.status.error },
                             ]} />
                             <Text style={[
                                 styles.statusText,
-                                { color: isEnabled ? colors.green.text : colors.red.text },
+                                { color: isEnabled ? colors.status.successText : colors.status.errorText },
                             ]}>
                                 {isEnabled ? 'Ativo' : 'Inativo'}
                             </Text>
                             <Switch
-                                trackColor={{ false: colors.gray.disabled, true: colors.gray.disabled }}
-                                thumbColor={isEnabled ? colors.green.extra : colors.red.extra}
+                                trackColor={{ false: colors.border.default, true: colors.border.default }}
+                                thumbColor={isEnabled ? colors.status.success : colors.status.error}
                                 onValueChange={toggleSwitch}
                                 value={isEnabled} />
                         </View>
@@ -230,10 +230,10 @@ export const AnimalInfoCard = ({ detalhes, onEdit, onRefresh }: { detalhes: any,
 
 const styles = StyleSheet.create({
     infoCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         padding: 16,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.05,
         shadowOffset: { width: 0, height: 4 },
         shadowRadius: 12,
@@ -250,18 +250,18 @@ const styles = StyleSheet.create({
         alignItems: 'center', 
         gap: 8 
     },
-    nameText: { 
-        fontSize: 20, 
-        fontWeight: '700', 
-        color: '#1A1A1A' 
+    nameText: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: colors.text.title
     },
-    brincoText: { 
-        fontSize: 14, 
-        color: '#6B7280', 
-        marginTop: 2 
+    brincoText: {
+        fontSize: 14,
+        color: colors.text.muted,
+        marginTop: 2
     },
     categoryBadge: {
-        backgroundColor: '#FEF3C7',
+        backgroundColor: colors.status.warningBg,
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 12,
@@ -298,29 +298,29 @@ const styles = StyleSheet.create({
     infoItem: { 
         width: '48%', 
     },
-    infoLabel: { 
-        fontSize: 12, 
-        color: '#6B7280',
+    infoLabel: {
+        fontSize: 12,
+        color: colors.text.muted,
         marginBottom: 4,
         fontWeight: '500',
     },
-    subtitle: { 
-        fontSize: 14, 
-        color: colors.gray.base,
+    subtitle: {
+        fontSize: 14,
+        color: colors.text.muted,
         marginBottom: 4,
         fontWeight: '600',
     },
-    infoValue: { 
-        fontSize: 14, 
-        fontWeight: '500', 
-        color: colors.brown.base, 
+    infoValue: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: colors.text.accent,
     },
-    infoValue2: { 
-        fontSize: 16, 
+    infoValue2: {
+        fontSize: 16,
         marginTop: 12,
         marginLeft: 4,
-        fontWeight: '500', 
-        color: colors.brown.base, 
+        fontWeight: '500',
+        color: colors.text.accent,
     },
     editButton: {
         padding: 5,

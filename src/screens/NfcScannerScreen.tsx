@@ -137,7 +137,7 @@ export const NfcScannerScreen = () => {
                 <Text style={styles.status}>{statusText}</Text>
                 
                 {lidas.length === 0 && isScanningRef.current && (
-                    <ActivityIndicator size="large" color={colors.yellow.static} style={{ marginVertical: 20 }} />
+                    <ActivityIndicator size="large" color={colors.brand.static} style={{ marginVertical: 20 }} />
                 )}
 
                 <Button 
@@ -150,14 +150,14 @@ export const NfcScannerScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.white.base, justifyContent: 'center', alignItems: 'center', },
-    content: { width: '90%', backgroundColor: colors.white.base, borderRadius: 20, padding: 25, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 5, },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: colors.brown.base, },
-    status: { fontSize: 16, marginBottom: 20, textAlign: 'center', color: colors.gray.base, },
-    tagListContainer: { width: '100%', maxHeight: 250, minHeight: 100, borderWidth: 1, borderColor: colors.gray.disabled, borderRadius: 10, padding: 10, marginTop: 15, marginBottom: 20, },
-    listTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: colors.brown.base },
+    container: { flex: 1, backgroundColor: colors.bg.card, justifyContent: 'center', alignItems: 'center', },
+    content: { width: '90%', backgroundColor: colors.bg.card, borderRadius: 20, padding: 25, alignItems: 'center', shadowColor: colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 5, },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: colors.text.accent, },
+    status: { fontSize: 16, marginBottom: 20, textAlign: 'center', color: colors.text.muted, },
+    tagListContainer: { width: '100%', maxHeight: 250, minHeight: 100, borderWidth: 1, borderColor: colors.border.default, borderRadius: 10, padding: 10, marginTop: 15, marginBottom: 20, },
+    listTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: colors.text.accent },
     tagList: { flexGrow: 1, },
-    tagText: { fontSize: 14, paddingVertical: 4, color: colors.black.base },
-    emptyText: { textAlign: 'center', marginTop: 20, color: colors.gray.base, },
-    button: { backgroundColor: colors.yellow.dark, padding: 10, borderRadius: 10 }
+    tagText: { fontSize: 14, paddingVertical: 4, color: colors.black },
+    emptyText: { textAlign: 'center', marginTop: 20, color: colors.text.muted, },
+    button: { backgroundColor: colors.brand.dark, padding: 10, borderRadius: 10 }
 });

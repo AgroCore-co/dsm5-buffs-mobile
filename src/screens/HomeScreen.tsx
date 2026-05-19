@@ -118,15 +118,15 @@ export const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#222'
+    backgroundColor: colors.text.heading
   },
   header: {
     height: 60,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: 'center',
     paddingLeft: 16,
     paddingTop: 20,
-    borderColor: colors.yellow.dark
+    borderColor: colors.brand.dark
   },
   loadingContainer: { 
     flex: 1, 
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     alignItems: "center" 
   },
   button: {
-    backgroundColor: colors.yellow.dark,
+    backgroundColor: colors.brand.dark,
     borderRadius: 50,
   },
   loading: {

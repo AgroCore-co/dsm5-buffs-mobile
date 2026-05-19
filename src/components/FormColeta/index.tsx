@@ -37,14 +37,7 @@ interface ColetaAddBottomSheetProps {
 }
 
 
-const defaultColors = {
-    primary: { base: "#FAC638" }, 
-    gray: { base: "#6B7280", claro: "#F8F7F5" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" }
-};
-const mergedColors = { ...defaultColors, ...colors };
+
 
 export const ColetaAddBottomSheet: React.FC<
   ColetaAddBottomSheetProps
@@ -247,13 +240,13 @@ export const ColetaAddBottomSheet: React.FC<
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
-    sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
-    handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
+    sheetBackground: { backgroundColor: colors.bg.sheet, borderRadius: 24 },
+    handleIndicator: { backgroundColor: colors.border.light, height: 4, width: 36 },
 
     // Container principal
     container: {
         paddingBottom: 32,
-        backgroundColor: mergedColors.gray.claro,
+        backgroundColor: colors.bg.sheet,
     },
     header: {
         flexDirection: "row",
@@ -266,17 +259,17 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 20,
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
     sectionTitle: {
         fontWeight: "600",
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
         paddingBottom: 4,
     },
     // Estilo base do input, usado pelo Floating Label
@@ -285,16 +278,16 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 12,
         justifyContent: "center",
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         paddingHorizontal: 12,
         fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base
+        color: colors.text.heading,
+        backgroundColor: colors.bg.card
     },
 
     // --- Estilos da Lista e Itens ---
     listContainer: {
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 16,
         padding: 16,
@@ -302,7 +295,7 @@ const styles = StyleSheet.create({
         zIndex: 10,
     },
     listContainerHeader: { 
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 8,
         marginHorizontal: 16,
         flexDirection: "row",
@@ -314,13 +307,13 @@ const styles = StyleSheet.create({
     },
     listLabel: {
         fontSize: 16,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         flex: 1,
     },
     listLabelDropdown: { 
         fontSize: 16,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         marginRight: 10,
     },
@@ -332,7 +325,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingVertical: 12,
         marginVertical: 12,
-        borderTopColor: mergedColors.border,
+        borderTopColor: colors.border.default,
     },
     dateDisplayButton: {
         flexDirection: "row",
@@ -341,12 +334,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.gray.claro,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.input,
     },
     dateDisplayValue: {
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontWeight: "600",
     },
 
@@ -358,23 +351,23 @@ const styles = StyleSheet.create({
         zIndex: 3000, // ZIndex alto para garantir que o dropdown fique por cima
     },
     dropdownStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
         height: 50,
     },
     dropdownContainerStyle: {
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
     },
     observacaoInput: {
         height: 120,
-        marginTop: 12, 
+        marginTop: 12,
     },
     footer: {
         flexDirection: "row",
         justifyContent: "center",
         padding: 16,
         borderTopWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         marginTop: 16,
     },
     footerBtn: {
@@ -386,18 +379,18 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     saveBtn: {
-        backgroundColor: mergedColors.primary.base,
+        backgroundColor: colors.brand.primary,
     },
     saveText: {
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontSize: 16,
     },
     radioGroupContainer: {
         marginBottom: 16,
         paddingTop: 8,
         borderTopWidth: 1,
-        borderTopColor: mergedColors.border, 
+        borderTopColor: colors.border.default,
     },
   // Estilos de Radio Button (Ajustados para melhor visualização)
   radioGroupRow: {
@@ -419,7 +412,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: colors.gray.base,
+    borderColor: colors.text.muted,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -427,16 +420,16 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#FAC638", 
+    backgroundColor: colors.brand.primary,
   },
   radioLabel: {
     fontSize: 14,
-    color: "#111827",
+    color: colors.text.heading,
     fontWeight: "600",
   },
   label: {
     fontSize: 14,
-    color: mergedColors.text.secondary,
+    color: colors.text.secondary,
     fontWeight: "600",
     marginBottom: 4,
   },

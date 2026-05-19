@@ -18,7 +18,7 @@ export const ZootecnicoCard = ({ item, onDelete, onPress }: any) => (
     {/* Bloco de Texto Principal */}
     <View style={styles.textContainer}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 5}}>
-        <Calendar width={12} height={12} fill={colors.brown.base} style={{marginTop: 2}}/>
+        <Calendar width={12} height={12} fill={colors.text.accent} style={{marginTop: 2}}/>
         <Text style={styles.textData}>
           DATA REGISTRO: {formatarDataBR(item?.dtRegistro)}
         </Text>
@@ -34,7 +34,7 @@ export const ZootecnicoCard = ({ item, onDelete, onPress }: any) => (
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white.base,
+    backgroundColor: colors.bg.card,
     padding: 16,
     borderRadius: 8,
     marginBottom: 10,
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     gap: 16,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -54,10 +54,10 @@ const styles = StyleSheet.create({
     }),
   },
   iconContainer: {
-    width: 20, 
+    width: 20,
     height: 5,
     borderRadius: 24,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -68,21 +68,21 @@ const styles = StyleSheet.create({
     gap: 4, 
   },
   textData: {
-    fontSize: 14, 
-    fontWeight: '700', 
-    color: colors.brown.base
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text.accent
   },
   textInfoPrincipal: {
-    fontSize: 13, 
-    fontWeight: '500', 
-    color: colors.brown.base,
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.text.accent,
     textTransform: 'uppercase',
     includeFontPadding: false,
   },
   textInfoSecundaria: {
-    fontSize: 12, 
-    fontWeight: '400', 
-    color: colors.gray.text,
+    fontSize: 12,
+    fontWeight: '400',
+    color: colors.text.placeholder,
     textTransform: 'uppercase',
     includeFontPadding: false,
   },
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   deleteText: {
-    color: colors.red.base,
+    color: colors.status.error,
     fontSize: 18,
     fontWeight: 'bold',
   },

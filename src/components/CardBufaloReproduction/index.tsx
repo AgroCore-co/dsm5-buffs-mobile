@@ -35,28 +35,28 @@ export const CardReproducao: React.FC<CardReproducaoProps> = ({
     { bg: string; text: string }
   > = {
     "Em andamento": {
-      bg: "#FEF3C7",
-      text: colors.yellow.warning,
+      bg: colors.status.warningBg,
+      text: colors.status.pendingBg,
     },
     "Confirmada": {
-      bg: "#FEF3C7",
-      text: colors.yellow.warning,
+      bg: colors.status.warningBg,
+      text: colors.status.pendingBg,
     },
     "Concluída": {
-      bg: "#D1FAE5",
-      text: colors.green.active,
+      bg: colors.status.successBg,
+      text: colors.status.successActive,
     },
     "Falhou": {
-      bg: "#FEE2E2",
-      text: colors.red.inactive,
+      bg: colors.status.errorBg,
+      text: colors.status.errorFade,
     },
   };
 
   const barColors: Record<StatusType, string> = {
-    "Em andamento": colors.yellow.warning,
-    "Confirmada": colors.yellow.warning,
-    "Concluída": colors.green.active,
-    "Falhou": colors.red.inactive,
+    "Em andamento": colors.status.pendingBg,
+    "Confirmada": colors.status.pendingBg,
+    "Concluída": colors.status.successActive,
+    "Falhou": colors.status.errorFade,
   };
 
   const color = statusColors[status];
@@ -139,10 +139,10 @@ const styles = StyleSheet.create({
   cardContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 12,
     padding: 12,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
@@ -169,11 +169,11 @@ const styles = StyleSheet.create({
   nome: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: colors.text.title,
   },
   brinco: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.text.muted,
     marginTop: 2,
   },
   chipRow: {
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F7F8FA",
+    backgroundColor: colors.bg.section,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -193,11 +193,11 @@ const styles = StyleSheet.create({
   chipLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.text.body,
     marginRight: 4,
   },
   chipValue: {
     fontSize: 12,
-    color: "#374151",
+    color: colors.text.body,
   },
 });

@@ -121,7 +121,7 @@ return (
 const styles = StyleSheet.create({
   header: {
     height: 60,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: 'center',
   },
   header1Text: {
@@ -129,16 +129,16 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: '900',
     textAlign: 'center',
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
   buttonText: {
     fontSize: 12,
     fontWeight: '900',
     textAlign: 'center',
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
   button: {
-    backgroundColor: colors.yellow.dark,
+    backgroundColor: colors.brand.dark,
     borderRadius: 50,
   },
   headerButtons: {
@@ -153,13 +153,13 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg.card,
     borderRadius: 12,
     paddingTop: 16,
     paddingBottom: 16,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
   },
   loadingContainer: { 
     flex: 1, 
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: '100%',
     height: 80,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     borderRadius: 20,
     paddingHorizontal: 20,
     height: 50,

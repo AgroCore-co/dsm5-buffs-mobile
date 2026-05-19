@@ -131,8 +131,8 @@ export const ReproducaoScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.yellow.base]}
-              tintColor={colors.yellow.base}
+              colors={[colors.brand.primary]}
+              tintColor={colors.brand.primary}
             />
           }
 
@@ -170,7 +170,7 @@ export const ReproducaoScreen = () => {
               <View style={styles.inlineLoader}>
                 <ActivityIndicator
                   size="large"
-                  color={colors.yellow.base}
+                  color={colors.brand.primary}
                 />
                 <Text style={{ marginTop: 8 }}>
                   Atualizando reproduções...
@@ -214,7 +214,7 @@ export const ReproducaoScreen = () => {
           }}
           style={styles.fabButtonContainer}
         >
-          <Plus width={24} height={24} color="#FFF" />
+          <Plus width={24} height={24} color={colors.text.onDark} />
         </TouchableOpacity>
       )}
 
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
 
   header: {
     height: 60,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: 'center',
   },
 
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: '900',
     textAlign: 'center',
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
 
   pagination: {
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   pageInfo: {
     marginHorizontal: 12,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.text.body,
   },
 
   fabButtonContainer: {
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,

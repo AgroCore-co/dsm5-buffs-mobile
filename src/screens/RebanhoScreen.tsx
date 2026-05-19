@@ -157,14 +157,14 @@ export const RebanhoScreen = () => {
       icon: <Plus width={24} height={24} fill="black" />, // Use seu SVG aqui
       name: "NovoAnimal",
       position: 1,
-      color: colors.yellow.base,
+      color: colors.brand.primary,
     },
     {
       text: "Scanner NFC",
-      icon: <Scanner width={24} height={24} fill="black" />, 
+      icon: <Scanner width={24} height={24} fill="black" />,
       name: "NfcScanner",
       position: 2,
-      color: colors.yellow.base,
+      color: colors.brand.primary,
     },
   ];
   const handleActionPress = (name: string | undefined) => {
@@ -219,8 +219,8 @@ export const RebanhoScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.yellow.base]}
-              tintColor={colors.yellow.base}
+              colors={[colors.brand.primary]}
+              tintColor={colors.brand.primary}
             />
           }
 
@@ -239,7 +239,7 @@ export const RebanhoScreen = () => {
                   style={styles.filterButton} 
                   onPress={() => setShowFiltro(true)}
                 >
-                  <IconFiltro width={24} height={24} fill={colors.brown.base} />
+                  <IconFiltro width={24} height={24} fill={colors.text.accent} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -265,7 +265,7 @@ export const RebanhoScreen = () => {
           ListEmptyComponent={
             listLoading ? (
               <View style={styles.inlineLoader}>
-                <ActivityIndicator size="large" color={colors.yellow.base} />
+                <ActivityIndicator size="large" color={colors.brand.primary} />
                 <Text style={{ marginTop: 8 }}>
                   Atualizando rebanho...
                 </Text>
@@ -312,9 +312,9 @@ export const RebanhoScreen = () => {
         actions={actions}
         onPressItem={handleActionPress}
         buttonSize={60}
-        color={colors.yellow.base} 
-        floatingIcon={<Plus width={24} height={24} fill={'black'} />} 
-        position="right" 
+        color={colors.brand.primary}
+        floatingIcon={<Plus width={24} height={24} fill={'black'} />}
+        position="right"
       />
 
         {!!selectedZootec && (
@@ -346,39 +346,39 @@ const styles = StyleSheet.create({
     flex: 1
    },
   card: {
-    flex: 1, 
-    paddingVertical: 16, 
+    flex: 1,
+    paddingVertical: 16,
     paddingHorizontal: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
-    shadowColor: colors.black.base,
+    borderColor: colors.border.default,
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
-    shadowOffset: { 
-      width: 0, 
-      height: 2 
+    shadowOffset: {
+      width: 0,
+      height: 2
     },
     shadowRadius: 4,
-    elevation: 2, 
+    elevation: 2,
     zIndex: 1000
   },
   containetSearch: { 
     flex: 1, 
    },
-  header: { 
-    height: 60, 
-    backgroundColor: colors.yellow.base, 
-    justifyContent: 'center', 
-    paddingLeft: 16 
+  header: {
+    height: 60,
+    backgroundColor: colors.brand.primary,
+    justifyContent: 'center',
+    paddingLeft: 16
   },
-  header1Text: { 
+  header1Text: {
     marginTop: 10,
     fontSize: 25,
-    fontWeight: "900", 
-    textAlign: "center", 
-    color: colors.brown.base 
+    fontWeight: "900",
+    textAlign: "center",
+    color: colors.text.accent
   },
   headerButtons: { 
     marginTop: 25, 
@@ -387,14 +387,14 @@ const styles = StyleSheet.create({
     right: 20, 
     gap: 20 
   },
-  button: { 
-    backgroundColor: colors.yellow.dark, 
-    borderRadius: 50 
+  button: {
+    backgroundColor: colors.brand.dark,
+    borderRadius: 50
   },
   pageInfo: {
     marginHorizontal: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.text.body,
     textAlign: "center",
   },
   pagination: {
@@ -410,8 +410,8 @@ const styles = StyleSheet.create({
     alignItems: "center" 
   },
   tagConfirmationBox: {
-    backgroundColor: colors.green.active, 
-    borderColor: colors.green.active,
+    backgroundColor: colors.status.successActive,
+    borderColor: colors.status.successActive,
     borderWidth: 1,
     borderRadius: 8,
     padding: 10,
@@ -419,19 +419,19 @@ const styles = StyleSheet.create({
   },
   tagConfirmationText: {
     fontWeight: 'bold',
-    color: colors.green.active,
+    color: colors.status.successActive,
   },
     fabMain: {
     position: 'absolute',
     right: 16,
     bottom: 16,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
   },
 
   fabChild: {
     position: 'absolute',
     right: 16,
-    backgroundColor: colors.yellow.dark,
+    backgroundColor: colors.brand.dark,
   },
 
   inlineLoader: {
@@ -449,11 +449,11 @@ const styles = StyleSheet.create({
   searchContainer: {
     flex: 1,
     height: 50,
-    backgroundColor: colors.white.base,
+    backgroundColor: colors.bg.card,
     borderRadius: 12,
     paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border.default,
     justifyContent: 'center',
   },
   searchInput: { 
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   filterButton: {
     width: 50,
     height: 50,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',

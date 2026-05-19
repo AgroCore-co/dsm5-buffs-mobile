@@ -21,17 +21,6 @@ import sanitarioService from "../../services/sanitarioService";
 import YellowButton from "../Button"; // Assumindo o componente de botão padrão
 import SelectBottomSheet from "../SelectBottomSheet";
 
-// ==========================================================
-// --- CONFIGURAÇÃO DE CORES (Padrão Unificado) ---
-// ==========================================================
-const defaultColors = {
-    primary: { base: "#FAC638" },
-    gray: { base: "#6B7280", claro: "#F8F7F5", disabled: "#E5E7EB" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" }
-};
-const mergedColors = { ...defaultColors, ...colors };
 
 // ==========================================================
 // --- INTERFACES E DADOS ---
@@ -287,10 +276,10 @@ return (
                         <Switch
                             value={Boolean(formData.necessita_retorno)}
                             onValueChange={(v) => handleChange("necessita_retorno", v)}
-                            thumbColor="#FFF"
+                            thumbColor={colors.bg.card}
                             trackColor={{
-                                false: "#E5E7EB",
-                                true: mergedColors.primary.base
+                                false: colors.border.default,
+                                true: colors.brand.primary
                             }}
                         />
                     </View>
@@ -344,13 +333,13 @@ return (
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
-    sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
-    handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
+    sheetBackground: { backgroundColor: colors.bg.sheet, borderRadius: 24 },
+    handleIndicator: { backgroundColor: colors.border.light, height: 4, width: 36 },
 
     // Container principal
     container: {
         paddingBottom: 32,
-        backgroundColor: mergedColors.gray.claro,
+        backgroundColor: colors.bg.sheet,
     },
     header: {
         flexDirection: "row",
@@ -363,37 +352,37 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 20,
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
     sectionTitle: {
         fontWeight: "600",
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
         paddingBottom: 4,
     },
     // Estilo base do input, usado pelo Floating Label
     inputBase: {
         width: "100%",
         borderWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         borderRadius: 8,
         paddingHorizontal: 12,
         marginTop: 5,
         marginBottom: 12,
         fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
+        color: colors.text.heading,
+        backgroundColor: colors.bg.card,
         minHeight: 50, // Adicionado para garantir altura mínima
     },
 
     // --- Estilos da Lista e Itens ---
     listContainer: {
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 16,
         padding: 16,
@@ -402,7 +391,7 @@ const styles = StyleSheet.create({
     },
 
     listContainerHeader: { // Para o item de data fora do listContainer principal (Data Aplicação)
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 16,
         flexDirection: "row",
@@ -414,19 +403,19 @@ const styles = StyleSheet.create({
     },
     listLabel: {
         fontSize: 16,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         flex: 1,
     },
     listLabelDropdown: { // Para o label ao lado do DropdownPicker
         fontSize: 16,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         marginRight: 10,
     },
     listValue: { // Usado para "Carregando"
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         textAlign: "right",
         minWidth: 60,
     },
@@ -439,7 +428,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         marginBottom: 12,
         borderTopWidth: 1,
-        borderTopColor: mergedColors.border,
+        borderTopColor: colors.border.default,
     },
     dateDisplayButton: {
         flexDirection: "row",
@@ -448,12 +437,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.gray.claro,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.sheet,
     },
     dateDisplayValue: {
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontWeight: "600",
         marginRight: 8,
     },
@@ -489,14 +478,14 @@ const styles = StyleSheet.create({
         zIndex: 1000, 
     },
     dropdownStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
         height: 50,
         minHeight: 50,
     },
     dropdownContainerStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
     },
 
     // --- Observação ---
@@ -510,7 +499,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         padding: 16,
         borderTopWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         marginTop: 16,
 
     },
@@ -524,22 +513,22 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     saveBtn: {
-        backgroundColor: mergedColors.primary.base,
+        backgroundColor: colors.brand.primary,
     },
     saveText: {
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontSize: 16,
     },
     label: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },
     dropdownLabel: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },
@@ -549,19 +538,19 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 14,
         borderRadius: 12,
-        backgroundColor: "#F9FAFB",
+        backgroundColor: colors.bg.subtle,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: colors.border.default,
     },
 
     switchActive: {
-        backgroundColor: "#FFF8E1",
-        borderColor: mergedColors.primary.base,
+        backgroundColor: colors.status.warningBg,
+        borderColor: colors.brand.primary,
     },
 
     switchText: {
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
 });

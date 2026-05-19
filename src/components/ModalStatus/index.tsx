@@ -63,18 +63,18 @@ const getVariantStyles = (variant: Variant) => {
   switch (variant) {
     case "danger":
       return {
-        bg: colors.red.extra,
-        text: colors.white.base,
+        bg: colors.status.error,
+        text: colors.text.onDark,
       };
     case "success":
       return {
-        bg: colors.green.extra,
-        text: colors.white.base,
+        bg: colors.status.success,
+        text: colors.text.onDark,
       };
     default:
       return {
-        bg: colors.brown.base,
-        text: colors.white.base,
+        bg: colors.text.accent,
+        text: colors.text.onDark,
       };
   }
 };
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 14,
     textAlign: "center",
-    color: "#555",
+    color: colors.text.muted,
     marginBottom: 20,
   },
   buttons: {
@@ -103,11 +103,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.border.default,
     alignItems: "center",
   },
   cancelText: {
-    color: "#374151",
+    color: colors.text.body,
     fontWeight: "600",
   },
   confirmButton: {

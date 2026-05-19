@@ -40,7 +40,7 @@ export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress, onS
       <View
         style={[
           styles.statusBar,
-          { backgroundColor: isLactando ? colors.green.active : colors.red.inactive },
+          { backgroundColor: isLactando ? colors.status.successActive : colors.status.errorFade },
         ]}
       />
       <View style={styles.content}>
@@ -51,15 +51,15 @@ export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress, onS
           <Text style={styles.brinco}>Brinco: Nº {animal.brinco}</Text>
         </View>
         <View style={[styles.statusBadge, !isEnabled && styles.statusBadgeSeca]}>
-          <View style={[ styles.statusDot, { backgroundColor: isEnabled ? colors.green.extra : colors.red.extra, }, ]} />
-          <Text style={[ styles.statusText, { color: isEnabled ? colors.green.text : colors.red.text, },]}>
+          <View style={[ styles.statusDot, { backgroundColor: isEnabled ? colors.status.success : colors.status.error, }, ]} />
+          <Text style={[ styles.statusText, { color: isEnabled ? colors.status.successText : colors.status.errorText, },]}>
             {isEnabled ? "Em Lactação" : "Seca"}
           </Text>
           <Switch
             value={isEnabled}
             onValueChange={toggleSwitch}
-            trackColor={{ false: colors.gray.disabled, true: colors.gray.disabled }}
-            thumbColor={isEnabled ? colors.green.extra : colors.red.extra}
+            trackColor={{ false: colors.border.default, true: colors.border.default }}
+            thumbColor={isEnabled ? colors.status.success : colors.status.error}
           />
         </View>
         </View>
@@ -99,10 +99,10 @@ const styles = StyleSheet.create({
   cardContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 12,
     padding: 12,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
@@ -131,11 +131,11 @@ const styles = StyleSheet.create({
   nome: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: colors.text.title,
   },
   brinco: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.text.muted,
   },
   chipRow: {
     flexDirection: "row",
@@ -147,21 +147,21 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F7F8FA",
+    backgroundColor: colors.bg.section,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   chipLabel: {
     fontSize: 13,
-    fontWeight: '700', 
-    color: "#374151",
+    fontWeight: '700',
+    color: colors.text.body,
     marginRight: 4,
   },
   chipValue: {
     fontSize: 13,
-    fontWeight: '500', 
-    color: "#374151",
+    fontWeight: '500',
+    color: colors.text.body,
   },
   footer: {
     flexDirection: "row",
@@ -169,12 +169,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.text.muted,
   },
   footerHighlight: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.yellow.base,
+    color: colors.brand.primary,
   },
   statusBadge: {
     flexDirection: "row",

@@ -124,15 +124,15 @@ export default function Movimentacoes() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#fff", 
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg.card,
     padding: 16,
     borderRadius: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
-    shadowColor: colors.black.base,
+    borderColor: colors.border.default,
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -150,24 +150,23 @@ const styles = StyleSheet.create({
   },
   listHeader: {
     flexDirection: "row",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.bg.input,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 12,
     marginBottom: 8,
   },
-  listHeaderText: { 
-    fontWeight: "600", 
-    color: "#4B5563" 
+  listHeaderText: {
+    fontWeight: "600",
+    color: colors.text.secondary
   },
   itemContainer: {
-    backgroundColor: colors.white.base,
+    backgroundColor: colors.bg.card,
     padding: 12,
     marginBottom: 5,
     borderBottomWidth: 1,
-
-    borderColor: colors.gray.disabled,
-    shadowColor: colors.black.base,
+    borderColor: colors.border.default,
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 2,
@@ -184,14 +183,14 @@ const styles = StyleSheet.create({
   qtdBox: {
     width: 40,
     height: 28,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.status.warningBg,
     borderRadius: 6,
     justifyContent: "center",
     alignItems: "center",
   },
-  qtdText: { 
-    fontWeight: "bold", 
-    color: "#B45309" 
+  qtdText: {
+    fontWeight: "bold",
+    color: colors.status.warningText
   },
   pagination: {
     flexDirection: "row",

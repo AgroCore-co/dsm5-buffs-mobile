@@ -37,7 +37,7 @@ export const CardBufalo: React.FC<CardBufaloProps> = ({
       <View
         style={[
           styles.statusBar,
-          { backgroundColor: isAtivo ? colors.green.active : colors.red.inactive },
+          { backgroundColor: isAtivo ? colors.status.successActive : colors.status.errorFade },
         ]}
       />
 
@@ -78,10 +78,10 @@ const styles = StyleSheet.create({
   cardContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 12,
     padding: 12,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
@@ -105,11 +105,11 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: colors.text.title,
   },
   brinco: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.text.muted,
   },
   chipRow: {
     flexDirection: "row",
@@ -120,27 +120,27 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F7F8FA",
+    backgroundColor: colors.bg.section,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   chipText: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.text.body,
     marginLeft: 4,
   },
   chipIcon: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.text.body,
   },
   categoryChip: {
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
   },
   categoryText: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
   moreButton: {
     paddingHorizontal: 8,
@@ -148,6 +148,6 @@ const styles = StyleSheet.create({
   },
   moreButtonText: {
     fontSize: 20,
-    color: colors.gray.base,
+    color: colors.text.muted,
   },
 });

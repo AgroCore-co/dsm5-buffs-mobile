@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
+import { colors } from "../../styles/colors";
 import sanitarioService from "../../services/sanitarioService";
 import YellowButton from "../Button";
 
@@ -111,7 +112,7 @@ export const FormSanitario = ({ onSubmit, onClose, idBufalo }: FormSanitarioProp
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
         <Text>Necessita retorno?</Text>
         <TouchableOpacity onPress={() => setRetorno(!retorno)} style={{ marginLeft: 10 }}>
-          <Text style={{ color: retorno ? "green" : "gray" }}>{retorno ? "Sim" : "Não"}</Text>
+          <Text style={{ color: retorno ? colors.status.success : colors.text.muted }}>{retorno ? "Sim" : "Não"}</Text>
         </TouchableOpacity>
       </View>
 
@@ -125,16 +126,16 @@ const styles = StyleSheet.create({
   title: { fontWeight: "bold", fontSize: 18, marginBottom: 12, textAlign: "center" },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.muted,
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "#FFD700",
+    backgroundColor: colors.brand.primary,
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
   },
-  buttonText: { color: "#fff", fontWeight: "bold" },
+  buttonText: { color: colors.text.onDark, fontWeight: "bold" },
 });
