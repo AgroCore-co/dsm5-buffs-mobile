@@ -359,14 +359,24 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: colors.brand.primary,
     justifyContent: 'center',
-    paddingLeft: 16
+    paddingLeft: 16,
+    borderBottomColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
   header1Text: {
     marginTop: 10,
     fontSize: 25,
     fontWeight: "900",
     textAlign: "center",
-    color: colors.text.accent
+    color: colors.text.accent,
   },
   headerButtons: { 
     marginTop: 25, 

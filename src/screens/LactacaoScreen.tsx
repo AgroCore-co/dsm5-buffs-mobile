@@ -322,12 +322,23 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: colors.brand.primary,
     justifyContent: "center",
-    alignItems: "center",
+    borderBottomColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    paddingLeft: 16,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,    
   },
   headerText: {
     marginTop: 10,
     fontSize: 25,
-    fontWeight: "900",
+    fontWeight: '900',
+    textAlign: 'center',
     color: colors.text.accent,
   },
   loadingContainer: {
@@ -361,6 +372,5 @@ const styles = StyleSheet.create({
     color: colors.text.body,
     textAlign: "center",
   },
-
 
 });

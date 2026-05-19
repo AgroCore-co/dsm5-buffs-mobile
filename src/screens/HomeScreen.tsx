@@ -77,7 +77,7 @@ export const HomeScreen = () => {
           <View style={{position: 'absolute', right: 60, top: 10}}>
             <UserMenu />
           </View>
-          <View style={{position: 'absolute', left: 70, top: -20}}>
+          <View style={{position: 'absolute', left: 70, top: -18}}>
             <NotificacoesButton />
           </View>
       </View>
@@ -126,7 +126,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 16,
     paddingTop: 20,
-    borderColor: colors.brand.dark
+    borderColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
   loadingContainer: { 
     flex: 1, 

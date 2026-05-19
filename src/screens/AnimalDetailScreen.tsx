@@ -455,7 +455,6 @@ const styles = StyleSheet.create({
     height: 48,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10
   },
   headerArrow: {
     fontSize: 28,
@@ -471,12 +470,24 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: colors.brand.primary,
     justifyContent: 'center',
-    paddingLeft: 16
+    paddingLeft: 16,
+    borderBottomColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
   header1Text: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.text.accent
+    fontSize: 25,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: colors.text.accent,
+    marginBottom: 5
   },
   loadingContainer: { 
     flex: 1, 
