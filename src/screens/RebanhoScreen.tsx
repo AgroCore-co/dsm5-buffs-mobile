@@ -139,17 +139,11 @@ export const RebanhoScreen = () => {
     navigation.navigate('NfcScannerScreen');
   };
 
-    // Função que será passada para o BottomSheet para salvar os dados
-  const handleSaveZootecnico = (data: any) => {
-    console.log("Salvando alterações do registro Zootec:", data);
-    // 1. Chamar o serviço de atualização
-    // Ex: zootecnicoService.update(data);
-    // 2. Fechar o BottomSheet
-    setSelectedZootec(null); 
-    
-    // 3. Recarregar a lista (opcional, dependendo da necessidade)
-    // fetchData(pageZootec, pageSanit); 
+  const handlePageChange = async (novaPagina: number) => {
+    if (novaPagina < 1 || novaPagina > totalPaginas) return;
+    await fetchBufalosFiltrados(novaPagina);
   };
+
 
   const actions = [
     {
@@ -282,11 +276,8 @@ export const RebanhoScreen = () => {
               <View style={styles.pagination}>
                 <Button
                   title="Anterior"
-                  onPress={() => {
-                    if (paginaAtual > 1)
-                      fetchBufalosFiltrados(filtros, paginaAtual - 1);
-                  }}
-                  disabled={paginaAtual === 1 || listLoading}
+                  onPress={() => handlePageChange(paginaAtual - 1)}
+                  disabled={paginaAtual === 1}
                 />
 
                 <Text style={styles.pageInfo}>
@@ -295,11 +286,8 @@ export const RebanhoScreen = () => {
 
                 <Button
                   title="Próxima"
-                  onPress={() => {
-                    if (paginaAtual < totalPaginas)
-                      fetchBufalosFiltrados(filtros, paginaAtual + 1);
-                  }}
-                  disabled={paginaAtual === totalPaginas || listLoading}
+                  onPress={() => handlePageChange(paginaAtual + 1)}
+                  disabled={paginaAtual === totalPaginas}
                 />
               </View>
             )
@@ -402,6 +390,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 12,
+    marginBottom: 40,
     gap: 8,
   },
   loadingContainer: { 

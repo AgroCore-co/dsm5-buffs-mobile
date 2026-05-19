@@ -170,10 +170,10 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
   };
 
 
-  const animaisPaginados = animais.slice(
-    (paginaAtual - 1) * itensPorPagina,
-    paginaAtual * itensPorPagina
-  );
+  const handlePageChange = async (novaPagina: number) => {
+    if (novaPagina < 1 || novaPagina > totalPaginas) return;
+    await fetchCiclos(novaPagina);
+  };
 
   const actions = [
     {
@@ -245,23 +245,17 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
               </View>
             ) : (
               <Text style={{ textAlign: "center", marginTop: 20 }}>
-                Nenhum animal encontrado
+                Nenhum registro encontrado
               </Text>
             )
           }
 
           ListFooterComponent={
-            listLoading ? (
-              <View style={styles.footerLoader}>
-                
-              </View>
-            ) : (
+            totalPaginas > 1 && !listLoading ? (
               <View style={styles.pagination}>
                 <Button
                   title="Anterior"
-                  onPress={() => {
-                    if (paginaAtual > 1) fetchCiclos(paginaAtual - 1);
-                  }}
+                  onPress={() => handlePageChange(paginaAtual - 1)}
                   disabled={paginaAtual === 1}
                 />
 
@@ -271,14 +265,11 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
 
                 <Button
                   title="Próxima"
-                  onPress={() => {
-                    if (paginaAtual < totalPaginas)
-                      fetchCiclos(paginaAtual + 1);
-                  }}
+                  onPress={() => handlePageChange(paginaAtual + 1)}
                   disabled={paginaAtual === totalPaginas}
                 />
               </View>
-            )
+            ) : null
           }
 
         />

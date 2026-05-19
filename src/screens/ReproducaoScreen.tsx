@@ -267,6 +267,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
+    marginBottom: 40,
     gap: 8,
   },
 
