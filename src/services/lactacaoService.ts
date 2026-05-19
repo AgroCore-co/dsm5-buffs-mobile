@@ -1,5 +1,8 @@
 import { apiFetch } from "../lib/apiClient";
 import { formatarDataBR } from "../utils/date";
+import { queryAll, queryFirst, execute } from "../database/db";
+import { enqueue } from "./pendingOperationsService";
+import uuid from "react-native-uuid";
 
 /* =========================
    INTERFACES
@@ -76,7 +79,7 @@ export interface EstoqueRegistroPayload {
 }
 
 /* =========================
-   GET — CICLOS DE LACTAÇÃO
+   GET — CICLOS DE LACTAÇÃO (SQLite)
 ========================= */
 
 export const getCiclosLactacao = async (
@@ -84,25 +87,25 @@ export const getCiclosLactacao = async (
   page = 1,
   limit = 10
 ) => {
-  try {
-    if (!propriedadeId) {
-      throw new Error("ID da propriedade é obrigatório.");
-    }
+  if (!propriedadeId) {
+    return { ciclos: [], meta: { page: 1, totalPages: 1, totalItems: 0 } };
+  }
 
-    const response: {
-      data: any[];
-      meta: {
-        page: number;
-        totalPages: number;
-        totalItems: number;
-      };
-    } = await apiFetch(
-      `/lactacao/propriedade/${propriedadeId}?page=${page}&limit=${limit}`
-    );
+  const offset = (page - 1) * limit;
+  const rows = await queryAll<{ _raw: string }>(
+    `SELECT _raw FROM ciclos_lactacao WHERE propriedadeId = ? ORDER BY updatedAt DESC LIMIT ? OFFSET ?`,
+    [propriedadeId, limit, offset],
+  );
 
-    const ciclos = response?.data ?? [];
+  const countRow = await queryFirst<{ total: number }>(
+    `SELECT COUNT(*) as total FROM ciclos_lactacao WHERE propriedadeId = ?`,
+    [propriedadeId],
+  );
+  const total = countRow?.total ?? 0;
 
-    const ciclosFormatados = ciclos.map((c) => ({
+  const ciclos = rows.map((r) => {
+    const c = JSON.parse(r._raw);
+    return {
       idCicloLactacao: c.idCicloLactacao,
       idBufala: c.idBufala,
       cicloAtual: c.cicloAtual,
@@ -114,34 +117,23 @@ export const getCiclosLactacao = async (
       dtSecagemPrevista: c.dtSecagemPrevista
         ? formatarDataBR(c.dtSecagemPrevista)
         : "—",
-    }));
+    };
+  });
 
-    return {
-      ciclos: ciclosFormatados,
-      meta: response.meta,
-    };
-  } catch (error) {
-    console.error("Erro ao buscar ciclos de lactação:", error);
-    return {
-      ciclos: [],
-      meta: { page: 1, totalPages: 1, totalItems: 0 },
-    };
-  }
+  return {
+    ciclos,
+    meta: { page, totalPages: Math.max(1, Math.ceil(total / limit)), totalItems: total },
+  };
 };
 
 /* =========================
-   GET — ESTATÍSTICAS
+   GET — ESTATÍSTICAS (API — dados computados)
 ========================= */
 
 export const getEstatisticasLactacao = async (propriedadeId: string) => {
   try {
-    if (!propriedadeId) {
-      throw new Error("ID da propriedade é obrigatório.");
-    }
-
-    return await apiFetch(
-      `/lactacao/propriedade/${propriedadeId}/estatisticas`
-    );
+    if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
+    return await apiFetch(`/lactacao/propriedade/${propriedadeId}/estatisticas`);
   } catch (error) {
     console.error("Erro ao buscar estatísticas de lactação:", error);
     return {
@@ -156,17 +148,13 @@ export const getEstatisticasLactacao = async (propriedadeId: string) => {
 };
 
 /* =========================
-   GET — INDÚSTRIAS
+   GET — INDÚSTRIAS (API — não sincronizável)
 ========================= */
 
 export const getIndustriasPorPropriedade = async (propriedadeId: string) => {
   try {
     if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
-
-    const response: Industria[] = await apiFetch(
-      `/laticinios/propriedade/${propriedadeId}`
-    );
-
+    const response: Industria[] = await apiFetch(`/laticinios/propriedade/${propriedadeId}`);
     return response || [];
   } catch (error) {
     console.error("Erro ao buscar indústrias da propriedade:", error);
@@ -175,92 +163,51 @@ export const getIndustriasPorPropriedade = async (propriedadeId: string) => {
 };
 
 /* =========================
-   POST / PATCH (INALTERADOS)
+   POST / PATCH — offline queue
 ========================= */
 
 export const registrarLactacaoApi = async (payload: LactacaoRegistroPayload) => {
-  try {
-    return await apiFetch("/ordenhas", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (error) {
-    console.error("Erro ao registrar lactação na API:", error);
-    throw new Error("Falha ao registrar lactação.");
-  }
+  const id = uuid.v4() as string;
+  await enqueue("ciclos_lactacao", "CREATE", { ...payload, id });
 };
 
 export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {
-  try {
-    console.log('📦 PAYLOAD FINAL / SWAGGER:', JSON.stringify(payload, null, 2));
-    return await apiFetch("/retiradas", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (error) {
-    console.error("Erro ao registrar coleta na API:", error);
-    throw new Error("Falha ao registrar coleta.");
-  }
+  const id = uuid.v4() as string;
+  await enqueue("ciclos_lactacao", "CREATE", { ...payload, id });
 };
 
 export const registrarEstoqueApi = async (payload: EstoqueRegistroPayload) => {
-  try {
-    return await apiFetch("/producao-diaria", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (error) {
-    console.error("Erro ao registrar estoque na API:", error);
-    throw new Error("Falha ao registrar estoque.");
-  }
+  const id = uuid.v4() as string;
+  await enqueue("ciclos_lactacao", "CREATE", { ...payload, id });
 };
 
 export const encerrarLactacao = async (idCiclo: string | number) => {
-  try {
-    if (!idCiclo) throw new Error("ID do ciclo é obrigatório.");
+  if (!idCiclo) throw new Error("ID do ciclo é obrigatório.");
 
-    const hoje = new Date().toISOString().split("T")[0];
+  const hoje = new Date().toISOString().split("T")[0];
+  const updatePayload = { id: String(idCiclo), dt_secagem_real: hoje, observacao: "Seca", status: "seco" };
 
-    return await apiFetch(`/lactacao/${idCiclo}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        dt_secagem_real: hoje,
-        observacao: "Seca",
-      }),
-    });
-  } catch (error) {
-    console.error("Erro ao encerrar lactação:", error);
-    throw new Error("Falha ao encerrar lactação.");
-  }
+  await execute(
+    `UPDATE ciclos_lactacao SET status = ?, _synced = 0 WHERE id = ?`,
+    ["seco", String(idCiclo)],
+  );
+  await enqueue("ciclos_lactacao", "UPDATE", updatePayload);
 };
 
 /* =========================
-   GET — PRODUÇÃO / ESTOQUE ATUAL
+   GET — PRODUÇÃO DIÁRIA (API — dado agregado)
 ========================= */
 
 export const getProducaoDiariaAtual = async (propriedadeId: string) => {
   try {
-    if (!propriedadeId) {
-      throw new Error("ID da propriedade é obrigatório.");
-    }
+    if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
 
-    const response: {
-      data: {
-        quantidade: string;
-        dt_registro: string;
-      }[];
-    } = await apiFetch(
+    const response: { data: { quantidade: string; dt_registro: string }[] } = await apiFetch(
       `/producao-diaria/propriedade/${propriedadeId}?page=1&limit=1`
     );
 
     const registro = response?.data?.[0];
-
-    if (!registro) {
-      return {
-        quantidade: 0,
-        dataAtualizacao: "N/D",
-      };
-    }
+    if (!registro) return { quantidade: 0, dataAtualizacao: "N/D" };
 
     return {
       quantidade: Number(registro.quantidade),
@@ -268,9 +215,6 @@ export const getProducaoDiariaAtual = async (propriedadeId: string) => {
     };
   } catch (error) {
     console.error("Erro ao buscar produção diária:", error);
-    return {
-      quantidade: 0,
-      dataAtualizacao: "N/D",
-    };
+    return { quantidade: 0, dataAtualizacao: "N/D" };
   }
 };
