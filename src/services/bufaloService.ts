@@ -1,109 +1,103 @@
-import { apiFetch } from "../lib/apiClient";
-import { grupoService, Grupo } from "./grupoService"; 
+import uuid from 'react-native-uuid';
+import { queryAll, queryFirst, execute } from '../database/db';
+import { enqueue } from './pendingOperationsService';
+import { grupoService, Grupo } from './grupoService';
 
-export const getBufalos = async (propriedadeId: string, page = 1, limit = 10) => {
-  try {
-    const result = await apiFetch(
-      `/bufalos/propriedade/${propriedadeId}?page=${page}&limit=${limit}`
-    );
+export const getBufalos = async (
+  propriedadeId: string,
+  page = 1,
+  limit = 10,
+) => {
+  const offset = (page - 1) * limit;
+  const rows = await queryAll<any>(
+    `SELECT _raw FROM bufalos WHERE propriedadeId = ? AND (_raw NOT LIKE '%"deletedAt":%' OR _raw LIKE '%"deletedAt":null%') ORDER BY brinco ASC LIMIT ? OFFSET ?`,
+    [propriedadeId, limit, offset],
+  );
 
-    const bufalos = result.data.map((b: any) => ({
-      ...b,
-      racaNome: b.raca?.nome || b.nomeRaca || "Desconhecida",
-    }));
+  const countRow = await queryFirst<{ total: number }>(
+    `SELECT COUNT(*) as total FROM bufalos WHERE propriedadeId = ? AND (_raw NOT LIKE '%"deletedAt":%' OR _raw LIKE '%"deletedAt":null%')`,
+    [propriedadeId],
+  );
+  const total = countRow?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
-    return {
-      bufalos,
-      meta: result.meta,
-    };
-  } catch (error: any) {
-    console.error("Erro ao buscar búfalos:", error);
-    return {
-      bufalos: [],
-      meta: {
-        page: 1,
-        limit,
-        total: 0,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
-      },
-    };
-  }
+  const bufalos = rows.map((r) => {
+    const b = JSON.parse(r._raw);
+    return { ...b, racaNome: b.raca?.nome || b.nomeRaca || 'Desconhecida' };
+  });
+
+  return {
+    bufalos,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
 };
 
 export const getBufaloDetalhes = async (id: string) => {
-  try {
-    const bufalo = await apiFetch(`/bufalos/${id}`);
+  const row = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE id = ?`,
+    [id],
+  );
+  if (!row) throw new Error(`Búfalo ${id} não encontrado`);
 
-    const paiNome =
-      bufalo.brincoPai ??
-      bufalo.materialGeneticoMachoNome ??
-      "Desconhecido";
-
-    const maeNome =
-      bufalo.brincoMae ??
-      bufalo.materialGeneticoFemeaNome ??
-      "Desconhecida";
-
-    return {
-      ...bufalo,
-      racaNome: bufalo.nomeRaca || bufalo.raca?.nome || "Desconhecida",
-      paiNome,
-      maeNome,
-    };
-  } catch (err) {
-    console.error("Erro ao buscar detalhes do búfalo:", err);
-    throw err;
-  }
+  const bufalo = JSON.parse(row._raw);
+  return {
+    ...bufalo,
+    racaNome: bufalo.nomeRaca || bufalo.raca?.nome || 'Desconhecida',
+    paiNome: bufalo.brincoPai ?? bufalo.materialGeneticoMachoNome ?? 'Desconhecido',
+    maeNome: bufalo.brincoMae ?? bufalo.materialGeneticoFemeaNome ?? 'Desconhecida',
+  };
 };
 
 export const createBufalo = async (data: any) => {
-  try {
-    const bufalo = await apiFetch("/bufalos", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    return bufalo;
-  } catch (err) {
-    console.error("Erro ao criar búfalo:", err);
-    throw err;
-  }
+  const id = data.id ?? (uuid.v4() as string);
+  const now = new Date().toISOString();
+  const newRecord = { ...data, id, createdAt: now, updatedAt: now };
+
+  await execute(
+    `INSERT INTO bufalos (id, propriedadeId, brinco, sexo, nivelMaturidade, status, idRaca, _raw, _synced, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+    [id, data.propriedadeId, data.brinco, data.sexo, data.nivelMaturidade, data.status ? 1 : 0, data.idRaca, JSON.stringify(newRecord), now],
+  );
+
+  await enqueue('bufalos', 'CREATE', newRecord);
+  return newRecord;
 };
 
 export const updateBufalo = async (id: string, data: any) => {
-  try {
-    const bufalo = await apiFetch(`/bufalos/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
-    return bufalo;
-  } catch (err) {
-    console.error(`Erro ao atualizar búfalo ${id}:`, err);
-    throw err;
-  }
+  const existing = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE id = ?`,
+    [id],
+  );
+  if (!existing) throw new Error(`Búfalo ${id} não encontrado`);
+
+  const now = new Date().toISOString();
+  const merged = { ...JSON.parse(existing._raw), ...data, updatedAt: now };
+
+  await execute(
+    `UPDATE bufalos SET brinco = ?, sexo = ?, nivelMaturidade = ?, status = ?, idRaca = ?, _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
+    [merged.brinco, merged.sexo, merged.nivelMaturidade, merged.status ? 1 : 0, merged.idRaca, JSON.stringify(merged), now, id],
+  );
+
+  await enqueue('bufalos', 'UPDATE', merged);
+  return merged;
 };
 
 export const deleteBufalo = async (id: string) => {
-  try {
-    await apiFetch(`/bufalos/${id}`, {
-      method: "DELETE",
-    });
-    return true;
-  } catch (err) {
-    console.error(`Erro ao deletar búfalo ${id}:`, err);
-    throw err;
-  }
+  await execute(`DELETE FROM bufalos WHERE id = ?`, [id]);
+  await enqueue('bufalos', 'DELETE', { id });
+  return true;
 };
 
 export const getRacas = async () => {
-  try {
-    const racas = await apiFetch("/racas");
-    return racas; 
-  } catch (err) {
-    console.error("Erro ao buscar raças:", err);
-    throw err;
-  }
+  const rows = await queryAll<{ _raw: string }>(`SELECT _raw FROM racas`);
+  return rows.map((r) => JSON.parse(r._raw));
 };
 
 export const filtrarBufalos = async (
@@ -116,101 +110,92 @@ export const filtrarBufalos = async (
     id_raca?: string;
   },
   page = 1,
-  limit = 10
+  limit = 10,
 ) => {
-  try {
-    const params = new URLSearchParams();
+  const conditions: string[] = [`propriedadeId = ?`];
+  const params: any[] = [propriedadeId];
 
-    if (filtros?.brinco) params.append("brinco", filtros.brinco);
-    if (filtros?.sexo) params.append("sexo", filtros.sexo);
-    if (filtros?.nivel_maturidade)
-      params.append("nivel_maturidade", filtros.nivel_maturidade);
-    if (filtros?.status !== undefined)
-      params.append("status", String(filtros.status));
-    if (filtros?.id_raca) params.append("id_raca", filtros.id_raca);
-
-    params.append("page", String(page));
-    params.append("limit", String(limit));
-
-    const result = await apiFetch(
-      `/bufalos/filtro/propriedade/${propriedadeId}/avancado?${params.toString()}`
-    );
-
-    const bufalos = result.data.map((b: any) => ({
-      ...b,
-      racaNome: b.raca?.nome || b.nomeRaca || "Desconhecida",
-    }));
-
-    return { bufalos, meta: result.meta };
-  } catch (error) {
-    console.error("Erro ao filtrar búfalos:", error);
-    return { bufalos: [], meta: { page: 1, totalPages: 1 } };
+  if (filtros?.brinco) {
+    conditions.push(`brinco LIKE ?`);
+    params.push(`%${filtros.brinco}%`);
   }
+  if (filtros?.sexo) {
+    conditions.push(`sexo = ?`);
+    params.push(filtros.sexo);
+  }
+  if (filtros?.nivel_maturidade) {
+    conditions.push(`nivelMaturidade = ?`);
+    params.push(filtros.nivel_maturidade);
+  }
+  if (filtros?.status !== undefined) {
+    conditions.push(`status = ?`);
+    params.push(filtros.status ? 1 : 0);
+  }
+  if (filtros?.id_raca) {
+    conditions.push(`idRaca = ?`);
+    params.push(filtros.id_raca);
+  }
+
+  const where = conditions.join(' AND ');
+  const offset = (page - 1) * limit;
+
+  const rows = await queryAll<any>(
+    `SELECT _raw FROM bufalos WHERE ${where} ORDER BY brinco ASC LIMIT ? OFFSET ?`,
+    [...params, limit, offset],
+  );
+
+  const countRow = await queryFirst<{ total: number }>(
+    `SELECT COUNT(*) as total FROM bufalos WHERE ${where}`,
+    params,
+  );
+  const total = countRow?.total ?? 0;
+
+  const bufalos = rows.map((r) => {
+    const b = JSON.parse(r._raw);
+    return { ...b, racaNome: b.raca?.nome || b.nomeRaca || 'Desconhecida' };
+  });
+
+  return {
+    bufalos,
+    meta: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+  };
 };
 
 export const getBufaloPorMicrochip = async (microchip: string) => {
-  try {
-    const bufalo = await apiFetch(`/bufalos/microchip/${microchip}`);
-    return bufalo;
-  } catch (err) {
-    console.error(
-      `Erro ao buscar búfalo pelo microchip ${microchip}:`,
-      err
-    );
-    throw err;
-  }
+  const row = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE _raw LIKE ?`,
+    [`%"microchip":"${microchip}"%`],
+  );
+  if (!row) throw new Error(`Búfalo com microchip ${microchip} não encontrado`);
+  return JSON.parse(row._raw);
 };
 
 export const getBufaloByBrincoAndSexo = async (
   propriedadeId: string,
   brinco: string,
-  sexo: "M" | "F"
+  sexo: 'M' | 'F',
 ) => {
-  try {
-    const params = new URLSearchParams();
-    params.append("brinco", brinco);
-    params.append("sexo", sexo);
-    params.append("limit", "1");
-    params.append("page", "1");
-
-    const result = await apiFetch(
-      `/bufalos/filtro/propriedade/${propriedadeId}/avancado?${params.toString()}`
-    );
-
-    const dataList = result.data || result.bufalos || result;
-    return dataList && dataList.length > 0 ? dataList[0] : null;
-  } catch (error) {
-    console.error(
-      `Erro ao buscar búfalo (Brinco: ${brinco}, Sexo: ${sexo}):`,
-      error
-    );
-    return null;
-  }
+  const row = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE propriedadeId = ? AND brinco = ? AND sexo = ? LIMIT 1`,
+    [propriedadeId, brinco, sexo],
+  );
+  return row ? JSON.parse(row._raw) : null;
 };
 
-export const getGrupos = async (
-  idPropriedade: string
-): Promise<Grupo[]> => {
+export const getGrupos = async (idPropriedade: string): Promise<Grupo[]> => {
   return grupoService.getAllByPropriedade(idPropriedade);
 };
 
 export const moverBufaloDeGrupo = async (
   idBufalo: string,
-  idNovoGrupo: string
+  idNovoGrupo: string,
 ) => {
   const payload = {
     idsBufalos: [idBufalo],
-    idNovoGrupo: idNovoGrupo,
-    motivo: "Mudança manual de grupo via tela de animal",
+    idNovoGrupo,
+    motivo: 'Mudança manual de grupo via tela de animal',
   };
-
-  await apiFetch("/bufalos/grupo/mover", {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  await enqueue('bufalos', 'UPDATE', { id: idBufalo, ...payload });
 };
 
 export default {
