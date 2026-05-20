@@ -133,11 +133,7 @@ export const RebanhoScreen = () => {
         console.log("Tags lidas recebidas. Processando busca de animais...");
         navigation.setParams({ lidas: undefined });
     }
-  }, [route.params?.lidas]); 
-  
-  const iniciarScanner = () => {
-    navigation.navigate('NfcScannerScreen');
-  };
+  }, [route.params?.lidas]);
 
   const handlePageChange = async (novaPagina: number) => {
     if (novaPagina < 1 || novaPagina > totalPaginas) return;

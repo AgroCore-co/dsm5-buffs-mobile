@@ -1,0 +1,203 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, FlatList } from 'react-native';
+import { MainLayout } from '../layouts/MainLayout';
+import { useDimensions } from '../utils/useDimensions';
+import { colors } from '../styles/colors';
+import Plus from '../../assets/images/plus.svg';
+import { MapLeaflet } from '../components/Mapa';
+import { piqueteService, Piquete } from "../services/piqueteService";
+import { usePropriedade } from "../context/PropriedadeContext";
+import AgroCore from '../icons/agroCore';
+import { DemarcacaoPiqueteSheet } from '../components/DemarcacaoPiqueteSheet'; 
+import { useGpsLocation } from '../hooks/useLocation';
+import BuffaloLoader from '../components/BufaloLoader';
+
+
+export const PiquetesScreen_backup = () => {
+  const { wp, hp } = useDimensions();
+  const [piquetes, setPiquetes] = useState<Piquete[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { location: currentLocation, loading: gpsLoading, error: gpsError } = useGpsLocation();
+  const { propriedadeSelecionada } = usePropriedade();
+
+  useEffect(() => {
+    const fetchPiquetes = async () => {
+      try {
+        if (!propriedadeSelecionada) return; 
+        const data = await piqueteService.getAll(propriedadeSelecionada.toString());
+        setPiquetes(data);
+      } catch (error) {
+        console.error("Erro ao buscar piquetes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPiquetes();
+  }, []);
+
+  
+  
+  const onRefresh = async () => {
+    setRefreshing(true);
+    if (propriedadeSelecionada) {
+      const data = await piqueteService.getAll(propriedadeSelecionada.toString());
+      setPiquetes(data);
+    }
+    setRefreshing(false);
+  };
+
+  const handleOpenSheet = () => {
+    setIsSheetOpen(true);
+  };
+
+  const handleCloseSheet = () => {
+      setIsSheetOpen(false);
+      onRefresh(); 
+    };
+
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <BuffaloLoader />
+      </View>
+    );
+  }
+  
+
+return (
+  <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.header1Text}>PIQUETES</Text>
+      </View>
+      <MainLayout>
+        <FlatList
+          data={[{ key: 'map' }]}
+          keyExtractor={(item) => item.key}
+          renderItem={() => (
+            <MapLeaflet
+              piquetes={piquetes.map(p => ({
+                ...p,
+                color: p.grupoCor,
+              }))}
+              currentLocation={currentLocation}
+            />
+          )}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }
+        />
+
+        {/* z */}
+        {!isSheetOpen && (
+          <TouchableOpacity 
+            onPress={handleOpenSheet}
+            style={styles.fab}
+          >
+            <Text style={styles.buttonText}>
+              ADICIONAR NOVO PIQUETE
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* SHEET */}
+        {isSheetOpen && propriedadeSelecionada && (
+          <DemarcacaoPiqueteSheet 
+            onClose={handleCloseSheet} 
+            propriedadeId={propriedadeSelecionada} 
+          />
+        )}
+      </MainLayout>
+  </View>
+);
+};
+
+const styles = StyleSheet.create({
+  header: {
+    height: 60,
+    backgroundColor: colors.brand.primary,
+    justifyContent: 'center',
+    paddingLeft: 16,
+    borderBottomColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  header1Text: {
+    marginTop: 10,
+    fontSize: 25,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: colors.text.accent,
+  },
+  buttonText: {
+    fontSize: 12,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: colors.text.accent,
+  },
+  button: {
+    backgroundColor: colors.brand.dark,
+    borderRadius: 50,
+  },
+  headerButtons: {
+    marginTop: 25,
+    flexDirection: 'row',
+    position: 'absolute',
+    right: 20,
+    gap: 20,
+  },
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    backgroundColor: colors.bg.card,
+    borderRadius: 12,
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  loadingContainer: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    height: 80,
+    backgroundColor: colors.brand.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    backgroundColor: colors.brand.primary,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 5,
+    zIndex: 10,
+  },
+});

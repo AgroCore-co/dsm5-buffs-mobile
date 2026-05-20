@@ -82,3 +82,6 @@ docs/superpowers/
 docs/sql/
 docs/issue-*.md
 docs/spec-*.md
+
+# MCP config (contém secrets locais)
+.mcp.json
