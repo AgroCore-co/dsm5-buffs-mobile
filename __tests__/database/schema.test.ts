@@ -21,3 +21,19 @@ describe('schema — lotes', () => {
     expect(hasLotes).toBe(true);
   });
 });
+
+describe('schema — ordenhas', () => {
+  test('ordenhas está em ENTITY_PK_MAP com id', () => {
+    expect(ENTITY_PK_MAP.ordenhas).toBe('id');
+  });
+
+  test('getEntityExtras extrai propriedadeId, bufaloId e idCicloLactacao', () => {
+    const record = { idBufala: 'b1', idPropriedade: 'p1', idCicloLactacao: 'c1' };
+    expect(getEntityExtras('ordenhas', record)).toEqual({ propriedadeId: 'p1', bufaloId: 'b1', idCicloLactacao: 'c1' });
+  });
+
+  test('CREATE_TABLES_SQL inclui a tabela ordenhas', () => {
+    const hasOrdenhas = CREATE_TABLES_SQL.some((sql) => /CREATE TABLE IF NOT EXISTS ordenhas/.test(sql));
+    expect(hasOrdenhas).toBe(true);
+  });
+});

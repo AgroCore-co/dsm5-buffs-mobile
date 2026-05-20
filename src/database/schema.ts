@@ -9,6 +9,7 @@ export const ENTITY_PK_MAP: Record<string, string> = {
   alertas: 'id',
   reproducoes: 'id',
   lotes: 'id',
+  ordenhas: 'id',
 };
 
 // Campo de PK que a API retorna por entidade (antes da normalização para 'id')
@@ -69,6 +70,12 @@ export function getEntityExtras(entity: string, record: any): Record<string, any
       return { ...idProp, bufaloId: record.idBufala ?? record.bufaloId ?? null };
     case 'lotes':
       return { ...idProp, idGrupo: record.grupo?.idGrupo ?? record.idGrupo ?? null };
+    case 'ordenhas':
+      return {
+        ...idProp,
+        bufaloId: record.idBufala ?? record.bufaloId ?? null,
+        idCicloLactacao: record.idCicloLactacao ?? null,
+      };
     default:
       return { ...idProp };
   }
@@ -186,6 +193,17 @@ export const CREATE_TABLES_SQL: string[] = [
     _raw          TEXT NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS idx_lotes_prop ON lotes(propriedadeId)`,
+  `CREATE TABLE IF NOT EXISTS ordenhas (
+    id              TEXT PRIMARY KEY,
+    propriedadeId   TEXT,
+    bufaloId        TEXT,
+    idCicloLactacao TEXT,
+    updatedAt       TEXT NOT NULL,
+    deletedAt       TEXT,
+    _synced         INTEGER NOT NULL DEFAULT 0,
+    _raw            TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_ordenhas_ciclo ON ordenhas(idCicloLactacao)`,
   `CREATE TABLE IF NOT EXISTS sync_meta (
     entity        TEXT NOT NULL,
     propriedadeId TEXT NOT NULL,
