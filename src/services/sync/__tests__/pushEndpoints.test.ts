@@ -82,3 +82,63 @@ describe('pushEndpoints — alertas', () => {
     });
   });
 });
+
+describe('pushEndpoints — reproducoes', () => {
+  test('CREATE → POST /cobertura', () => {
+    const p = { id: 'r1', idBufala: 'b1' };
+    expect(resolvePushEndpoint('reproducoes', 'CREATE', p)).toEqual({
+      endpoint: '/cobertura', method: 'POST', body: p,
+    });
+  });
+
+  test('UPDATE plain → PATCH /cobertura/{id} com { status, tipo_parto }', () => {
+    const p = { id: 'r1', status: 'Confirmada', tipo_parto: undefined };
+    expect(resolvePushEndpoint('reproducoes', 'UPDATE', p)).toEqual({
+      endpoint: '/cobertura/r1', method: 'PATCH', body: { status: 'Confirmada', tipo_parto: undefined },
+    });
+  });
+
+  test('UPDATE com dt_parto → PATCH /cobertura/{id}/registrar-parto', () => {
+    const p = {
+      id: 'r1', status: 'CONCLUIDA',
+      dt_parto: '2026-05-01', tipo_parto: 'Normal',
+      observacao: 'ok', criar_ciclo_lactacao: true, padrao_dias_lactacao: 305,
+    };
+    expect(resolvePushEndpoint('reproducoes', 'UPDATE', p)).toEqual({
+      endpoint: '/cobertura/r1/registrar-parto',
+      method: 'PATCH',
+      body: {
+        dt_parto: '2026-05-01', tipo_parto: 'Normal',
+        observacao: 'ok', criar_ciclo_lactacao: true, padrao_dias_lactacao: 305,
+      },
+    });
+  });
+
+  test('DELETE → DELETE /cobertura/{id}', () => {
+    expect(resolvePushEndpoint('reproducoes', 'DELETE', { id: 'r1' })).toEqual({
+      endpoint: '/cobertura/r1', method: 'DELETE',
+    });
+  });
+});
+
+describe('pushEndpoints — ciclos_lactacao', () => {
+  test('CREATE → POST /lactacao', () => {
+    const p = { id: 'c1', dt_parto: '2026-01-10' };
+    expect(resolvePushEndpoint('ciclos_lactacao', 'CREATE', p)).toEqual({
+      endpoint: '/lactacao', method: 'POST', body: p,
+    });
+  });
+
+  test('UPDATE → PATCH /lactacao/{id}', () => {
+    const p = { id: 'c1', status: 'seco' };
+    expect(resolvePushEndpoint('ciclos_lactacao', 'UPDATE', p)).toEqual({
+      endpoint: '/lactacao/c1', method: 'PATCH', body: p,
+    });
+  });
+
+  test('DELETE → DELETE /lactacao/{id}', () => {
+    expect(resolvePushEndpoint('ciclos_lactacao', 'DELETE', { id: 'c1' })).toEqual({
+      endpoint: '/lactacao/c1', method: 'DELETE',
+    });
+  });
+});

@@ -38,6 +38,34 @@ const RESOLVERS: Record<string, Resolver> = {
     if (op === 'UPDATE') return { endpoint: `/alertas/${p.id}/visto`, method: 'PATCH', body: { visto: p.visto ?? true } };
     return null;
   },
+  reproducoes: (op, p) => {
+    if (op === 'CREATE') return { endpoint: '/cobertura', method: 'POST', body: p };
+    if (op === 'UPDATE') {
+      const isRegistrarParto = p?.dt_parto != null || p?.criar_ciclo_lactacao != null;
+      if (isRegistrarParto) {
+        return {
+          endpoint: `/cobertura/${p.id}/registrar-parto`,
+          method: 'PATCH',
+          body: {
+            dt_parto: p.dt_parto,
+            tipo_parto: p.tipo_parto,
+            observacao: p.observacao,
+            criar_ciclo_lactacao: p.criar_ciclo_lactacao,
+            padrao_dias_lactacao: p.padrao_dias_lactacao,
+          },
+        };
+      }
+      return { endpoint: `/cobertura/${p.id}`, method: 'PATCH', body: { status: p.status, tipo_parto: p.tipo_parto } };
+    }
+    if (op === 'DELETE') return { endpoint: `/cobertura/${p.id}`, method: 'DELETE' };
+    return null;
+  },
+  ciclos_lactacao: (op, p) => {
+    if (op === 'CREATE') return { endpoint: '/lactacao', method: 'POST', body: p };
+    if (op === 'UPDATE') return { endpoint: `/lactacao/${p.id}`, method: 'PATCH', body: p };
+    if (op === 'DELETE') return { endpoint: `/lactacao/${p.id}`, method: 'DELETE' };
+    return null;
+  },
 };
 
 export function resolvePushEndpoint(entity: string, operation: OperationType, payload: any): ResolvedPush {
