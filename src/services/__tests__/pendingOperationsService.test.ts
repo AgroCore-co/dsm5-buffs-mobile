@@ -10,15 +10,29 @@ const mockExecute = execute as jest.Mock;
 
 beforeEach(() => jest.clearAllMocks());
 
-test('enqueue insere operação na tabela pending_operations', async () => {
+test('enqueue grava endpoint/method resolvidos pelo registry (pesagens CREATE)', async () => {
   mockExecute.mockResolvedValue(undefined);
 
-  await enqueue('bufalos', 'CREATE', { id: 'abc', nome: 'Estrela' });
+  await enqueue('pesagens', 'CREATE', { id: 'z1', bufaloId: 'b9' });
 
   expect(mockExecute).toHaveBeenCalledWith(
     expect.stringContaining('INSERT INTO pending_operations'),
-    expect.arrayContaining(['test-uuid', 'bufalos', 'CREATE'])
+    expect.arrayContaining(['test-uuid', 'pesagens', 'CREATE', '/dados-zootecnicos/bufalo/b9', 'POST'])
   );
+});
+
+test('enqueue grava o body transformado (bufalos mover grupo)', async () => {
+  mockExecute.mockResolvedValue(undefined);
+
+  await enqueue('bufalos', 'UPDATE', { id: 'b1', idsBufalos: ['b1'], idNovoGrupo: 'g2', motivo: 'manual' });
+
+  const call = mockExecute.mock.calls[0];
+  const params = call[1] as any[];
+  expect(params).toEqual(
+    expect.arrayContaining(['test-uuid', 'bufalos', 'UPDATE', '/bufalos/grupo/mover', 'PATCH'])
+  );
+  const storedBody = JSON.parse(params[5]);
+  expect(storedBody).toEqual({ idsBufalos: ['b1'], idNovoGrupo: 'g2', motivo: 'manual' });
 });
 
 test('getPending retorna operações com retryCount < 5', async () => {

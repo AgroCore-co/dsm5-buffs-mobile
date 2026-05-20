@@ -1,5 +1,6 @@
 import uuid from 'react-native-uuid';
 import { execute, queryAll, queryFirst } from '../database/db';
+import { resolvePushEndpoint } from './sync/pushEndpoints';
 
 export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE';
 
@@ -16,31 +17,8 @@ export interface PendingOperation {
   createdAt: string;
 }
 
-const ENTITY_ROUTE: Record<string, string> = {
-  bufalos: '/bufalos',
-  ciclos_lactacao: '/lactacao',
-  grupos: '/grupos',
-  racas: '/racas',
-  dados_zootecnicos: '/dados-zootecnicos',
-  medicamentos: '/medicamentos',
-  dados_sanitarios: '/dados-sanitarios',
-  alertas: '/alertas',
-  coberturas: '/coberturas',
-  material_genetico: '/material-genetico',
-};
-
-function deriveEndpointMethod(entity: string, operation: OperationType, payload: any) {
-  const base = ENTITY_ROUTE[entity] ?? `/${entity}`;
-  const id = payload?.id ?? payload?.idBufalo ?? payload?.idCicloLactacao ?? null;
-  switch (operation) {
-    case 'CREATE': return { endpoint: base, method: 'POST' };
-    case 'UPDATE': return { endpoint: id ? `${base}/${id}` : base, method: 'PATCH' };
-    case 'DELETE': return { endpoint: id ? `${base}/${id}` : base, method: 'DELETE' };
-  }
-}
-
 export async function enqueue(entity: string, operation: OperationType, payload: object): Promise<void> {
-  const { endpoint, method } = deriveEndpointMethod(entity, operation, payload);
+  const { endpoint, method, body } = resolvePushEndpoint(entity, operation, payload);
   await execute(
     `INSERT INTO pending_operations
       (id, entity, operation, endpoint, method, payload, status, retryCount, createdAt)
@@ -51,7 +29,7 @@ export async function enqueue(entity: string, operation: OperationType, payload:
       operation,
       endpoint,
       method,
-      JSON.stringify(payload),
+      JSON.stringify(body ?? payload),
       new Date().toISOString(),
     ]
   );
