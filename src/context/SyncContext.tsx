@@ -1,90 +1,90 @@
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import React, {
+  createContext, useCallback, useContext, useEffect, useRef, useState,
+} from 'react';
+import { AppState } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import { sync } from '../services/syncService';
-import { getPendingCount, getFailedCount } from '../services/pendingOperationsService';
+import { syncService } from '../services/syncService';
+import { pendingOperationsService } from '../services/pendingOperationsService';
+import { usePropriedade } from './PropriedadeContext';
 
-const SYNC_INTERVAL_MS = 5 * 60 * 1000;
-
-interface SyncContextData {
+interface SyncContextValue {
   isSyncing: boolean;
-  lastSyncedAt: Date | null;
+  lastSyncedAt: string | null;
   pendingCount: number;
-  failedCount: number;
-  triggerSync: () => Promise<void>;
+  hasFailed: boolean;
+  sync: () => void;
 }
 
-const SyncContext = createContext<SyncContextData>({} as SyncContextData);
+const SyncContext = createContext<SyncContextValue>({
+  isSyncing: false,
+  lastSyncedAt: null,
+  pendingCount: 0,
+  hasFailed: false,
+  sync: () => {},
+});
 
-export const SyncProvider: React.FC<{ propriedadeId: string | null; children: React.ReactNode }> = ({
-  propriedadeId,
-  children,
-}) => {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+interface SyncProviderProps {
+  children: React.ReactNode;
+  propriedadeId?: string;
+}
+
+export const SyncProvider: React.FC<SyncProviderProps> = ({ children, propriedadeId: propPropId }) => {
+  const { propriedadeSelecionada } = usePropriedade();
+  const propriedadeId = propPropId || propriedadeSelecionada;
+  
+  const [isSyncing, setIsSyncing]       = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
-  const [failedCount, setFailedCount] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [hasFailed, setHasFailed]       = useState(false);
+  const isSyncingRef = useRef(false);
 
   const refreshCounts = useCallback(async () => {
-    const [pending, failed] = await Promise.all([getPendingCount(), getFailedCount()]);
+    const pending = await pendingOperationsService.getPendingCount();
+    const failed  = await pendingOperationsService.getFailedCount();
     setPendingCount(pending);
-    setFailedCount(failed);
+    setHasFailed(failed > 0);
   }, []);
 
-  const triggerSync = useCallback(async () => {
-    if (!propriedadeId || isSyncing) return;
+  const sync = useCallback(async () => {
+    if (!propriedadeId || isSyncingRef.current) return;
+    isSyncingRef.current = true;
     setIsSyncing(true);
     try {
-      await sync(propriedadeId);
-      setLastSyncedAt(new Date());
+      await syncService.sync(propriedadeId);
+      setLastSyncedAt(new Date().toISOString());
       await refreshCounts();
+    } catch {
+      setHasFailed(true);
     } finally {
+      isSyncingRef.current = false;
       setIsSyncing(false);
     }
-  }, [propriedadeId, isSyncing, refreshCounts]);
+  }, [propriedadeId, refreshCounts]);
 
-  // Trigger 1: foreground
+  // Gatilho 1 — app volta ao foreground
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
-      if (state === 'active') {
-        triggerSync();
-      }
+    const sub = AppState.addEventListener('change', s => { if (s === 'active') sync(); });
+    return () => sub.remove();
+  }, [sync]);
+
+  // Gatilho 2 — rede reconectada
+  useEffect(() => {
+    return NetInfo.addEventListener(state => {
+      if (state.isConnected && state.isInternetReachable) sync();
     });
-    return () => subscription.remove();
-  }, [triggerSync]);
+  }, [sync]);
 
-  // Trigger 2: reconnect
+  // Gatilho 3 — intervalo de 5 min em foreground
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      if (state.isConnected) {
-        triggerSync();
-      }
-    });
-    return () => unsubscribe();
-  }, [triggerSync]);
-
-  // Trigger 3: interval
-  useEffect(() => {
-    intervalRef.current = setInterval(triggerSync, SYNC_INTERVAL_MS);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [triggerSync]);
-
-  // Trigger 4: on propriedadeId change (also covers initial mount)
-  useEffect(() => {
-    if (propriedadeId) {
-      triggerSync();
-      refreshCounts();
-    }
-  }, [propriedadeId]);
+    const t = setInterval(sync, 5 * 60 * 1000);
+    return () => clearInterval(t);
+  }, [sync]);
 
   return (
-    <SyncContext.Provider value={{ isSyncing, lastSyncedAt, pendingCount, failedCount, triggerSync }}>
+    <SyncContext.Provider value={{ isSyncing, lastSyncedAt, pendingCount, hasFailed, sync }}>
       {children}
     </SyncContext.Provider>
   );
 };
 
-export const useSync = () => useContext(SyncContext);
+export const useSyncStatus = () => useContext(SyncContext);

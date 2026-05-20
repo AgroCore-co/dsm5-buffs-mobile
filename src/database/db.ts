@@ -24,7 +24,14 @@ export async function execute(sql: string, params: any[] = []): Promise<void> {
   await getDb().executeAsync(sql, params);
 }
 
-export async function isFirstSync(): Promise<boolean> {
+export async function isFirstSync(propriedadeId?: string): Promise<boolean> {
+  if (propriedadeId) {
+    const row = await queryFirst<{ count: number }>(
+      'SELECT COUNT(*) as count FROM sync_meta WHERE propriedadeId = ?',
+      [propriedadeId]
+    );
+    return (row?.count ?? 0) === 0;
+  }
   const row = await queryFirst<{ count: number }>('SELECT COUNT(*) as count FROM sync_meta');
   return (row?.count ?? 0) === 0;
 }
