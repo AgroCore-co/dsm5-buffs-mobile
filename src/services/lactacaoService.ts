@@ -168,7 +168,25 @@ export const getIndustriasPorPropriedade = async (propriedadeId: string) => {
 
 export const registrarLactacaoApi = async (payload: LactacaoRegistroPayload) => {
   const id = uuid.v4() as string;
-  await enqueue("ciclos_lactacao", "CREATE", { ...payload, id });
+  const now = new Date().toISOString();
+  const body = {
+    id,
+    idBufala: payload.id_bufala,
+    idPropriedade: String(payload.id_propriedade),
+    idCicloLactacao: payload.id_ciclo_lactacao,
+    qtOrdenha: payload.qt_ordenha,
+    periodo: payload.periodo,
+    ocorrencia: payload.ocorrencia ?? "",
+    dtOrdenha: payload.dt_ordenha,
+  };
+
+  await execute(
+    `INSERT INTO ordenhas (id, propriedadeId, bufaloId, idCicloLactacao, _raw, _synced, updatedAt)
+     VALUES (?, ?, ?, ?, ?, 0, ?)`,
+    [id, body.idPropriedade, body.idBufala, body.idCicloLactacao, JSON.stringify(body), now],
+  );
+
+  await enqueue("ordenhas", "CREATE", body);
 };
 
 export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {

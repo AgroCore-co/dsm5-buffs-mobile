@@ -39,10 +39,23 @@ describe('getCiclosLactacao', () => {
 });
 
 describe('registrarLactacaoApi', () => {
-  it('enqueues CREATE operation', async () => {
+  it('insere local e enfileira CREATE de ordenhas em camelCase', async () => {
+    (execute as jest.Mock).mockResolvedValue(undefined);
     (enqueue as jest.Mock).mockResolvedValue(undefined);
-    await registrarLactacaoApi({ id_bufala: 'b1', id_propriedade: 1, id_ciclo_lactacao: 'c1', qt_ordenha: 5, periodo: 'M', dt_ordenha: '2026-01-01' });
-    expect(enqueue).toHaveBeenCalledWith('ciclos_lactacao', 'CREATE', expect.objectContaining({ id: 'new-uuid' }));
+
+    await registrarLactacaoApi({
+      id_bufala: 'b1', id_propriedade: 'p1', id_ciclo_lactacao: 'c1',
+      qt_ordenha: 5, periodo: 'M', dt_ordenha: '2026-01-01',
+    });
+
+    expect(execute).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO ordenhas'),
+      expect.arrayContaining(['new-uuid', 'p1', 'b1', 'c1'])
+    );
+    expect(enqueue).toHaveBeenCalledWith(
+      'ordenhas', 'CREATE',
+      expect.objectContaining({ id: 'new-uuid', idBufala: 'b1', idCicloLactacao: 'c1', qtOrdenha: 5, dtOrdenha: '2026-01-01' })
+    );
   });
 });
 
