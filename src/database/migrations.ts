@@ -1,14 +1,14 @@
 import { CREATE_TABLES_SQL } from './schema';
 import { execute, queryFirst } from './db';
 
-const CURRENT_VERSION = 7;
+const CURRENT_VERSION = 8;
 
 const LEGACY_TABLES = [
   'bufalos', 'ciclos_lactacao', 'grupos', 'racas',
   'dados_zootecnicos', 'pesagens', 'medicamentos',
   'dados_sanitarios', 'eventos_sanitarios', 'alertas',
   'coberturas', 'reproducoes', 'material_genetico',
-  'lotes', 'sync_meta', 'pending_operations',
+  'lotes', 'ordenhas', 'sync_meta', 'pending_operations',
 ];
 
 export async function runMigrations(): Promise<void> {
