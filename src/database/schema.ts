@@ -1,14 +1,14 @@
 export const ENTITY_PK_MAP: Record<string, string> = {
-  bufalos: 'idBufalo',
-  ciclos_lactacao: 'idCicloLactacao',
-  grupos: 'idGrupo',
-  racas: 'idRaca',
+  bufalos: 'id',
+  ciclos_lactacao: 'id',
+  grupos: 'id',
+  racas: 'id',
   pesagens: 'id',
-  medicamentos: 'idMedicamento',
+  medicamentos: 'id',
   eventos_sanitarios: 'id',
-  alertas: 'idAlerta',
+  alertas: 'id',
   reproducoes: 'id',
-  material_genetico: 'idMaterialGenetico',
+  material_genetico: 'id',
 };
 
 export const SYNC_ENTITY_PATH: Record<string, string> = {
@@ -24,7 +24,7 @@ export const SYNC_ENTITY_PATH: Record<string, string> = {
   material_genetico: 'material-genetico',
 };
 
-// Retorna colunas queryáveis por entidade (além de pk/updatedAt/deletedAt/_raw)
+// Retorna colunas queryáveis por entidade (além de id/updatedAt/deletedAt/_raw)
 export function getEntityExtras(entity: string, record: any): Record<string, any> {
   const idProp = { propriedadeId: record.idPropriedade ?? record.propriedadeId ?? null };
   switch (entity) {
@@ -41,17 +41,17 @@ export function getEntityExtras(entity: string, record: any): Record<string, any
     case 'ciclos_lactacao':
       return { ...idProp, idBufala: record.idBufala ?? null, status: record.status ?? null };
     case 'grupos':
-      return { ...idProp, nome: record.nome ?? null };
+      return { ...idProp, nome: record.nomeGrupo ?? record.nome ?? null };
     case 'racas':
       return { nome: record.nome ?? null };
     case 'pesagens':
       return { ...idProp, bufaloId: record.idBufalo ?? record.bufaloId ?? null };
     case 'medicamentos':
-      return { nome: record.nome ?? null };
+      return { nome: record.medicacao ?? record.nome ?? null };
     case 'eventos_sanitarios':
       return { ...idProp, bufaloId: record.idBufalo ?? record.bufaloId ?? null };
     case 'alertas':
-      return { ...idProp, lido: record.lido ? 1 : 0 };
+      return { ...idProp, lido: record.visto ? 1 : (record.lido ? 1 : 0) };
     case 'reproducoes':
       return { ...idProp, bufaloId: record.idBufala ?? record.bufaloId ?? null };
     case 'material_genetico':
@@ -79,18 +79,18 @@ export const CREATE_TABLES_SQL: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_bufalos_prop ON bufalos(propriedadeId)`,
   `CREATE INDEX IF NOT EXISTS idx_bufalos_brinco ON bufalos(brinco)`,
   `CREATE TABLE IF NOT EXISTS ciclos_lactacao (
-    idCicloLactacao TEXT PRIMARY KEY,
-    propriedadeId   TEXT,
-    idBufala        TEXT,
-    status          TEXT,
-    updatedAt       TEXT NOT NULL,
-    deletedAt       TEXT,
-    _synced         INTEGER NOT NULL DEFAULT 0,
-    _raw            TEXT NOT NULL
+    id            TEXT PRIMARY KEY,
+    propriedadeId TEXT,
+    idBufala      TEXT,
+    status        TEXT,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _synced       INTEGER NOT NULL DEFAULT 0,
+    _raw          TEXT NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS idx_lactacao_prop ON ciclos_lactacao(propriedadeId)`,
   `CREATE TABLE IF NOT EXISTS grupos (
-    idGrupo       TEXT PRIMARY KEY,
+    id            TEXT PRIMARY KEY,
     propriedadeId TEXT,
     nome          TEXT,
     updatedAt     TEXT NOT NULL,
@@ -99,7 +99,7 @@ export const CREATE_TABLES_SQL: string[] = [
     _raw          TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS racas (
-    idRaca    TEXT PRIMARY KEY,
+    id        TEXT PRIMARY KEY,
     nome      TEXT,
     updatedAt TEXT NOT NULL,
     deletedAt TEXT,
@@ -116,11 +116,11 @@ export const CREATE_TABLES_SQL: string[] = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_pesagens_bufalo ON pesagens(bufaloId)`,
   `CREATE TABLE IF NOT EXISTS medicamentos (
-    idMedicamento TEXT PRIMARY KEY,
-    nome          TEXT,
-    updatedAt     TEXT NOT NULL,
-    deletedAt     TEXT,
-    _raw          TEXT NOT NULL
+    id        TEXT PRIMARY KEY,
+    nome      TEXT,
+    updatedAt TEXT NOT NULL,
+    deletedAt TEXT,
+    _raw      TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS eventos_sanitarios (
     id            TEXT PRIMARY KEY,
@@ -134,7 +134,7 @@ export const CREATE_TABLES_SQL: string[] = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_sanitario_bufalo ON eventos_sanitarios(bufaloId)`,
   `CREATE TABLE IF NOT EXISTS alertas (
-    idAlerta      TEXT PRIMARY KEY,
+    id            TEXT PRIMARY KEY,
     propriedadeId TEXT,
     lido          INTEGER DEFAULT 0,
     updatedAt     TEXT NOT NULL,
@@ -153,12 +153,12 @@ export const CREATE_TABLES_SQL: string[] = [
     _raw          TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS material_genetico (
-    idMaterialGenetico TEXT PRIMARY KEY,
-    propriedadeId      TEXT,
-    updatedAt          TEXT NOT NULL,
-    deletedAt          TEXT,
-    _synced            INTEGER NOT NULL DEFAULT 0,
-    _raw               TEXT NOT NULL
+    id            TEXT PRIMARY KEY,
+    propriedadeId TEXT,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _synced       INTEGER NOT NULL DEFAULT 0,
+    _raw          TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS sync_meta (
     entity        TEXT NOT NULL,

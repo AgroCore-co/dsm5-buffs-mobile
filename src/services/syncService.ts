@@ -13,10 +13,13 @@ async function upsertBatch(entity: string, records: any[]): Promise<void> {
   const pk = ENTITY_PK_MAP[entity];
 
   for (const record of records) {
-    if (record.deletedAt) {
+    const deletedAt = record.deletedAt ?? record.deleted_at ?? null;
+    const updatedAt = record.updatedAt ?? record.updated_at ?? new Date().toISOString();
+
+    if (deletedAt) {
       await execute(
         `UPDATE ${entity} SET deletedAt = ?, updatedAt = ? WHERE ${pk} = ?`,
-        [record.deletedAt, record.updatedAt, record[pk]]
+        [deletedAt, updatedAt, record[pk]]
       );
       continue;
     }
@@ -25,7 +28,7 @@ async function upsertBatch(entity: string, records: any[]): Promise<void> {
     const colNames = [pk, 'updatedAt', 'deletedAt', '_synced', '_raw', ...Object.keys(extras)];
     const colVals = [
       record[pk],
-      record.updatedAt,
+      updatedAt,
       null,
       1,
       JSON.stringify(record),
