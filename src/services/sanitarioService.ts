@@ -20,7 +20,7 @@ export const sanitarioService = {
     await execute(
       `INSERT INTO eventos_sanitarios (id, bufaloId, propriedadeId, tipo, _raw, _synced, updatedAt)
        VALUES (?, ?, ?, ?, ?, 0, ?)`,
-      [id, adapted.idBufalo ?? payload.id_bufalo, adapted.idPropriedade ?? payload.id_propriedade, adapted.tipo ?? null, JSON.stringify(newRecord), now],
+      [id, payload.id_bufalo, payload.id_propriedade, payload.tipo ?? null, JSON.stringify(newRecord), now],
     );
     await enqueue("eventos_sanitarios", "CREATE", newRecord);
     return newRecord;

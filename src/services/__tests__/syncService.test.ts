@@ -8,18 +8,17 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
 }));
 
-import { queryAll, queryFirst, execute } from '../../database/db';
+import { queryFirst, execute } from '../../database/db';
 import { apiFetch } from '../../lib/apiClient';
-import { pendingOperationsService } from '../pendingOperationsService';
+import { getPending, markSynced } from '../pendingOperationsService';
 import { syncService } from '../syncService';
 import { __setConnected } from '@react-native-community/netinfo';
 
-const mockQueryAll = queryAll as jest.Mock;
 const mockQueryFirst = queryFirst as jest.Mock;
 const mockExecute = execute as jest.Mock;
 const mockApiFetch = apiFetch as jest.Mock;
-const mockGetPending = pendingOperationsService.getPending as jest.Mock;
-const mockMarkSynced = pendingOperationsService.markSynced as jest.Mock;
+const mockGetPending = getPending as jest.Mock;
+const mockMarkSynced = markSynced as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();

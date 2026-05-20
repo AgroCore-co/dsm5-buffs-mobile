@@ -4,7 +4,7 @@ import React, {
 import { AppState } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { syncService } from '../services/syncService';
-import { pendingOperationsService } from '../services/pendingOperationsService';
+import { getPendingCount, getFailedCount } from '../services/pendingOperationsService';
 import { usePropriedade } from './PropriedadeContext';
 
 interface SyncContextValue {
@@ -39,8 +39,8 @@ export const SyncProvider: React.FC<SyncProviderProps> = ({ children, propriedad
   const isSyncingRef = useRef(false);
 
   const refreshCounts = useCallback(async () => {
-    const pending = await pendingOperationsService.getPendingCount();
-    const failed  = await pendingOperationsService.getFailedCount();
+    const pending = await getPendingCount();
+    const failed  = await getFailedCount();
     setPendingCount(pending);
     setHasFailed(failed > 0);
   }, []);

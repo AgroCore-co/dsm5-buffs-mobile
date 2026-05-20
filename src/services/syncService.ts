@@ -1,8 +1,8 @@
 import NetInfo from '@react-native-community/netinfo';
 import { apiFetch } from '../lib/apiClient';
-import { execute, queryAll, queryFirst } from '../database/db';
+import { execute, queryFirst } from '../database/db';
 import { ENTITY_PK_MAP, SYNC_ENTITY_PATH, getEntityExtras } from '../database/schema';
-import { pendingOperationsService } from './pendingOperationsService';
+import { getPending, markSynced, incrementRetry } from './pendingOperationsService';
 
 async function isConnected(): Promise<boolean> {
   const state = await NetInfo.fetch();
@@ -63,18 +63,18 @@ class SyncService {
   }
 
   private async push(): Promise<void> {
-    const pending = await pendingOperationsService.getPending();
+    const pending = await getPending();
     for (const op of pending) {
       try {
         await apiFetch(op.endpoint, { method: op.method, body: op.payload });
-        await pendingOperationsService.markSynced(op.id);
+        await markSynced(op.id);
         const pk = ENTITY_PK_MAP[op.entity];
-        const localId = JSON.parse(op.payload)[pk];
+        const localId = JSON.parse(op.payload)[pk] ?? JSON.parse(op.payload).id;
         if (localId) {
-          await execute(`UPDATE ${op.entity} SET _synced = 1 WHERE ${pk} = ?`, [localId]);
+          await execute(`UPDATE ${op.entity} SET _synced = 1 WHERE ${pk} = ? OR id = ?`, [localId, localId]);
         }
-      } catch (err: any) {
-        await pendingOperationsService.incrementRetry(op.id, op.retryCount, err?.message ?? 'unknown');
+      } catch {
+        await incrementRetry(op.id);
       }
     }
   }

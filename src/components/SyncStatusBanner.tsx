@@ -1,21 +1,21 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSync } from '../context/SyncContext';
+import { useSyncStatus } from '../context/SyncContext';
 import { colors } from '../styles/colors';
 
 export function SyncStatusBanner() {
-  const { isSyncing, pendingCount, failedCount, triggerSync } = useSync();
+  const { isSyncing, pendingCount, hasFailed: failedCount, sync: triggerSync } = useSyncStatus();
 
-  if (!isSyncing && pendingCount === 0 && failedCount === 0) return null;
+  if (!isSyncing && pendingCount === 0 && !failedCount) return null;
 
-  const bgColor = failedCount > 0 ? colors.red.inactive : colors.yellow.warning;
-  const textColor = failedCount > 0 ? colors.red.text : colors.brown.base;
+  const bgColor = failedCount ? colors.red.inactive : colors.yellow.warning;
+  const textColor = failedCount ? colors.red.text : colors.brown.base;
 
   let message = '';
   if (isSyncing) {
     message = 'Sincronizando...';
-  } else if (failedCount > 0) {
-    message = `${failedCount} operação(ões) falharam.`;
+  } else if (failedCount) {
+    message = 'Operações com falha. Toque para tentar novamente.';
   } else if (pendingCount > 0) {
     message = `${pendingCount} operação(ões) aguardando sync.`;
   }

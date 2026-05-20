@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { sync } from '../services/syncService';
+import { syncService } from '../services/syncService';
 import { colors } from '../styles/colors';
 
 interface Props {
@@ -19,7 +19,7 @@ export function InitialSyncScreen({ propriedadeId, onSyncComplete }: Props) {
     setState('syncing');
     setError(null);
     try {
-      await sync(propriedadeId);
+      await syncService.sync(propriedadeId);
       setState('done');
       onSyncComplete();
     } catch (err: any) {

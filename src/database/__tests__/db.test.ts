@@ -11,7 +11,7 @@ test('queryAll retorna array de linhas', async () => {
   __setMockRows([{ id: '1', nome: 'Brahman' }]);
   const rows = await queryAll('SELECT * FROM racas');
   expect(rows).toEqual([{ id: '1', nome: 'Brahman' }]);
-  expect(__mockDb.executeAsync).toHaveBeenCalledWith('SELECT * FROM racas', []);
+  expect(__mockDb.execute).toHaveBeenCalledWith('SELECT * FROM racas');
 });
 
 test('queryFirst retorna primeira linha ou null', async () => {
@@ -20,10 +20,10 @@ test('queryFirst retorna primeira linha ou null', async () => {
   expect(row).toBeNull();
 });
 
-test('execute chama executeAsync com params', async () => {
+test('execute chama execute com params', async () => {
   __setMockRows([]);
   await execute('DELETE FROM pending_operations WHERE id = ?', ['abc']);
-  expect(__mockDb.executeAsync).toHaveBeenCalledWith(
+  expect(__mockDb.execute).toHaveBeenCalledWith(
     'DELETE FROM pending_operations WHERE id = ?',
     ['abc']
   );

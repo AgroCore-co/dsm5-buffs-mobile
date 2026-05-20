@@ -212,7 +212,7 @@ function AppContent() {
 function AppWithSync() {
   const { propriedadeSelecionada } = usePropriedade();
   return (
-    <SyncProvider propriedadeId={propriedadeSelecionada}>
+    <SyncProvider propriedadeId={propriedadeSelecionada ?? undefined}>
       <PortalProvider>
         <BottomSheetModalProvider>
           <NavigationContainer>

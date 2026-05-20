@@ -8,16 +8,9 @@ export async function runMigrations(): Promise<void> {
   const version = row?.user_version ?? 0;
 
   if (version < CURRENT_VERSION) {
-    // Executa cada statement separadamente (op-sqlite não aceita múltiplos em uma só chamada)
-    const statements = CREATE_TABLES_SQL
-      .split(';')
-      .map(s => s.trim())
-      .filter(Boolean);
-
-    for (const sql of statements) {
+    for (const sql of CREATE_TABLES_SQL) {
       await execute(sql);
     }
-
-    await execute(`PRAGMA user_version = ${CURRENT_VERSION}`);
+    await execute('PRAGMA user_version = 1');
   }
 }

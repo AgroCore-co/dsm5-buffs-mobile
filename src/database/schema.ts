@@ -61,13 +61,13 @@ export function getEntityExtras(entity: string, record: any): Record<string, any
   }
 }
 
-export const CREATE_TABLES_SQL = `
-  CREATE TABLE IF NOT EXISTS bufalos (
-    idBufalo        TEXT PRIMARY KEY,
-    idPropriedade   TEXT,
+export const CREATE_TABLES_SQL: string[] = [
+  `CREATE TABLE IF NOT EXISTS bufalos (
+    id              TEXT PRIMARY KEY,
+    propriedadeId   TEXT,
     brinco          TEXT,
     sexo            TEXT,
-    status          TEXT,
+    status          INTEGER DEFAULT 0,
     nivelMaturidade TEXT,
     idRaca          TEXT,
     microchip       TEXT,
@@ -75,107 +75,96 @@ export const CREATE_TABLES_SQL = `
     deletedAt       TEXT,
     _synced         INTEGER NOT NULL DEFAULT 0,
     _raw            TEXT NOT NULL
-  );
-  CREATE INDEX IF NOT EXISTS idx_bufalos_prop ON bufalos(idPropriedade);
-  CREATE INDEX IF NOT EXISTS idx_bufalos_brinco ON bufalos(brinco);
-
-  CREATE TABLE IF NOT EXISTS ciclos_lactacao (
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_bufalos_prop ON bufalos(propriedadeId)`,
+  `CREATE INDEX IF NOT EXISTS idx_bufalos_brinco ON bufalos(brinco)`,
+  `CREATE TABLE IF NOT EXISTS ciclos_lactacao (
     idCicloLactacao TEXT PRIMARY KEY,
-    idPropriedade   TEXT,
+    propriedadeId   TEXT,
     idBufala        TEXT,
     status          TEXT,
     updatedAt       TEXT NOT NULL,
     deletedAt       TEXT,
     _synced         INTEGER NOT NULL DEFAULT 0,
     _raw            TEXT NOT NULL
-  );
-  CREATE INDEX IF NOT EXISTS idx_lactacao_prop ON ciclos_lactacao(idPropriedade);
-
-  CREATE TABLE IF NOT EXISTS grupos (
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_lactacao_prop ON ciclos_lactacao(propriedadeId)`,
+  `CREATE TABLE IF NOT EXISTS grupos (
     idGrupo       TEXT PRIMARY KEY,
-    idPropriedade TEXT,
+    propriedadeId TEXT,
     nome          TEXT,
     updatedAt     TEXT NOT NULL,
     deletedAt     TEXT,
     _synced       INTEGER NOT NULL DEFAULT 0,
     _raw          TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS racas (
+  )`,
+  `CREATE TABLE IF NOT EXISTS racas (
     idRaca    TEXT PRIMARY KEY,
     nome      TEXT,
     updatedAt TEXT NOT NULL,
     deletedAt TEXT,
     _raw      TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS dados_zootecnicos (
+  )`,
+  `CREATE TABLE IF NOT EXISTS dados_zootecnicos (
     idDadoZootecnico TEXT PRIMARY KEY,
-    idPropriedade    TEXT,
+    propriedadeId    TEXT,
     idBufalo         TEXT,
     updatedAt        TEXT NOT NULL,
     deletedAt        TEXT,
     _synced          INTEGER NOT NULL DEFAULT 0,
     _raw             TEXT NOT NULL
-  );
-  CREATE INDEX IF NOT EXISTS idx_zootecnico_bufalo ON dados_zootecnicos(idBufalo);
-
-  CREATE TABLE IF NOT EXISTS medicamentos (
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_zootecnico_bufalo ON dados_zootecnicos(idBufalo)`,
+  `CREATE TABLE IF NOT EXISTS medicamentos (
     idMedicamento TEXT PRIMARY KEY,
     nome          TEXT,
     updatedAt     TEXT NOT NULL,
     deletedAt     TEXT,
     _raw          TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS dados_sanitarios (
+  )`,
+  `CREATE TABLE IF NOT EXISTS dados_sanitarios (
     idDadoSanitario TEXT PRIMARY KEY,
-    idPropriedade   TEXT,
+    propriedadeId   TEXT,
     idBufalo        TEXT,
     updatedAt       TEXT NOT NULL,
     deletedAt       TEXT,
     _synced         INTEGER NOT NULL DEFAULT 0,
     _raw            TEXT NOT NULL
-  );
-  CREATE INDEX IF NOT EXISTS idx_sanitario_bufalo ON dados_sanitarios(idBufalo);
-
-  CREATE TABLE IF NOT EXISTS alertas (
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_sanitario_bufalo ON dados_sanitarios(idBufalo)`,
+  `CREATE TABLE IF NOT EXISTS alertas (
     idAlerta      TEXT PRIMARY KEY,
-    idPropriedade TEXT,
+    propriedadeId TEXT,
     lido          INTEGER DEFAULT 0,
     updatedAt     TEXT NOT NULL,
     deletedAt     TEXT,
     _synced       INTEGER NOT NULL DEFAULT 0,
     _raw          TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS coberturas (
+  )`,
+  `CREATE TABLE IF NOT EXISTS coberturas (
     idCobertura   TEXT PRIMARY KEY,
-    idPropriedade TEXT,
+    propriedadeId TEXT,
     idBufala      TEXT,
     updatedAt     TEXT NOT NULL,
     deletedAt     TEXT,
     _synced       INTEGER NOT NULL DEFAULT 0,
     _raw          TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS material_genetico (
+  )`,
+  `CREATE TABLE IF NOT EXISTS material_genetico (
     idMaterialGenetico TEXT PRIMARY KEY,
-    idPropriedade      TEXT,
+    propriedadeId      TEXT,
     updatedAt          TEXT NOT NULL,
     deletedAt          TEXT,
     _synced            INTEGER NOT NULL DEFAULT 0,
     _raw               TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS sync_meta (
-    entity         TEXT NOT NULL,
-    propriedadeId  TEXT NOT NULL,
-    lastSyncedAt   TEXT,
+  )`,
+  `CREATE TABLE IF NOT EXISTS sync_meta (
+    entity        TEXT NOT NULL,
+    propriedadeId TEXT NOT NULL,
+    lastSyncedAt  TEXT,
     PRIMARY KEY (entity, propriedadeId)
-  );
-
-  CREATE TABLE IF NOT EXISTS pending_operations (
+  )`,
+  `CREATE TABLE IF NOT EXISTS pending_operations (
     id           TEXT PRIMARY KEY,
     entity       TEXT NOT NULL,
     operation    TEXT NOT NULL,
@@ -186,5 +175,5 @@ export const CREATE_TABLES_SQL = `
     retryCount   INTEGER NOT NULL DEFAULT 0,
     errorMessage TEXT,
     createdAt    TEXT NOT NULL
-  );
-`;
+  )`,
+];
