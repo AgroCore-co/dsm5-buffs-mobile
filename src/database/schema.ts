@@ -11,6 +11,20 @@ export const ENTITY_PK_MAP: Record<string, string> = {
   material_genetico: 'id',
 };
 
+// Campo de PK que a API retorna por entidade (antes da normalização para 'id')
+export const ENTITY_API_PK_MAP: Record<string, string> = {
+  bufalos: 'idBufalo',
+  ciclos_lactacao: 'idCicloLactacao',
+  grupos: 'idGrupo',
+  racas: 'idRaca',
+  pesagens: 'idZootec',
+  medicamentos: 'idMedicacao',
+  eventos_sanitarios: 'idSanit',
+  alertas: 'idAlerta',
+  reproducoes: 'idReproducao',
+  material_genetico: 'idMaterial',
+};
+
 export const SYNC_ENTITY_PATH: Record<string, string> = {
   bufalos: 'bufalos',
   ciclos_lactacao: 'lactacao/ciclos',

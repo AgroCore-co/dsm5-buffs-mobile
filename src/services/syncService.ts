@@ -1,7 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { apiFetch } from '../lib/apiClient';
 import { execute, queryFirst } from '../database/db';
-import { ENTITY_PK_MAP, SYNC_ENTITY_PATH, getEntityExtras } from '../database/schema';
+import { ENTITY_PK_MAP, ENTITY_API_PK_MAP, SYNC_ENTITY_PATH, getEntityExtras } from '../database/schema';
 import { getPending, markSynced, incrementRetry } from './pendingOperationsService';
 
 async function isConnected(): Promise<boolean> {
@@ -98,12 +98,18 @@ class SyncService {
       if (meta?.lastSyncedAt) qs.append('updated_at', meta.lastSyncedAt);
 
       const response = await apiFetch(`/sync/${path}?${qs.toString()}`);
-      
-      // New endpoints return arrays directly, not { data, meta }
+
       const data = Array.isArray(response) ? response : response.data || [];
       const syncedAt = response.synced_at || response.meta?.synced_at || new Date().toISOString();
 
-      await upsertBatch(entity, data);
+      // Garante que cada registro tem campo 'id', mesmo que a API retorne só o PK original
+      const apiPk = ENTITY_API_PK_MAP[entity];
+      const normalizedData = data.map((record: any) => ({
+        ...record,
+        id: record.id ?? (apiPk ? record[apiPk] : null),
+      }));
+
+      await upsertBatch(entity, normalizedData);
 
       await execute(
         `INSERT OR REPLACE INTO sync_meta (entity, propriedadeId, lastSyncedAt) VALUES (?, ?, ?)`,
