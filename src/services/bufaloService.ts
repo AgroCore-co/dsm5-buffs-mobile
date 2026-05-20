@@ -10,12 +10,12 @@ export const getBufalos = async (
 ) => {
   const offset = (page - 1) * limit;
   const rows = await queryAll<any>(
-    `SELECT _raw FROM bufalos WHERE propriedadeId = ? AND (_raw NOT LIKE '%"deletedAt":%' OR _raw LIKE '%"deletedAt":null%') ORDER BY brinco ASC LIMIT ? OFFSET ?`,
+    `SELECT _raw FROM bufalos WHERE propriedadeId = ? AND id IS NOT NULL AND (_raw NOT LIKE '%"deletedAt":%' OR _raw LIKE '%"deletedAt":null%') ORDER BY brinco ASC LIMIT ? OFFSET ?`,
     [propriedadeId, limit, offset],
   );
 
   const countRow = await queryFirst<{ total: number }>(
-    `SELECT COUNT(*) as total FROM bufalos WHERE propriedadeId = ? AND (_raw NOT LIKE '%"deletedAt":%' OR _raw LIKE '%"deletedAt":null%')`,
+    `SELECT COUNT(*) as total FROM bufalos WHERE propriedadeId = ? AND id IS NOT NULL AND (_raw NOT LIKE '%"deletedAt":%' OR _raw LIKE '%"deletedAt":null%')`,
     [propriedadeId],
   );
   const total = countRow?.total ?? 0;
@@ -112,7 +112,7 @@ export const filtrarBufalos = async (
   page = 1,
   limit = 10,
 ) => {
-  const conditions: string[] = [`propriedadeId = ?`];
+  const conditions: string[] = [`propriedadeId = ?`, `id IS NOT NULL`];
   const params: any[] = [propriedadeId];
 
   if (filtros?.brinco) {
