@@ -82,11 +82,12 @@ export const AnimalDetailScreen = () => {
   isAddingSanitario;
 
   const fetchData = async (
-    pageZootecToLoad = pageZootec, 
+    pageZootecToLoad = pageZootec,
     pageSanitToLoad = pageSanit
   ) => {
     setLoading(true);
     try {
+      console.log('[AnimalDetail] buscando id:', id);
       const base = await bufaloService.getBufaloDetalhes(id);
       
       const zootResp = await zootecnicoService.getHistorico(id, pageZootecToLoad, PAGE_SIZE);

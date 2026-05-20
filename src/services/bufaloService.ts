@@ -152,6 +152,7 @@ export const filtrarBufalos = async (
 
   const bufalos = rows.map((r) => {
     const b = JSON.parse(r._raw);
+    console.log('[filtrarBufalos] id:', b.id, '| idBufalo:', b.idBufalo);
     return { ...b, racaNome: b.raca?.nome || b.nomeRaca || 'Desconhecida' };
   });
 
