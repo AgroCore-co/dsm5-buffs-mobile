@@ -142,3 +142,25 @@ describe('pushEndpoints — ciclos_lactacao', () => {
     });
   });
 });
+
+describe('pushEndpoints — fallback genérico', () => {
+  test('entidade sem resolver: CREATE → POST /{entity}', () => {
+    const p = { id: 'x1' };
+    expect(resolvePushEndpoint('grupos', 'CREATE', p)).toEqual({
+      endpoint: '/grupos', method: 'POST', body: p,
+    });
+  });
+
+  test('entidade sem resolver: UPDATE com id → PATCH /{entity}/{id}', () => {
+    const p = { id: 'x1' };
+    expect(resolvePushEndpoint('grupos', 'UPDATE', p)).toEqual({
+      endpoint: '/grupos/x1', method: 'PATCH', body: p,
+    });
+  });
+
+  test('entidade sem resolver: DELETE com id → DELETE /{entity}/{id}', () => {
+    expect(resolvePushEndpoint('grupos', 'DELETE', { id: 'x1' })).toEqual({
+      endpoint: '/grupos/x1', method: 'DELETE',
+    });
+  });
+});
