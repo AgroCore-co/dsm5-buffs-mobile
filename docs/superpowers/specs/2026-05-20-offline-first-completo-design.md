@@ -1,52 +1,63 @@
-# Offline-First Completo — Design / Análise das 3 Frentes
+# Offline-First Completo — Spec / Handoff
 
-> **Status:** Em brainstorming. Documento vivo — captura o raciocínio e as decisões tomadas até agora. Há itens em aberto marcados como **[ABERTO]** no fim.
+> **Status:** Em andamento. Fases 1–3 implementadas; Fase 4 (issues da API) redigida; Fase 5 (dashboards) e o trabalho complementar de escrita offline pendentes.
 >
-> **Data:** 2026-05-20
+> **Última atualização:** 2026-05-20 · **Branch:** `feature/design-mobile` · **Migração local atual:** v8
 >
-> **Objetivo:** Levar o app mobile (`dsm5-buffs-mobile`) a funcionar 100% offline-first, analisando as 3 frentes (banco Supabase, buffs-api, mobile) e produzindo um plano faseado de alterações no mobile + issues de melhoria na API.
+> **Objetivo:** Levar o app mobile (`dsm5-buffs-mobile`) a funcionar offline-first de verdade — leitura (pull) e escrita (push) — analisando as 3 frentes (banco Supabase, buffs-api, mobile).
+>
+> **Como usar este doc:** é o ponto de partida da próxima sessão. Leia o "Estado atual" e pule para "O que falta fazer".
+
+---
+
+## TL;DR para a próxima sessão
+
+- **Leitura offline (pull):** funcionando para bufalos, ciclos_lactacao, grupos, racas, pesagens, medicamentos, eventos_sanitarios, alertas, reproducoes e **lotes**.
+- **Escrita offline (push):** os endpoints agora são roteados corretamente (Fase 1), MAS **ainda há um bloqueio não resolvido**: a API usa `forbidNonWhitelisted: true`, então o body que o mobile envia (com `id`/`createdAt`/`updatedAt` extras) **é rejeitado com 400**. **Creates offline ainda não sobem** até implementarmos o "body limpo" (ver "O que falta", item 1).
+- **Issues da API redigidas** (em `docs/issue-*.md`) — falta abrir no repo da buffs-api e o time implementar.
+- **Falta:** body limpo + ordem na fila (mobile), dashboards locais (Fase 5), e a integração das rotas `/sync` flat quando a API entregar.
 
 ---
 
 ## Contexto
 
-O mobile foi migrado para arquitetura offline-first com SQLite (`@op-engineering/op-sqlite`). O fluxo é:
-- **PULL (leitura):** `syncService` baixa entidades dos endpoints `/sync/*` da API e popula tabelas locais.
-- **PUSH (escrita):** escritas offline vão para a fila `pending_operations` e são empurradas para a API REST quando há conexão (não há rotas `/sync` para escrita — reusa o REST existente, por decisão de projeto).
+Arquitetura offline-first com SQLite (`@op-engineering/op-sqlite`):
+- **PULL (leitura):** `syncService` baixa entidades de `/sync/*` e popula tabelas locais.
+- **PUSH (escrita):** escritas offline vão para a fila `pending_operations` e são empurradas para a API REST quando há conexão (sem rotas `/sync` de escrita — reusa o REST existente).
 
-A buffs-api fica em `/home/v1nisouza/Área de trabalho/PASTA PI/buffs-api`. **Restrição de segurança: nunca ler arquivos `.env` da API.**
+buffs-api: `/home/v1nisouza/Área de trabalho/PASTA PI/buffs-api`. **Restrição: nunca ler `.env` da API.**
+Schema Supabase: `docs/sql/apiusa.md`. Issue original do `/sync`: `docs/issue-sync-endpoints.md`.
 
-Schema do Supabase documentado em `docs/sql/apiusa.md`. Issue original do módulo `/sync` em `docs/issue-sync-endpoints.md`.
-
----
-
-## Decisões tomadas (brainstorming)
-
-1. **Escopo:** Offline-first **completo** — push, lotes/piquetes, material genético, ordenha e dashboards locais.
-2. **Entidades sem `/sync` flat:** abordagem **mista** — mobile usa os endpoints que já existem agora (para destravar), E abrimos issues para a API padronizar `/sync` flat depois.
-3. **Dashboards offline:** **calcular localmente** a partir dos dados crus sincronizados (não cachear, não "indisponível").
-4. **Conserto do push:** **registry por entidade** (`pushEndpoints.ts`) — opção A.
-5. **Ordem das fases:** issues de API (Fase 4) **antes** dos dashboards locais (Fase 5).
-6. **Ordenha / amarração com reprodução:** **não** replicar o `parto → ciclo` offline (é composto server-side). Ver seção "Ordenha".
+**Migrações:** `src/database/migrations.ts` faz **drop-all + recreate** sempre que `user_version < CURRENT_VERSION` (recria do schema e re-sincroniza da API). Cada fase que muda schema bumpa a versão. Hoje em **v8**.
 
 ---
 
-## Análise das 3 frentes
+## Decisões firmadas (não revisitar sem motivo)
 
-### 1. Banco Supabase (fonte da verdade)
-Schema relacional completo (`docs/sql/apiusa.md`). Entidades relevantes ao mobile: `Bufalo`, `Raca`, `Grupo`, `Lote`, `MaterialGenetico`, `DadosZootecnicos`, `Medicacoes`, `DadosSanitarios`, `DadosReproducao`, `CicloLactacao`, `DadosLactacao` (ordenha diária), `Alertas`.
+1. **Escopo:** offline-first completo (push, lotes, ordenha, dashboards locais). Material genético **fora** — sem consumidor no app (form usa texto livre).
+2. **Entidades sem `/sync` flat:** abordagem **mista** — mobile usa o que já existe agora; issues abertas para a API padronizar depois.
+3. **Dashboards offline:** **calcular localmente** dos dados crus (não cachear).
+4. **Push:** **registry por entidade** (`src/services/sync/pushEndpoints.ts`).
+5. **Ordenha:** **não** replicar `parto → ciclo` offline (é composto server-side). Lista de lactação sai dos ciclos já sincronizados.
+6. **Ghost-record / escrita offline robusta:** resolver via **`id` opcional do cliente na API** (issue redigida) + trabalho mobile (body limpo + ordem). **Não** criar rota batch `/sync/push` (pularia side-effects).
+7. **Não tocar** no `ValidationPipe` global da API (risco de quebrar todos os fluxos). Mudanças na API são **aditivas** (campo opcional).
 
-No schema **Drizzle** da API, ~todas as tabelas têm `deleted_at` (soft-delete) — fundamental para o sync purgar registros deletados localmente.
+---
 
-### 2. API (buffs-api)
-- REST rico: toda entidade tem `POST/GET/PATCH/DELETE` + `restore` + `deleted/all`.
-- Módulo `/sync` tem **dois conjuntos**:
-  - **Flat** (query param `propriedadeId`): `bufalos`, `lactacao/ciclos`, `sanitario/eventos`, `reproducao`, `zootecnico/pesagens`, `grupos`, `alertas`, `racas`, `medicacoes`. Retornam **arrays crus** (sem normalização de `id`, sem paginação). NÃO filtram soft-deletes (bom p/ sync).
-  - **Paginado antigo** (`:id_propriedade/...`): wrapper `{data, meta}` normalizado via `normalizeRecord` (adiciona `id`, `updated_at`, `deleted_at`). Inclui `material-genetico`, `coberturas`, dashboards.
-- **Sem endpoint de sync (flat nem paginado por propriedade) para:** `lotes` (só REST `GET /lotes/propriedade/:id`), `ordenha` por propriedade (só global paginado, ou por búfala/ciclo).
-- `registrar-parto` (`PATCH /cobertura/:id/registrar-parto`) é **composto server-side**: atualiza cobertura + cria `CicloLactacao` + calcula `dt_secagem_prevista` + cria alerta de secagem (`cobertura.service.ts:487`).
+## Análise das 3 frentes (referência)
 
-#### Paths base dos controllers (para o push registry)
+### Supabase
+Schema relacional completo. ~Todas as tabelas têm `deleted_at` (soft-delete) no Drizzle da API — essencial pro sync purgar deletados.
+
+### API (buffs-api)
+- REST por entidade: `POST/GET/PATCH/DELETE` + `restore` + `deleted/all`.
+- `ValidationPipe` global (`main.ts:244`): `whitelist: true`, **`forbidNonWhitelisted: true`**, `transform: true`. → **body com campo fora do DTO = 400.**
+- `/sync` tem **flat** (query `propriedadeId`, array cru, sem soft-delete filtrado): `bufalos`, `lactacao/ciclos`, `sanitario/eventos`, `reproducao`, `zootecnico/pesagens`, `grupos`, `alertas`, `racas`, `medicacoes`. E **paginado antigo** (`:id_propriedade/...`, wrapper `{data,meta}`): inclui `material-genetico`, `coberturas`, dashboards.
+- **Sem endpoint de sync por propriedade para:** `lotes` (só REST `GET /lotes/propriedade/:id`) e `ordenha` (só global paginado `/ordenhas` ou por búfala/ciclo).
+- `registrar-parto` (`PATCH /cobertura/:id/registrar-parto`, `cobertura.service.ts:487`) é **composto**: atualiza cobertura + cria `CicloLactacao` + calcula secagem + cria alerta.
+- DTOs de create são **camelCase** e estritos (ex.: `CreateDadosLactacaoDto` = `idBufala`, `qtOrdenha`, `dtOrdenha`...).
+
+#### Paths base dos controllers (referência do push registry)
 | Entidade (local) | Controller base | Observação |
 |---|---|---|
 | bufalos | `/bufalos` | mover grupo: `PATCH /bufalos/grupo/mover` |
@@ -54,139 +65,92 @@ No schema **Drizzle** da API, ~todas as tabelas têm `deleted_at` (soft-delete) 
 | pesagens | `/dados-zootecnicos` | CREATE: `POST /dados-zootecnicos/bufalo/:id_bufalo` |
 | eventos_sanitarios | `/dados-sanitarios` | |
 | reproducoes | `/cobertura` | registrar-parto: `PATCH /cobertura/:id/registrar-parto` |
-| medicamentos | `/medicamentos` | |
-| grupos | `/grupos` | |
-| racas | `/racas` | |
 | alertas | `/alertas` | marcar visto: `PATCH /alertas/:id/visto` |
-| material_genetico | `/material-genetico` | |
-| ordenha | `/ordenhas` | |
+| ordenhas | `/ordenhas` | DTO camelCase (`idBufala`,`qtOrdenha`,`dtOrdenha`) |
 | lotes | `/lotes` | |
 
-### 3. Mobile (estado atual)
-**PULL — funcionando após fixes da sessão de 2026-05-20** (migração v5, normalização de `id` via `ENTITY_API_PK_MAP`, filtros `id IS NOT NULL`, `_synced` em racas/medicamentos, remoção de material_genetico que não tinha rota flat).
+---
 
-**PUSH — QUEBRADO para várias entidades.** O `pendingOperationsService.deriveEndpointMethod` é genérico (`/{entity}/{id}`) e o mapa `ENTITY_ROUTE` está dessincronizado dos nomes usados nos `enqueue`. Endpoints gerados errados:
+## Estado atual — o que já foi implementado
 
-| Entidade no enqueue | Gerado (ERRADO) | Correto |
+> Tudo em commits no branch `feature/design-mobile`. Cada fase tem um plano em `docs/superpowers/plans/`.
+
+### ✅ Fase 1 — Conserto da fila de PUSH (`plans/2026-05-20-fase1-push-queue.md`)
+- Criado `src/services/sync/pushEndpoints.ts` — registry `resolvePushEndpoint(entity, op, payload)` → `{ endpoint, method, body }`, com fallback genérico.
+- `pendingOperationsService.enqueue` agora consulta o registry e grava o **body transformado** (importante p/ mover-grupo e registrar-parto).
+- Resolvers: `bufalos` (CRUD + `grupo/mover`), `pesagens` (`/dados-zootecnicos/bufalo/:id`), `eventos_sanitarios` (`/dados-sanitarios`), `alertas` (`/:id/visto`), `reproducoes` (`/cobertura` + split `registrar-parto`), `ciclos_lactacao` (`/lactacao`).
+- Migração **v6** (limpa a `pending_operations` antiga com endpoints errados).
+- Testes: `src/services/sync/__tests__/pushEndpoints.test.ts` (21) + `pendingOperationsService.test.ts`.
+
+### ✅ Fase 2 — Lotes/piquetes offline (`plans/2026-05-20-fase2-lotes-offline.md`)
+- Tabela local `lotes` (`propriedadeId`, `idGrupo`) + maps + `getEntityExtras`.
+- `syncService.pullEntity` tem caso especial: `lotes` → `GET /lotes/propriedade/:id` (REST; sem incremental/soft-delete até a Fase 4).
+- `piqueteService.getAll` lê do SQLite (resolve o erro de rede do AnimalDetail/PiquetesScreen offline). `create` insere local + `enqueue('lotes','CREATE')` (fallback → `POST /lotes`).
+- Migração **v7**. Testes: `__tests__/database/schema.test.ts`, `piqueteService.test.ts`, +1 no syncService.
+
+### ✅ Fase 3 — Ordenha offline (`plans/2026-05-20-fase3-ordenha-offline.md`)
+- **Só ordenha** (material genético cortado — sem consumidor).
+- Tabela local `ordenhas` (write-only nesta fase) + `ENTITY_PK_MAP.ordenhas='id'` + `getEntityExtras`.
+- `registrarLactacaoApi` (em `lactacaoService.ts`) reescrito: **adapta snake_case→camelCase** (o DTO exige), insere local + `enqueue('ordenhas','CREATE')` (fallback → `POST /ordenhas`).
+- `syncService.pullEntity` **pula** `ordenhas` (sem `/sync/ordenha` até a Fase 4).
+- Migração **v8**. Testes atualizados em `lactacaoService.test.ts`, `schema.test.ts`, `syncService.test.ts`.
+- **Não tocado** (fora de escopo, sem regressão): `registrarColetaApi`/`registrarEstoqueApi` seguem mal-rotulados como `ciclos_lactacao` (laticínios/produção — fase separada). `encerrarLactacao` já estava correto.
+
+### ✅ Fase 4 — Issues da API redigidas (NÃO implementadas na API)
+Arquivos em `docs/`:
+- `issue-sync-ordenha.md` 🔴 ALTA — `GET /sync/ordenha` (tabela `dadoslactacao`, PK `idLact`). Único bloqueio real; destrava dashboards de produção/lactação.
+- `issue-sync-lotes.md` 🟡 MÉDIA — `GET /sync/lotes` (tabela `lote`, PK `idLote`, join `grupo`). Ganha incremental + soft-delete.
+- `issue-sync-material-genetico.md` 🟢 BAIXA — `GET /sync/material-genetico` flat (tabela `materialgenetico`, PK `idMaterial`).
+- `issue-client-uuid-create.md` 🔴 ALTA — `id` opcional do cliente nos 7 DTOs de create (resolve ghost-record + cadeia FK + editar-antes-de-sincronizar).
+
+---
+
+## Descobertas importantes (contexto que custou caro)
+
+1. **`forbidNonWhitelisted: true`** (`main.ts:246`): o body do push com qualquer campo fora do DTO → **400**. Hoje o mobile envia `id`/`createdAt`/`updatedAt`/etc. nos creates → **creates offline ainda não sobem**. É o bloqueio nº 1 da escrita offline. (Mobile-side, sem risco de API.)
+2. **Ghost-record + cadeias de dependência:** o app cria offline com UUID local; a API gera o id dela → duplicata. Pior: dado que referencia outro dado criado offline (FK), e editar dado ainda não sincronizado (PATCH 404). A reconciliação só-mobile (rewrite L→S) **não** resolve cadeia/edit-before-sync — só o **id estável** (client-UUID na API) resolve. Cenários confirmados pelo usuário como reais.
+3. **DTO de ordenha é camelCase** — exigiu adaptação no `registrarLactacaoApi` (senão 400 mesmo no endpoint certo).
+4. **Sem endpoint de ordenha por propriedade** na API — por isso o histórico de ordenha (e os dashboards que dependem dele) ficam para depois do `/sync/ordenha`.
+
+---
+
+## O que falta fazer (próximos passos, em ordem sugerida)
+
+### 1. 🔴 Escrita offline ponta-a-ponta — trabalho MOBILE (não depende da API)
+Sem isso, creates offline não sincronizam. Duas peças:
+- **(1a) Body limpo:** o push deve enviar **só os campos do DTO** de cada entidade (hoje envia extras → 400 por `forbidNonWhitelisted`). Provável lugar: shaping por entidade no `pushEndpoints.ts` (o registry já decide o `body`; basta restringi-lo aos campos aceitos). Precisa mapear os campos de cada `Create*Dto` da API.
+- **(1b) Ordem na fila:** `syncService.push` é FIFO (`ORDER BY createdAt`) mas **continua** se um op falha. Mudar para **parar no primeiro fracasso de pré-requisito** (ou bloquear dependentes), pra CREATE A subir antes de CREATE B / UPDATE A.
+> Brainstorming dessa parte já feito (ver "Descobertas" 1–2 e `issue-client-uuid-create.md`). Falta o `id` estável: depende da issue de client-UUID ser implementada na API. Enquanto não for, body-limpo + ordem já fazem creates **isolados** subirem; cadeia/edit-before-sync ficam 100% só após o client-UUID.
+
+### 2. Abrir as 4 issues no repo da buffs-api
+`docs/issue-client-uuid-create.md`, `issue-sync-ordenha.md`, `issue-sync-lotes.md`, `issue-sync-material-genetico.md`. Usar `gh issue create` (colar o conteúdo). **Não implementar a API nesta base** (é outro repo/time).
+
+### 3. 🟡 Fase 5 — Dashboards locais (`src/services/dashboards/`)
+Espelhar `dashboard.service.ts:24-274` (agregações puras). Disponibilidade:
+| Dashboard | Fontes locais | Quando dá pra fazer |
 |---|---|---|
-| `pesagens` CREATE | `POST /pesagens` | `POST /dados-zootecnicos/bufalo/:id_bufalo` |
-| `pesagens` UPDATE/DELETE | `/pesagens/:id` | `/dados-zootecnicos/:id` |
-| `eventos_sanitarios` | `/eventos_sanitarios` | `/dados-sanitarios` |
-| `reproducoes` | `/reproducoes` | `/cobertura` |
-| `alertas` (visto) | `PATCH /alertas/:id` | `PATCH /alertas/:id/visto` |
-| `bufalos` (mover grupo) | `PATCH /bufalos/:id` | `PATCH /bufalos/grupo/mover` |
+| `getStats` | bufalos+raça, ciclos, lotes, usuários (sem fonte local) | **Agora** (usuários: aproximar/omitir) |
+| `getReproducaoMetricas` | reproducoes (contagem por status) | **Agora** |
+| `getLactacaoMetricas` | ciclos + ordenha | Após `/sync/ordenha` (issue) |
+| `getProducaoMensal` | ordenha por período | Após `/sync/ordenha` (issue) |
 
-Resultado: escritas offline desses fluxos falham silenciosamente (5 retries e travam na fila).
+### 4. Integrar as rotas `/sync` flat quando a API entregar
+Cada `issue-sync-*.md` tem a seção "Impacto no mobile" com o que mudar:
+- **ordenha:** adicionar `ordenha:'idLact'` em `ENTITY_API_PK_MAP`, path em `SYNC_ENTITY_PATH`, remover o early-return de `ordenhas` em `pullEntity`.
+- **lotes:** trocar o caso especial REST pelo `/sync/lotes` (ganha incremental + soft-delete).
+- **material-genetico:** re-adicionar nos maps + `getEntityExtras` (a tabela local já existe no schema).
 
-**Telas online-only (sem fallback offline, quebram/vaziam sem rede):** `piqueteService` (lotes — getAll + create), dashboards (`lactacaoService` estatísticas/laticínios, `reproducaoService` dashboard, `propriedadeService` propriedades/dashboard). Auth pode continuar online-only.
-
----
-
-## Roadmap faseado (cada fase entrega software testável)
-
-```
-Fase 1 — Fila de PUSH (fundação)         ← desbloqueia TODAS as escritas offline
-Fase 2 — Lotes/piquetes offline           ← independente; alimenta dashboards
-Fase 3 — Material genético + Ordenha       ← alimenta reprodução/lactação + dashboards
-Fase 4 — Issues de melhoria na API         ← /sync flat para lotes/material/ordenha
-Fase 5 — Dashboards locais                 ← última, depende de 2, 3 e 4
-```
-
-### Fase 1 — Conserto da fila de PUSH (APROVADA)
-
-**Solução:** registry por entidade em `src/services/sync/pushEndpoints.ts`.
-
-```typescript
-type PushResolver = (op: OperationType, payload: any) =>
-  { endpoint: string; method: string; body?: any } | null;
-
-const PUSH_ENDPOINTS: Record<string, PushResolver> = {
-  bufalos: (op, p) => {
-    if (op === 'UPDATE' && p.idNovoGrupo)
-      return { endpoint: '/bufalos/grupo/mover', method: 'PATCH',
-               body: { idsBufalos: p.idsBufalos, idNovoGrupo: p.idNovoGrupo, motivo: p.motivo } };
-    if (op === 'CREATE') return { endpoint: '/bufalos', method: 'POST', body: p };
-    if (op === 'UPDATE') return { endpoint: `/bufalos/${p.id}`, method: 'PATCH', body: p };
-    if (op === 'DELETE') return { endpoint: `/bufalos/${p.id}`, method: 'DELETE' };
-  },
-  pesagens: (op, p) => {
-    if (op === 'CREATE') return { endpoint: `/dados-zootecnicos/bufalo/${p.bufaloId}`, method: 'POST', body: p };
-    if (op === 'UPDATE') return { endpoint: `/dados-zootecnicos/${p.id}`, method: 'PATCH', body: p };
-    if (op === 'DELETE') return { endpoint: `/dados-zootecnicos/${p.id}`, method: 'DELETE' };
-  },
-  eventos_sanitarios: (op, p) => { /* → /dados-sanitarios */ },
-  reproducoes:        (op, p) => { /* → /cobertura (CREATE/UPDATE) */ },
-  alertas:            (op, p) => ({ endpoint: `/alertas/${p.id}/visto`, method: 'PATCH' }),
-  ciclos_lactacao:    (op, p) => { /* → /lactacao */ },
-  // Fase 2+: lotes, material_genetico, ordenha
-};
-```
-
-**Mudanças:**
-- `pendingOperationsService.enqueue` consulta o registry (remove `ENTITY_ROUTE` + `deriveEndpointMethod`).
-- Cada `enqueue` deve carregar os campos que a rota exige (ex.: `pesagens` precisa de `bufaloId` no payload — já tem).
-- Unit tests por entidade × operação (endpoint/método/body).
-- `syncService.push` **não muda** (já lê `op.endpoint`/`op.method`/`op.payload`).
-
-**Decisão:** limpar a tabela `pending_operations` no próximo bump de migração (são writes que nunca subiram com endpoint errado) — em vez de tentar recalcular endpoints das pendentes.
-
-### Fase 2 — Lotes/piquetes offline (APROVADA)
-
-Padrão: tabela local + sync + religar service.
-- Tabela `lotes` (extras: `propriedadeId`, `idGrupo`) + maps + bump de migração.
-- **Sem `/sync/lotes`** → sync via REST existente `GET /lotes/propriedade/:id` (array cru; sem incremental/soft-delete por ora). `syncService` ganha caso especial para montar essa URL em vez de `/sync/...`.
-- `piqueteService.getAll` → lê do SQLite local (resolve o erro de rede do AnimalDetail paliado em 2026-05-20).
-- `piqueteService.create` → `enqueue('lotes', 'CREATE', ...)` → registry `POST /lotes`.
-
-### Fase 3 — Material genético + Ordenha (APROVADA, com nuance de ordenha)
-
-**Material genético:** re-adicionar tabela local. Sync via paginado existente `:id_propriedade/material-genetico` (`{data, meta}`). `syncService` precisa lidar com **paginação** (loop até esgotar). Religa tela de reprodução (seleção sêmen/óvulo) e nomes de pai/mãe.
-
-**Ordenha — resolução da amarração com reprodução:**
-A API cria o ciclo automaticamente no `registrar-parto` (server-side). Replicar offline causaria **ciclo duplicado** (UUID local vs UUID servidor). Portanto:
-
-| Necessidade | Solução |
-|---|---|
-| Quem está em ordenha (lista) | Deriva de `ciclos_lactacao` com status "Em Lactação" — **já sincronizado, zero trabalho novo** |
-| Parto registrado offline | Enfileira `registrar-parto`; búfala aparece na ordenha após o próximo sync (limitação documentada, sem duplicar ciclo) |
-| Registrar ordenha (leite) offline | Tabela local `ordenha` + push `POST /ordenhas` |
-| Histórico de ordenhas p/ dashboards | **Adiado para depois da Fase 4** (depende de `/sync/ordenha` flat) |
-
-**Não replicamos o `parto → ciclo` offline.** A lista de ordenha sai dos ciclos já sincronizados.
-
-**Decisão (histórico de ordenha):** **adiar** o sync do histórico para depois da Fase 4. Fase 3 cobre só (a) lista de lactação a partir dos ciclos já sincronizados e (b) registro de ordenha offline (push `POST /ordenhas`). Consequência: dashboards de **produção** e **lactação** só funcionam offline após a Fase 4.
-
-### Fase 4 — Issues de melhoria na API
-
-Abrir issues (não implementar na API nesta sessão) para padronizar `/sync` flat, no padrão de `docs/issue-sync-endpoints.md` (array cru, incremental via `updated_at`, inclui soft-deletes):
-1. `GET /sync/ordenha?propriedadeId=` — **prioridade alta**; único bloqueio real (não existe endpoint de ordenha por propriedade hoje). Destrava dashboards de produção/lactação.
-2. `GET /sync/lotes?propriedadeId=` — substitui o REST `/lotes/propriedade/:id` da Fase 2 (ganha incremental + soft-delete).
-3. `GET /sync/material-genetico?propriedadeId=` flat — substitui o paginado da Fase 3.
-
-Cada issue vira um arquivo em `docs/`. Quando atendida, o mobile troca o mecanismo interino pela rota flat.
-
-### Fase 5 — Dashboards locais
-
-Módulo `src/services/dashboards/` com uma função pura por dashboard, lendo do SQLite. Lógica espelhada de `dashboard.service.ts:24-274` (Map/reduce, classificação por faixas da média do rebanho, série mensal, variação %).
-
-| Dashboard | Fontes locais | Disponível offline |
-|---|---|---|
-| `getStats` | bufalos+raça✓, ciclos✓, lotes (F2), usuários (sem fonte local) | Após Fase 2 (usuários: aproximar/omitir) |
-| `getReproducaoMetricas` | reproducoes✓ (contagem por status) | Já dá pra fazer |
-| `getLactacaoMetricas` | ciclos✓ + ordenha | Após Fase 4 |
-| `getProducaoMensal` | ordenha por período | Após Fase 4 |
+### 5. Bordas conhecidas (tratar quando incomodar)
+- **Ciclo via `registrar-parto` offline:** o ciclo é criado server-side com id próprio; ordenha lançada offline pra esse ciclo referenciaria id local divergente. Mexe na lógica composta do parto — rodada separada.
+- **`registrarColetaApi`/`registrarEstoqueApi`:** ainda enfileiram como `ciclos_lactacao` (→ `POST /lactacao`, errado). São laticínios/produção; precisam de endpoints próprios (investigar se existem) — fora do escopo atual.
+- **Contagem de usuários** no `getStats` local: sem fonte local — aproximar ou omitir.
 
 ---
 
-## Itens em aberto [ABERTO]
+## Limitações atuais (estado real do app hoje)
 
-1. Contagem de usuários no `getStats` local (sem fonte local hoje) — aproximar ou omitir. *(Decisão fina deixada para a implementação da Fase 5.)*
-
----
-
-## Próximos passos
-1. Resolver itens em aberto.
-2. Concluir apresentação das seções (Fases 4 e 5) e aprovar.
-3. Self-review do spec.
-4. Usuário revisa o spec.
-5. Invocar `writing-plans` para gerar o plano de implementação da Fase 1 (e seguintes).
+- **Creates offline não sincronizam ainda** (bloqueio do `forbidNonWhitelisted` — item 1a). Eles ficam na fila; o registro local existe e aparece, mas o push dá 400 até o body-limpo.
+- **Duplicata/ghost-record** ocorrerá quando os creates passarem a subir, até o client-UUID na API (item 2 + issue).
+- **Lotes:** sem incremental nem purge de deletados até `/sync/lotes`.
+- **Ordenha:** write-only (sem histórico do servidor) até `/sync/ordenha`.
+- **Dashboards:** ainda online-only (Fase 5 não iniciada).
