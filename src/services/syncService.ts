@@ -109,8 +109,8 @@ class SyncService {
         `INSERT OR REPLACE INTO sync_meta (entity, propriedadeId, lastSyncedAt) VALUES (?, ?, ?)`,
         [entity, syncPropId, syncedAt]
       );
-    } catch {
-      // falha silenciosa — dados locais continuam disponíveis
+    } catch (err) {
+      console.warn(`[sync] pullEntity falhou para "${entity}":`, err);
     }
   }
 

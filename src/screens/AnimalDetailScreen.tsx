@@ -57,6 +57,7 @@ export const AnimalDetailScreen = () => {
   const [tab, setTab] = useState<"info" | "zootec" | "sanit">("info");
   const [detalhes, setDetalhes] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { propriedadeSelecionada } = usePropriedade();
   
@@ -106,8 +107,11 @@ export const AnimalDetailScreen = () => {
         dadosSanitarios: sanitResp.data || [],
       });
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao buscar dados do búfalo:", err);
+      if (err?.message?.includes('não encontrado')) {
+        setNotFound(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -266,6 +270,19 @@ export const AnimalDetailScreen = () => {
     return (
       <View style={styles.loadingContainer}>
         <BuffaloLoader />
+      </View>
+    );
+  }
+
+  if (notFound || (!loading && !detalhes)) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={{ fontSize: 16, color: '#666', textAlign: 'center', marginBottom: 16 }}>
+          Animal não encontrado.{'\n'}Verifique a sincronização e tente novamente.
+        </Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 12 }}>
+          <Text style={{ color: colors.yellow.dark, fontWeight: '600' }}>Voltar</Text>
+        </TouchableOpacity>
       </View>
     );
   }
