@@ -22,6 +22,22 @@ const RESOLVERS: Record<string, Resolver> = {
     if (op === 'DELETE') return { endpoint: `/bufalos/${p.id}`, method: 'DELETE' };
     return null;
   },
+  pesagens: (op, p) => {
+    if (op === 'CREATE') return { endpoint: `/dados-zootecnicos/bufalo/${p.bufaloId}`, method: 'POST', body: p };
+    if (op === 'UPDATE') return { endpoint: `/dados-zootecnicos/${p.id}`, method: 'PATCH', body: p };
+    if (op === 'DELETE') return { endpoint: `/dados-zootecnicos/${p.id}`, method: 'DELETE' };
+    return null;
+  },
+  eventos_sanitarios: (op, p) => {
+    if (op === 'CREATE') return { endpoint: '/dados-sanitarios', method: 'POST', body: p };
+    if (op === 'UPDATE') return { endpoint: `/dados-sanitarios/${p.id}`, method: 'PATCH', body: p };
+    if (op === 'DELETE') return { endpoint: `/dados-sanitarios/${p.id}`, method: 'DELETE' };
+    return null;
+  },
+  alertas: (op, p) => {
+    if (op === 'UPDATE') return { endpoint: `/alertas/${p.id}/visto`, method: 'PATCH', body: { visto: p.visto ?? true } };
+    return null;
+  },
 };
 
 export function resolvePushEndpoint(entity: string, operation: OperationType, payload: any): ResolvedPush {
