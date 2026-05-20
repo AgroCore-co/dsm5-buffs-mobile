@@ -39,6 +39,13 @@ export const getBufalos = async (
   };
 };
 
+const lookupBrinco = async (animalId: string | null | undefined): Promise<string | null> => {
+  if (!animalId) return null;
+  const row = await queryFirst<{ _raw: string }>(`SELECT _raw FROM bufalos WHERE id = ?`, [animalId]);
+  if (!row) return null;
+  return JSON.parse(row._raw)?.brinco ?? null;
+};
+
 export const getBufaloDetalhes = async (id: string) => {
   const row = await queryFirst<{ _raw: string }>(
     `SELECT _raw FROM bufalos WHERE id = ?`,
@@ -47,11 +54,24 @@ export const getBufaloDetalhes = async (id: string) => {
   if (!row) throw new Error(`Búfalo ${id} não encontrado`);
 
   const bufalo = JSON.parse(row._raw);
+
+  const paiNome =
+    bufalo.brincoPai ??
+    bufalo.materialGeneticoMachoNome ??
+    (await lookupBrinco(bufalo.idPai)) ??
+    'Desconhecido';
+
+  const maeNome =
+    bufalo.brincoMae ??
+    bufalo.materialGeneticoFemeaNome ??
+    (await lookupBrinco(bufalo.idMae)) ??
+    'Desconhecida';
+
   return {
     ...bufalo,
     racaNome: bufalo.nomeRaca || bufalo.raca?.nome || 'Desconhecida',
-    paiNome: bufalo.brincoPai ?? bufalo.materialGeneticoMachoNome ?? 'Desconhecido',
-    maeNome: bufalo.brincoMae ?? bufalo.materialGeneticoFemeaNome ?? 'Desconhecida',
+    paiNome,
+    maeNome,
   };
 };
 
