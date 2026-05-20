@@ -22,11 +22,25 @@ describe('runMigrations', () => {
     CREATE_TABLES_SQL.forEach((sql) => {
       expect(mockExecute).toHaveBeenCalledWith(sql);
     });
-    expect(mockExecute).toHaveBeenCalledWith('PRAGMA user_version = 1');
+    expect(mockExecute).toHaveBeenCalledWith('PRAGMA user_version = 2');
+  });
+
+  it('drops old tables and recreates when user_version is 1', async () => {
+    mockExecute
+      .mockResolvedValueOnce({ rows: [{ user_version: 1 }] })
+      .mockResolvedValue({ rows: [] });
+
+    await runMigrations();
+
+    expect(mockExecute).toHaveBeenCalledWith(expect.stringContaining('DROP TABLE IF EXISTS bufalos'));
+    CREATE_TABLES_SQL.forEach((sql) => {
+      expect(mockExecute).toHaveBeenCalledWith(sql);
+    });
+    expect(mockExecute).toHaveBeenCalledWith('PRAGMA user_version = 2');
   });
 
   it('skips migrations when user_version is current', async () => {
-    mockExecute.mockResolvedValueOnce({ rows: [{ user_version: 1 }] });
+    mockExecute.mockResolvedValueOnce({ rows: [{ user_version: 2 }] });
 
     await runMigrations();
 
