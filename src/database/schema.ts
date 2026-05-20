@@ -8,7 +8,6 @@ export const ENTITY_PK_MAP: Record<string, string> = {
   eventos_sanitarios: 'id',
   alertas: 'id',
   reproducoes: 'id',
-  material_genetico: 'id',
 };
 
 // Campo de PK que a API retorna por entidade (antes da normalização para 'id')
@@ -22,7 +21,6 @@ export const ENTITY_API_PK_MAP: Record<string, string> = {
   eventos_sanitarios: 'idSanit',
   alertas: 'idAlerta',
   reproducoes: 'idReproducao',
-  material_genetico: 'idMaterial',
 };
 
 export const SYNC_ENTITY_PATH: Record<string, string> = {
@@ -35,7 +33,6 @@ export const SYNC_ENTITY_PATH: Record<string, string> = {
   eventos_sanitarios: 'sanitario/eventos',
   alertas: 'alertas',
   reproducoes: 'reproducao',
-  material_genetico: 'material-genetico',
 };
 
 // Retorna colunas queryáveis por entidade (além de id/updatedAt/deletedAt/_raw)
@@ -61,15 +58,13 @@ export function getEntityExtras(entity: string, record: any): Record<string, any
     case 'pesagens':
       return { ...idProp, bufaloId: record.idBufalo ?? record.bufaloId ?? null };
     case 'medicamentos':
-      return { nome: record.medicacao ?? record.nome ?? null };
+      return { ...idProp, nome: record.medicacao ?? record.nome ?? null };
     case 'eventos_sanitarios':
       return { ...idProp, bufaloId: record.idBufalo ?? record.bufaloId ?? null };
     case 'alertas':
       return { ...idProp, lido: record.visto ? 1 : (record.lido ? 1 : 0) };
     case 'reproducoes':
       return { ...idProp, bufaloId: record.idBufala ?? record.bufaloId ?? null };
-    case 'material_genetico':
-      return { ...idProp };
     default:
       return { ...idProp };
   }
@@ -117,6 +112,7 @@ export const CREATE_TABLES_SQL: string[] = [
     nome      TEXT,
     updatedAt TEXT NOT NULL,
     deletedAt TEXT,
+    _synced   INTEGER NOT NULL DEFAULT 0,
     _raw      TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS pesagens (
@@ -130,11 +126,13 @@ export const CREATE_TABLES_SQL: string[] = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_pesagens_bufalo ON pesagens(bufaloId)`,
   `CREATE TABLE IF NOT EXISTS medicamentos (
-    id        TEXT PRIMARY KEY,
-    nome      TEXT,
-    updatedAt TEXT NOT NULL,
-    deletedAt TEXT,
-    _raw      TEXT NOT NULL
+    id            TEXT PRIMARY KEY,
+    propriedadeId TEXT,
+    nome          TEXT,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _synced       INTEGER NOT NULL DEFAULT 0,
+    _raw          TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS eventos_sanitarios (
     id            TEXT PRIMARY KEY,

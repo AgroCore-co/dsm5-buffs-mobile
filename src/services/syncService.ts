@@ -84,7 +84,7 @@ class SyncService {
 
   private async pullEntity(entity: string, propriedadeId: string): Promise<void> {
     try {
-      const syncPropId = ['racas', 'medicamentos'].includes(entity) ? 'global' : propriedadeId;
+      const syncPropId = entity === 'racas' ? 'global' : propriedadeId;
       const meta = await queryFirst<{ lastSyncedAt: string | null }>(
         'SELECT lastSyncedAt FROM sync_meta WHERE entity = ? AND propriedadeId = ?',
         [entity, syncPropId]
@@ -92,7 +92,7 @@ class SyncService {
 
       const path = SYNC_ENTITY_PATH[entity];
       const qs = new URLSearchParams();
-      if (!['racas', 'medicamentos'].includes(entity)) {
+      if (entity !== 'racas') {
         qs.append('propriedadeId', propriedadeId);
       }
       if (meta?.lastSyncedAt) qs.append('updated_at', meta.lastSyncedAt);
