@@ -1,21 +1,23 @@
-import { getDb } from './db';
 import { CREATE_TABLES_SQL } from './schema';
+import { execute, queryFirst } from './db';
 
 const CURRENT_VERSION = 1;
 
 export async function runMigrations(): Promise<void> {
-  const db = getDb();
+  const row = await queryFirst<{ user_version: number }>('PRAGMA user_version');
+  const version = row?.user_version ?? 0;
 
-  const versionResult = await db.execute('PRAGMA user_version');
-  const currentVersion = (versionResult.rows[0] as any)?.user_version ?? 0;
+  if (version < CURRENT_VERSION) {
+    // Executa cada statement separadamente (op-sqlite não aceita múltiplos em uma só chamada)
+    const statements = CREATE_TABLES_SQL
+      .split(';')
+      .map(s => s.trim())
+      .filter(Boolean);
 
-  if (currentVersion >= CURRENT_VERSION) {
-    return;
+    for (const sql of statements) {
+      await execute(sql);
+    }
+
+    await execute(`PRAGMA user_version = ${CURRENT_VERSION}`);
   }
-
-  for (const sql of CREATE_TABLES_SQL) {
-    await db.execute(sql);
-  }
-
-  await db.execute(`PRAGMA user_version = ${CURRENT_VERSION}`);
 }

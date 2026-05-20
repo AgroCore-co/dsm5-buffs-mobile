@@ -1,8 +1,11 @@
+let _mockRows: any[] = [];
+
+export const __setMockRows = (rows: any[]) => { _mockRows = rows; };
+export const __clearMocks = () => { _mockRows = []; };
+
 const mockDb = {
-  execute: jest.fn().mockResolvedValue({ rows: [], rowsAffected: 0 }),
-  executeBatch: jest.fn().mockResolvedValue({ rowsAffected: 0 }),
-  close: jest.fn(),
+  executeAsync: jest.fn(async () => ({ rows: { _array: _mockRows } })),
 };
 
-export const open = jest.fn().mockReturnValue(mockDb);
-export const OPSQLiteConnection = jest.fn();
+export const open = jest.fn(() => mockDb);
+export const __mockDb = mockDb;

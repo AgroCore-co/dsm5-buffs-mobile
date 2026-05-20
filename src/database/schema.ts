@@ -1,184 +1,190 @@
-export const CREATE_TABLES_SQL = [
-  `CREATE TABLE IF NOT EXISTS bufalos (
-    id TEXT PRIMARY KEY,
-    propriedadeId TEXT NOT NULL,
-    brinco TEXT,
-    sexo TEXT,
-    nivelMaturidade TEXT,
-    status INTEGER,
-    idRaca TEXT,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 0,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS ciclos_lactacao (
-    id TEXT PRIMARY KEY,
-    bufaloId TEXT NOT NULL,
-    propriedadeId TEXT NOT NULL,
-    status TEXT,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 0,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS eventos_sanitarios (
-    id TEXT PRIMARY KEY,
-    bufaloId TEXT NOT NULL,
-    propriedadeId TEXT NOT NULL,
-    tipo TEXT,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 0,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS reproducoes (
-    id TEXT PRIMARY KEY,
-    bufaloId TEXT NOT NULL,
-    propriedadeId TEXT NOT NULL,
-    tipo TEXT,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 0,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS pesagens (
-    id TEXT PRIMARY KEY,
-    bufaloId TEXT NOT NULL,
-    propriedadeId TEXT NOT NULL,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 0,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS grupos (
-    id TEXT PRIMARY KEY,
-    propriedadeId TEXT NOT NULL,
-    nome TEXT,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 0,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS alertas (
-    id TEXT PRIMARY KEY,
-    propriedadeId TEXT NOT NULL,
-    tipo TEXT,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 0,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS racas (
-    id TEXT PRIMARY KEY,
-    nome TEXT,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 1,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS medicamentos (
-    id TEXT PRIMARY KEY,
-    nome TEXT,
-    _raw TEXT NOT NULL,
-    _synced INTEGER NOT NULL DEFAULT 1,
-    updatedAt TEXT
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS pending_operations (
-    id TEXT PRIMARY KEY,
-    entity TEXT NOT NULL,
-    operation TEXT NOT NULL,
-    payload TEXT NOT NULL,
-    retryCount INTEGER NOT NULL DEFAULT 0,
-    createdAt TEXT NOT NULL
-  )`,
-
-  `CREATE TABLE IF NOT EXISTS sync_meta (
-    entity TEXT NOT NULL,
-    propriedadeId TEXT NOT NULL,
-    lastSyncedAt TEXT,
-    PRIMARY KEY (entity, propriedadeId)
-  )`,
-];
-
 export const ENTITY_PK_MAP: Record<string, string> = {
-  bufalos: 'id',
-  ciclos_lactacao: 'id',
-  eventos_sanitarios: 'id',
-  reproducoes: 'id',
-  pesagens: 'id',
-  grupos: 'id',
-  alertas: 'id',
-  racas: 'id',
-  medicamentos: 'id',
+  bufalos: 'idBufalo',
+  ciclos_lactacao: 'idCicloLactacao',
+  grupos: 'idGrupo',
+  racas: 'idRaca',
+  dados_zootecnicos: 'idDadoZootecnico',
+  medicamentos: 'idMedicamento',
+  dados_sanitarios: 'idDadoSanitario',
+  alertas: 'idAlerta',
+  coberturas: 'idCobertura',
+  material_genetico: 'idMaterialGenetico',
 };
 
 export const SYNC_ENTITY_PATH: Record<string, string> = {
   bufalos: 'bufalos',
   ciclos_lactacao: 'lactacao/ciclos',
-  eventos_sanitarios: 'sanitario/eventos',
-  reproducoes: 'reproducao',
-  pesagens: 'zootecnico/pesagens',
   grupos: 'grupos',
-  alertas: 'alertas',
   racas: 'racas',
-  medicamentos: 'medicamentos',
+  dados_zootecnicos: 'zootecnico/pesagens',
+  medicamentos: 'medicacoes',
+  dados_sanitarios: 'sanitario/eventos',
+  alertas: 'alertas',
+  coberturas: 'reproducao',
+  material_genetico: 'material-genetico',
 };
 
-interface EntityExtra {
-  columns: string[];
-  values: (row: any) => any[];
-}
-
-export function getEntityExtras(entity: string): EntityExtra {
+// Retorna colunas queryáveis por entidade (além de pk/updatedAt/deletedAt/_raw)
+export function getEntityExtras(entity: string, record: any): Record<string, any> {
+  const idProp = { idPropriedade: record.idPropriedade ?? null };
   switch (entity) {
     case 'bufalos':
       return {
-        columns: ['propriedadeId', 'brinco', 'sexo', 'nivelMaturidade', 'status', 'idRaca', 'updatedAt'],
-        values: (r) => [r.propriedadeId, r.brinco, r.sexo, r.nivelMaturidade, r.status ? 1 : 0, r.idRaca, r.updatedAt],
+        ...idProp,
+        brinco: record.brinco ?? null,
+        sexo: record.sexo ?? null,
+        status: record.status ?? null,
+        nivelMaturidade: record.nivelMaturidade ?? null,
+        idRaca: record.idRaca ?? null,
+        microchip: record.microchip ?? null,
       };
     case 'ciclos_lactacao':
-      return {
-        columns: ['bufaloId', 'propriedadeId', 'status', 'updatedAt'],
-        values: (r) => [r.bufaloId, r.propriedadeId, r.status, r.updatedAt],
-      };
-    case 'eventos_sanitarios':
-      return {
-        columns: ['bufaloId', 'propriedadeId', 'tipo', 'updatedAt'],
-        values: (r) => [r.bufaloId, r.propriedadeId, r.tipo, r.updatedAt],
-      };
-    case 'reproducoes':
-      return {
-        columns: ['bufaloId', 'propriedadeId', 'tipo', 'updatedAt'],
-        values: (r) => [r.bufaloId, r.propriedadeId, r.tipo, r.updatedAt],
-      };
-    case 'pesagens':
-      return {
-        columns: ['bufaloId', 'propriedadeId', 'updatedAt'],
-        values: (r) => [r.bufaloId, r.propriedadeId, r.updatedAt],
-      };
+      return { ...idProp, idBufala: record.idBufala ?? null, status: record.status ?? null };
     case 'grupos':
-      return {
-        columns: ['propriedadeId', 'nome', 'updatedAt'],
-        values: (r) => [r.propriedadeId, r.nome, r.updatedAt],
-      };
-    case 'alertas':
-      return {
-        columns: ['propriedadeId', 'tipo', 'updatedAt'],
-        values: (r) => [r.propriedadeId, r.tipo, r.updatedAt],
-      };
+      return { ...idProp, nome: record.nome ?? null };
     case 'racas':
-      return {
-        columns: ['nome', 'updatedAt'],
-        values: (r) => [r.nome, r.updatedAt],
-      };
+      return { nome: record.nome ?? null };         // sem idPropriedade (global)
+    case 'dados_zootecnicos':
+      return { ...idProp, idBufalo: record.idBufalo ?? null };
     case 'medicamentos':
-      return {
-        columns: ['nome', 'updatedAt'],
-        values: (r) => [r.nome, r.updatedAt],
-      };
+      return { nome: record.nome ?? null };          // sem idPropriedade (global)
+    case 'dados_sanitarios':
+      return { ...idProp, idBufalo: record.idBufalo ?? null };
+    case 'alertas':
+      return { ...idProp, lido: record.lido ? 1 : 0 };
+    case 'coberturas':
+      return { ...idProp, idBufala: record.idBufala ?? null };
+    case 'material_genetico':
+      return { ...idProp };
     default:
-      return { columns: [], values: () => [] };
+      return { ...idProp };
   }
 }
+
+export const CREATE_TABLES_SQL = `
+  CREATE TABLE IF NOT EXISTS bufalos (
+    idBufalo        TEXT PRIMARY KEY,
+    idPropriedade   TEXT,
+    brinco          TEXT,
+    sexo            TEXT,
+    status          TEXT,
+    nivelMaturidade TEXT,
+    idRaca          TEXT,
+    microchip       TEXT,
+    updatedAt       TEXT NOT NULL,
+    deletedAt       TEXT,
+    _synced         INTEGER NOT NULL DEFAULT 0,
+    _raw            TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_bufalos_prop ON bufalos(idPropriedade);
+  CREATE INDEX IF NOT EXISTS idx_bufalos_brinco ON bufalos(brinco);
+
+  CREATE TABLE IF NOT EXISTS ciclos_lactacao (
+    idCicloLactacao TEXT PRIMARY KEY,
+    idPropriedade   TEXT,
+    idBufala        TEXT,
+    status          TEXT,
+    updatedAt       TEXT NOT NULL,
+    deletedAt       TEXT,
+    _synced         INTEGER NOT NULL DEFAULT 0,
+    _raw            TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_lactacao_prop ON ciclos_lactacao(idPropriedade);
+
+  CREATE TABLE IF NOT EXISTS grupos (
+    idGrupo       TEXT PRIMARY KEY,
+    idPropriedade TEXT,
+    nome          TEXT,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _synced       INTEGER NOT NULL DEFAULT 0,
+    _raw          TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS racas (
+    idRaca    TEXT PRIMARY KEY,
+    nome      TEXT,
+    updatedAt TEXT NOT NULL,
+    deletedAt TEXT,
+    _raw      TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS dados_zootecnicos (
+    idDadoZootecnico TEXT PRIMARY KEY,
+    idPropriedade    TEXT,
+    idBufalo         TEXT,
+    updatedAt        TEXT NOT NULL,
+    deletedAt        TEXT,
+    _synced          INTEGER NOT NULL DEFAULT 0,
+    _raw             TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_zootecnico_bufalo ON dados_zootecnicos(idBufalo);
+
+  CREATE TABLE IF NOT EXISTS medicamentos (
+    idMedicamento TEXT PRIMARY KEY,
+    nome          TEXT,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _raw          TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS dados_sanitarios (
+    idDadoSanitario TEXT PRIMARY KEY,
+    idPropriedade   TEXT,
+    idBufalo        TEXT,
+    updatedAt       TEXT NOT NULL,
+    deletedAt       TEXT,
+    _synced         INTEGER NOT NULL DEFAULT 0,
+    _raw            TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_sanitario_bufalo ON dados_sanitarios(idBufalo);
+
+  CREATE TABLE IF NOT EXISTS alertas (
+    idAlerta      TEXT PRIMARY KEY,
+    idPropriedade TEXT,
+    lido          INTEGER DEFAULT 0,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _synced       INTEGER NOT NULL DEFAULT 0,
+    _raw          TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS coberturas (
+    idCobertura   TEXT PRIMARY KEY,
+    idPropriedade TEXT,
+    idBufala      TEXT,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _synced       INTEGER NOT NULL DEFAULT 0,
+    _raw          TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS material_genetico (
+    idMaterialGenetico TEXT PRIMARY KEY,
+    idPropriedade      TEXT,
+    updatedAt          TEXT NOT NULL,
+    deletedAt          TEXT,
+    _synced            INTEGER NOT NULL DEFAULT 0,
+    _raw               TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS sync_meta (
+    entity         TEXT NOT NULL,
+    propriedadeId  TEXT NOT NULL,
+    lastSyncedAt   TEXT,
+    PRIMARY KEY (entity, propriedadeId)
+  );
+
+  CREATE TABLE IF NOT EXISTS pending_operations (
+    id           TEXT PRIMARY KEY,
+    entity       TEXT NOT NULL,
+    operation    TEXT NOT NULL,
+    endpoint     TEXT NOT NULL,
+    method       TEXT NOT NULL,
+    payload      TEXT NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'PENDING',
+    retryCount   INTEGER NOT NULL DEFAULT 0,
+    errorMessage TEXT,
+    createdAt    TEXT NOT NULL
+  );
+`;
