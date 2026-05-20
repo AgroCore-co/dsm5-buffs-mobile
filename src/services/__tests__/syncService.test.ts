@@ -12,7 +12,10 @@ import { queryFirst, execute } from '../../database/db';
 import { apiFetch } from '../../lib/apiClient';
 import { getPending, markSynced } from '../pendingOperationsService';
 import { syncService } from '../syncService';
-import { __setConnected } from '@react-native-community/netinfo';
+
+const { __setConnected } = jest.requireMock('@react-native-community/netinfo') as {
+  __setConnected: (val: boolean) => void;
+};
 
 const mockQueryFirst = queryFirst as jest.Mock;
 const mockExecute = execute as jest.Mock;

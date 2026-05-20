@@ -1,6 +1,9 @@
 jest.mock('@op-engineering/op-sqlite');
 
-import { __mockDb, __setMockRows } from '@op-engineering/op-sqlite';
+const { __mockDb, __setMockRows } = jest.requireMock('@op-engineering/op-sqlite') as {
+  __mockDb: { execute: jest.Mock };
+  __setMockRows: (rows: any[]) => void;
+};
 import { queryAll, queryFirst, execute } from '../db';
 
 beforeEach(() => {
