@@ -150,36 +150,37 @@ A API cria o ciclo automaticamente no `registrar-parto` (server-side). Replicar 
 | Quem está em ordenha (lista) | Deriva de `ciclos_lactacao` com status "Em Lactação" — **já sincronizado, zero trabalho novo** |
 | Parto registrado offline | Enfileira `registrar-parto`; búfala aparece na ordenha após o próximo sync (limitação documentada, sem duplicar ciclo) |
 | Registrar ordenha (leite) offline | Tabela local `ordenha` + push `POST /ordenhas` |
-| Histórico de ordenhas p/ dashboards | Sync — **[ABERTO]** ver abaixo |
+| Histórico de ordenhas p/ dashboards | **Adiado para depois da Fase 4** (depende de `/sync/ordenha` flat) |
 
 **Não replicamos o `parto → ciclo` offline.** A lista de ordenha sai dos ciclos já sincronizados.
 
+**Decisão (histórico de ordenha):** **adiar** o sync do histórico para depois da Fase 4. Fase 3 cobre só (a) lista de lactação a partir dos ciclos já sincronizados e (b) registro de ordenha offline (push `POST /ordenhas`). Consequência: dashboards de **produção** e **lactação** só funcionam offline após a Fase 4.
+
 ### Fase 4 — Issues de melhoria na API
 
-Abrir issues (não implementar na API nesta sessão) para padronizar `/sync` flat:
-- `GET /sync/lotes?propriedadeId=` (array cru, incremental, com soft-delete)
-- `GET /sync/material-genetico?propriedadeId=` (flat, substitui o paginado)
-- `GET /sync/ordenha?propriedadeId=` (todas as ordenhas da propriedade — **não existe hoje**, é o maior bloqueio para dashboards de produção/lactação)
+Abrir issues (não implementar na API nesta sessão) para padronizar `/sync` flat, no padrão de `docs/issue-sync-endpoints.md` (array cru, incremental via `updated_at`, inclui soft-deletes):
+1. `GET /sync/ordenha?propriedadeId=` — **prioridade alta**; único bloqueio real (não existe endpoint de ordenha por propriedade hoje). Destrava dashboards de produção/lactação.
+2. `GET /sync/lotes?propriedadeId=` — substitui o REST `/lotes/propriedade/:id` da Fase 2 (ganha incremental + soft-delete).
+3. `GET /sync/material-genetico?propriedadeId=` flat — substitui o paginado da Fase 3.
 
-Após cada issue ser atendida, o mobile troca o mecanismo interino pelo endpoint flat.
+Cada issue vira um arquivo em `docs/`. Quando atendida, o mobile troca o mecanismo interino pela rota flat.
 
 ### Fase 5 — Dashboards locais
 
-Replicar no mobile as 4 agregações de `dashboard.service.ts` a partir dos dados locais:
-- **getStats:** bufalos (com raça), búfalas lactando (ciclos status), contagem de lotes, contagem de usuários. Depende de: bufalos✓, ciclos✓, **lotes (Fase 2)**, usuários (sem fonte local — aproximar/omitir).
-- **getLactacaoMetricas:** ciclos + ordenhas (totalLeite, qtdOrdenhas por ciclo) → depende de **ordenha (Fase 3/4)**.
-- **getProducaoMensal:** ordenhas por período → depende de **ordenha (Fase 3/4)**.
-- **getReproducaoMetricas:** reproduções por status → depende de reproducoes✓.
+Módulo `src/services/dashboards/` com uma função pura por dashboard, lendo do SQLite. Lógica espelhada de `dashboard.service.ts:24-274` (Map/reduce, classificação por faixas da média do rebanho, série mensal, variação %).
 
-Lógica de cálculo: ver `dashboard.service.ts` (linhas 24-274) — agregações puras (Map/reduce, classificação por faixas da média do rebanho, série histórica mensal, variação percentual).
+| Dashboard | Fontes locais | Disponível offline |
+|---|---|---|
+| `getStats` | bufalos+raça✓, ciclos✓, lotes (F2), usuários (sem fonte local) | Após Fase 2 (usuários: aproximar/omitir) |
+| `getReproducaoMetricas` | reproducoes✓ (contagem por status) | Já dá pra fazer |
+| `getLactacaoMetricas` | ciclos✓ + ordenha | Após Fase 4 |
+| `getProducaoMensal` | ordenha por período | Após Fase 4 |
 
 ---
 
 ## Itens em aberto [ABERTO]
 
-1. **Histórico de ordenhas para dashboards (Fase 3 vs Fase 4):** sync interino **por ciclo** agora (loop `GET /ordenhas/ciclo/:id` — N+1 requisições, funciona sem mexer na API), OU deixar o histórico só para depois da Fase 4 (com `/sync/ordenha` flat). *Pendente de decisão do usuário.*
-2. Detalhamento fino das Fases 4 e 5 ainda não apresentado em seção própria no brainstorming.
-3. Contagem de usuários no `getStats` local (sem fonte local hoje) — aproximar ou omitir.
+1. Contagem de usuários no `getStats` local (sem fonte local hoje) — aproximar ou omitir. *(Decisão fina deixada para a implementação da Fase 5.)*
 
 ---
 
