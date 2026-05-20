@@ -84,6 +84,9 @@ class SyncService {
 
   private async pullEntity(entity: string, propriedadeId: string): Promise<void> {
     try {
+      // ordenha ainda não tem endpoint de sync flat — registro é write-only até a Fase 4
+      if (entity === 'ordenhas') return;
+
       const syncPropId = entity === 'racas' ? 'global' : propriedadeId;
       const meta = await queryFirst<{ lastSyncedAt: string | null }>(
         'SELECT lastSyncedAt FROM sync_meta WHERE entity = ? AND propriedadeId = ?',

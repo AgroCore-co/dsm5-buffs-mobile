@@ -84,3 +84,11 @@ test('pull de lotes usa o endpoint REST /lotes/propriedade/:id (não /sync)', as
     expect.any(Array)
   );
 });
+
+test('pull de ordenhas é pulado (sem /sync/ordenha até a Fase 4)', async () => {
+  mockApiFetch.mockResolvedValue([]);
+
+  await (syncService as any).pullEntity('ordenhas', 'p1');
+
+  expect(mockApiFetch).not.toHaveBeenCalled();
+});
