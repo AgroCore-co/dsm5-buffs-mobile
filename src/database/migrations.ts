@@ -1,7 +1,7 @@
 import { CREATE_TABLES_SQL } from './schema';
 import { execute, queryFirst } from './db';
 
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 6;
 
 const LEGACY_TABLES = [
   'bufalos', 'ciclos_lactacao', 'grupos', 'racas',
