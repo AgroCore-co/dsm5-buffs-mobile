@@ -95,14 +95,17 @@ export const AnimalDetailScreen = () => {
       const sanitResp = await sanitarioService.getHistorico(id, pageSanitToLoad, PAGE_SIZE);
       setTotalPagesSanit(sanitResp.meta?.totalPages ?? 1);
 
-      const lotes = await piqueteService.getAll(base.idPropriedade);
-      const loteDoAnimal = lotes.find(
-        (lote) => lote.idGrupo === base.idGrupo
-      );
+      let loteDoAnimal: any = null;
+      try {
+        const lotes = await piqueteService.getAll(base.idPropriedade);
+        loteDoAnimal = lotes.find((lote) => lote.idGrupo === base.idGrupo) ?? null;
+      } catch {
+        // sem rede — dados do lote ficam vazios, animal ainda carrega
+      }
 
       setDetalhes({
         ...base,
-        coords: loteDoAnimal || [],
+        coords: loteDoAnimal ?? [],
         dadosZootecnicos: zootResp.data || [],
         dadosSanitarios: sanitResp.data || [],
       });
