@@ -22,7 +22,7 @@ describe('runMigrations', () => {
     CREATE_TABLES_SQL.forEach((sql) => {
       expect(mockExecute).toHaveBeenCalledWith(sql);
     });
-    expect(mockExecute).toHaveBeenCalledWith('PRAGMA user_version = 6');
+    expect(mockExecute).toHaveBeenCalledWith('PRAGMA user_version = 7');
   });
 
   it('drops old tables and recreates when user_version is 1', async () => {
@@ -36,11 +36,11 @@ describe('runMigrations', () => {
     CREATE_TABLES_SQL.forEach((sql) => {
       expect(mockExecute).toHaveBeenCalledWith(sql);
     });
-    expect(mockExecute).toHaveBeenCalledWith('PRAGMA user_version = 6');
+    expect(mockExecute).toHaveBeenCalledWith('PRAGMA user_version = 7');
   });
 
   it('skips migrations when user_version is current', async () => {
-    mockExecute.mockResolvedValueOnce({ rows: [{ user_version: 6 }] });
+    mockExecute.mockResolvedValueOnce({ rows: [{ user_version: 7 }] });
 
     await runMigrations();
 
