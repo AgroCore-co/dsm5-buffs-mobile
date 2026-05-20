@@ -40,10 +40,6 @@ export const getBufalos = async (
 };
 
 export const getBufaloDetalhes = async (id: string) => {
-  const sample = await queryAll<{ id: string }>(`SELECT id FROM bufalos LIMIT 5`);
-  console.log('[getBufaloDetalhes] ids no banco:', sample.map(r => r.id));
-  console.log('[getBufaloDetalhes] buscando:', id);
-
   const row = await queryFirst<{ _raw: string }>(
     `SELECT _raw FROM bufalos WHERE id = ?`,
     [id],
@@ -156,7 +152,6 @@ export const filtrarBufalos = async (
 
   const bufalos = rows.map((r) => {
     const b = JSON.parse(r._raw);
-    console.log('[filtrarBufalos] id:', b.id, '| idBufalo:', b.idBufalo);
     return { ...b, racaNome: b.raca?.nome || b.nomeRaca || 'Desconhecida' };
   });
 
