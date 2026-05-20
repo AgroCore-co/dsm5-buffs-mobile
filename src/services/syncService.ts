@@ -90,14 +90,20 @@ class SyncService {
         [entity, syncPropId]
       );
 
-      const path = SYNC_ENTITY_PATH[entity];
-      const qs = new URLSearchParams();
-      if (entity !== 'racas') {
-        qs.append('propriedadeId', propriedadeId);
-      }
-      if (meta?.lastSyncedAt) qs.append('updated_at', meta.lastSyncedAt);
+      let response: any;
+      if (entity === 'lotes') {
+        // Sem /sync/lotes flat ainda — usa o REST existente (Fase 4 troca por flat)
+        response = await apiFetch(`/lotes/propriedade/${propriedadeId}`);
+      } else {
+        const path = SYNC_ENTITY_PATH[entity];
+        const qs = new URLSearchParams();
+        if (entity !== 'racas') {
+          qs.append('propriedadeId', propriedadeId);
+        }
+        if (meta?.lastSyncedAt) qs.append('updated_at', meta.lastSyncedAt);
 
-      const response = await apiFetch(`/sync/${path}?${qs.toString()}`);
+        response = await apiFetch(`/sync/${path}?${qs.toString()}`);
+      }
 
       const data = Array.isArray(response) ? response : response.data || [];
       const syncedAt = response.synced_at || response.meta?.synced_at || new Date().toISOString();

@@ -68,3 +68,19 @@ test('pull chama /sync endpoint e faz upsert', async () => {
     expect.any(Array)
   );
 });
+
+test('pull de lotes usa o endpoint REST /lotes/propriedade/:id (não /sync)', async () => {
+  mockQueryFirst.mockResolvedValue(null);
+  mockApiFetch.mockResolvedValue([
+    { idLote: 'l1', idPropriedade: 'p1', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null, grupo: { idGrupo: 'g1' } }
+  ]);
+  mockExecute.mockResolvedValue(undefined);
+
+  await (syncService as any).pullEntity('lotes', 'p1');
+
+  expect(mockApiFetch).toHaveBeenCalledWith('/lotes/propriedade/p1');
+  expect(mockExecute).toHaveBeenCalledWith(
+    expect.stringContaining('INSERT INTO lotes'),
+    expect.any(Array)
+  );
+});
