@@ -2,6 +2,16 @@ import uuid from 'react-native-uuid';
 import { queryAll, queryFirst, execute } from '../database/db';
 import { enqueue } from './pendingOperationsService';
 import { grupoService, Grupo } from './grupoService';
+import { normalizePayload } from '../utils/normalizePayload';
+
+const BUFALO_FIELD_MAP: Record<string, string[]> = {
+  nivelMaturidade: ['nivel_maturidade'],
+  idRaca:          ['id_raca'],
+  idPai:           ['id_pai'],
+  idMae:           ['id_mae'],
+  idPropriedade:   ['id_propriedade'],
+  dtNascimento:    ['dt_nascimento'],
+};
 
 export const getBufalos = async (
   propriedadeId: string,
@@ -133,8 +143,9 @@ export const updateBufalo = async (id: string, data: any) => {
   );
   if (!existing) throw new Error(`Búfalo ${id} não encontrado`);
 
+  const normalized = normalizePayload(data, BUFALO_FIELD_MAP);
   const now = new Date().toISOString();
-  const merged = { ...JSON.parse(existing._raw), ...data, updatedAt: now };
+  const merged = { ...JSON.parse(existing._raw), ...normalized, updatedAt: now };
 
   await execute(
     `UPDATE bufalos SET brinco = ?, sexo = ?, nivelMaturidade = ?, status = ?, idRaca = ?, _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
