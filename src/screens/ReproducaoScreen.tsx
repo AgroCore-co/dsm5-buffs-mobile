@@ -160,7 +160,8 @@ export const ReproducaoScreen = () => {
                 status: item.status,
                 tipo_parto: item.tipoParto,
                 tipo_inseminacao: item.tipoInseminacao,
-                id_semen: item.id_semen,
+                id_semen: item.idSemen,
+                id_ovulo: item.idOvulo,
               }}
               onPress={() => handleCardPress(item)}
             />

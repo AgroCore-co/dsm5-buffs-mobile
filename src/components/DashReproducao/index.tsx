@@ -2,8 +2,6 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors } from "../../styles/colors";
 import TextTitle from "../TextTitle";
-import { formatarDataBR } from "../../utils/date";
-
 interface DashReproductionProps {
   emProcesso: number;       // total de reproduções em andamento
   confirmadas: number;      // total de reproduções confirmadas
@@ -40,7 +38,7 @@ export default function DashReproduction({
         </View>
       </View>
       
-      <Text style={styles.footerText}>Última atualização: {formatarDataBR(ultimaData)}</Text>
+      <Text style={styles.footerText}>Última atualização: {ultimaData}</Text>
     </View>
   );
 }

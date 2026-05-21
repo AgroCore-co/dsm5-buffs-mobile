@@ -107,18 +107,34 @@ export const getCiclosLactacao = async (
 
   const ciclos = rows.map((r) => {
     const c = JSON.parse(r._raw);
+
+    // API pode devolver flat (cicloAtual) ou nested (ciclo_atual.numero_ciclo)
+    const cicloAtual: number | null =
+      c.cicloAtual ?? c.ciclo_atual?.numero_ciclo ?? c.numeroCiclo ?? null;
+
+    // Dias em lactação: flat > nested > calculado a partir do dtParto
+    const dtPartoStr: string | undefined =
+      c.dtParto ?? c.ciclo_atual?.dt_parto ?? c.cicloAtualDtParto;
+    const diasEmLactacao: number | null =
+      c.diasEmLactacao ??
+      c.ciclo_atual?.dias_em_lactacao ??
+      (dtPartoStr
+        ? Math.floor((Date.now() - new Date(dtPartoStr).getTime()) / 86400000)
+        : null);
+
+    const dtSecagem: string | undefined =
+      c.dtSecagemPrevista ?? c.ciclo_atual?.dt_secagem_prevista;
+
     return {
       idCicloLactacao: c.idCicloLactacao,
       idBufala: c.idBufala,
-      cicloAtual: c.cicloAtual,
-      nome: c.bufala?.nome ?? "Não informado",
-      brinco: c.bufala?.brinco ?? "-",
+      cicloAtual,
+      nome: c.bufala?.nome ?? c.nomeBufala ?? "Não informado",
+      brinco: c.bufala?.brinco ?? c.brincoBufala ?? "-",
       status: c.status,
-      raca: c.bufala?.raca ?? "Não informado",
-      diasEmLactacao: c.diasEmLactacao,
-      dtSecagemPrevista: c.dtSecagemPrevista
-        ? formatarDataBR(c.dtSecagemPrevista)
-        : "—",
+      raca: c.bufala?.raca ?? c.racaBufala ?? "Não informado",
+      diasEmLactacao,
+      dtSecagemPrevista: dtSecagem ? formatarDataBR(dtSecagem) : "—",
     };
   });
 
