@@ -90,7 +90,7 @@ describe('getStats', () => {
 });
 
 describe('getReproducaoMetricas', () => {
-  test('conta reproduções por status e trata Concluída como Confirmada', async () => {
+  test('conta reproduções por status separando Confirmada de Concluída', async () => {
     mockQueryAll.mockResolvedValue([
       { _raw: JSON.stringify({ status: 'Em andamento', dtEvento: '2026-04-01' }) },
       { _raw: JSON.stringify({ status: 'Em andamento', dtEvento: '2026-04-15' }) },
@@ -100,7 +100,8 @@ describe('getReproducaoMetricas', () => {
     ]);
     const result = await getReproducaoMetricas('prop-1');
     expect(result.totalEmAndamento).toBe(2);
-    expect(result.totalConfirmada).toBe(2); // Confirmada + Concluída
+    expect(result.totalConfirmada).toBe(1); // apenas 'Confirmada' = gestante
+    expect(result.totalConcluida).toBe(1);  // 'Concluída' = parto aconteceu
     expect(result.totalFalha).toBe(1);
   });
 

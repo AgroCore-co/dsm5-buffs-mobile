@@ -68,7 +68,8 @@ export async function getReproducaoMetricas(propriedadeId: string) {
   const reproducoes = rows.map(r => JSON.parse(r._raw));
 
   const totalEmAndamento = reproducoes.filter(r => r.status === 'Em andamento').length;
-  const totalConfirmada = reproducoes.filter(r => r.status === 'Confirmada' || r.status === 'Concluída').length;
+  const totalConfirmada = reproducoes.filter(r => r.status === 'Confirmada').length;
+  const totalConcluida = reproducoes.filter(r => r.status === 'Concluída').length;
   const totalFalha = reproducoes.filter(r => r.status === 'Falha').length;
 
   const datas = reproducoes
@@ -78,7 +79,7 @@ export async function getReproducaoMetricas(propriedadeId: string) {
     .reverse();
   const ultimaDataReproducao = datas.length > 0 ? formatarDataBR(datas[0]) : null;
 
-  return { totalEmAndamento, totalConfirmada, totalFalha, ultimaDataReproducao };
+  return { totalEmAndamento, totalConfirmada, totalConcluida, totalFalha, ultimaDataReproducao };
 }
 
 export async function getEstatisticasLactacao(propriedadeId: string) {

@@ -1,4 +1,3 @@
-import { apiFetch } from "../lib/apiClient";
 import { formatarDataBR } from "../utils/date";
 import { getEstatisticasLactacao as getEstatisticasLactacaoLocal } from './dashboardService';
 import { queryAll, queryFirst, execute } from "../database/db";
@@ -147,8 +146,19 @@ export const getEstatisticasLactacao = async (propriedadeId: string) => {
 export const getIndustriasPorPropriedade = async (propriedadeId: string) => {
   try {
     if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
-    const response: Industria[] = await apiFetch(`/laticinios/propriedade/${propriedadeId}`);
-    return response || [];
+    const rows = await queryAll<{ _raw: string }>(
+      `SELECT _raw FROM industrias WHERE propriedadeId = ? AND deletedAt IS NULL`,
+      [propriedadeId],
+    );
+    return rows.map(r => {
+      const raw = JSON.parse(r._raw);
+      return {
+        id_industria: raw.id_industria ?? raw.idIndustria ?? raw.id ?? '',
+        nome: raw.nome ?? '',
+        endereco: raw.endereco ?? '',
+        contato: raw.contato,
+      } as Industria;
+    });
   } catch (error) {
     console.error("Erro ao buscar indústrias da propriedade:", error);
     return [];
@@ -216,22 +226,18 @@ export const encerrarLactacao = async (idCiclo: string | number) => {
 ========================= */
 
 export const getProducaoDiariaAtual = async (propriedadeId: string) => {
-  try {
-    if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
-
-    const response: { data: { quantidade: string; dt_registro: string }[] } = await apiFetch(
-      `/producao-diaria/propriedade/${propriedadeId}?page=1&limit=1`
-    );
-
-    const registro = response?.data?.[0];
-    if (!registro) return { quantidade: 0, dataAtualizacao: "N/D" };
-
-    return {
-      quantidade: Number(registro.quantidade),
-      dataAtualizacao: formatarDataBR(registro.dt_registro),
-    };
-  } catch (error) {
-    console.error("Erro ao buscar produção diária:", error);
-    return { quantidade: 0, dataAtualizacao: "N/D" };
+  if (!propriedadeId) return { quantidade: 0, dataAtualizacao: "N/D" };
+  const hoje = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const rows = await queryAll<{ _raw: string }>(
+    `SELECT _raw FROM ordenhas WHERE propriedadeId = ? AND deletedAt IS NULL`,
+    [propriedadeId],
+  );
+  let total = 0;
+  for (const row of rows) {
+    const o = JSON.parse(row._raw);
+    if (o.dtOrdenha && (o.dtOrdenha as string).startsWith(hoje)) {
+      total += Number(o.qtOrdenha ?? 0);
+    }
   }
+  return { quantidade: total, dataAtualizacao: formatarDataBR(hoje) };
 };

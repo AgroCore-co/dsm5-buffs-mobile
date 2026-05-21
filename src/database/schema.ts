@@ -10,6 +10,8 @@ export const ENTITY_PK_MAP: Record<string, string> = {
   reproducoes: 'id',
   lotes: 'id',
   ordenhas: 'id',
+  material_genetico: 'id',
+  industrias: 'id',
 };
 
 // Campo de PK que a API retorna por entidade (antes da normalização para 'id')
@@ -24,6 +26,10 @@ export const ENTITY_API_PK_MAP: Record<string, string> = {
   alertas: 'idAlerta',
   reproducoes: 'idReproducao',
   lotes: 'idLote',
+  ordenhas: 'idLact',
+  material_genetico: 'idMaterial',
+  // sync endpoint returns id_industria (snake_case)
+  industrias: 'id_industria',
 };
 
 export const SYNC_ENTITY_PATH: Record<string, string> = {
@@ -36,6 +42,10 @@ export const SYNC_ENTITY_PATH: Record<string, string> = {
   eventos_sanitarios: 'sanitario/eventos',
   alertas: 'alertas',
   reproducoes: 'reproducao',
+  lotes: 'lotes',
+  ordenhas: 'ordenha',
+  material_genetico: 'material-genetico',
+  industrias: 'laticinios',
 };
 
 // Retorna colunas queryáveis por entidade (além de id/updatedAt/deletedAt/_raw)
@@ -76,6 +86,10 @@ export function getEntityExtras(entity: string, record: any): Record<string, any
         bufaloId: record.idBufala ?? record.bufaloId ?? null,
         idCicloLactacao: record.idCicloLactacao ?? null,
       };
+    case 'material_genetico':
+      return { ...idProp };
+    case 'industrias':
+      return { ...idProp, nome: record.nome ?? null };
     default:
       return { ...idProp };
   }
@@ -204,6 +218,16 @@ export const CREATE_TABLES_SQL: string[] = [
     _raw            TEXT NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS idx_ordenhas_ciclo ON ordenhas(idCicloLactacao)`,
+  `CREATE TABLE IF NOT EXISTS industrias (
+    id            TEXT PRIMARY KEY,
+    propriedadeId TEXT,
+    nome          TEXT,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _synced       INTEGER NOT NULL DEFAULT 0,
+    _raw          TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_industrias_prop ON industrias(propriedadeId)`,
   `CREATE TABLE IF NOT EXISTS sync_meta (
     entity        TEXT NOT NULL,
     propriedadeId TEXT NOT NULL,
