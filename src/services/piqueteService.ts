@@ -50,7 +50,33 @@ export const piqueteService = {
       `SELECT _raw FROM lotes WHERE propriedadeId = ?`,
       [id],
     );
-    return rows.map((row) => mapRawToPiquete(JSON.parse(row._raw)));
+
+    const grupoRows = await queryAll<{ _raw: string }>(
+      `SELECT _raw FROM grupos WHERE propriedadeId = ?`,
+      [id],
+    );
+    const grupoMap: Record<string, { nomeGrupo: string; color: string }> = {};
+    grupoRows.forEach((gr) => {
+      const g = JSON.parse(gr._raw);
+      const key = g.idGrupo ?? g.id;
+      if (key) grupoMap[key] = { nomeGrupo: g.nomeGrupo ?? g.nome ?? '', color: g.color ?? '#000000' };
+    });
+
+    return rows.map((row) => {
+      const item = JSON.parse(row._raw);
+      const idGrupo = item.grupo?.idGrupo ?? item.idGrupo ?? null;
+      const fallback = idGrupo ? grupoMap[idGrupo] : undefined;
+      return {
+        id: item.idLote ?? item.id,
+        nome: item.nomeLote,
+        coords: item.geoMapa?.coordinates?.[0]?.map((c: number[]) => ({
+          latitude: c[1], longitude: c[0],
+        })) ?? [],
+        idGrupo,
+        grupoNome: item.grupo?.nomeGrupo ?? fallback?.nomeGrupo ?? '',
+        grupoCor: item.grupo?.color ?? fallback?.color ?? '#000000',
+      } as Piquete;
+    });
   },
 
   async create(novoPiquete: NovoPiqueteDTO): Promise<Piquete> {

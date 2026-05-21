@@ -49,3 +49,27 @@ test('create insere local e enfileira CREATE de lotes', async () => {
   );
   expect(mockEnqueue).toHaveBeenCalledWith('lotes', 'CREATE', expect.objectContaining({ id: 'lote-uuid', nomeLote: 'Novo' }));
 });
+
+describe('piqueteService.getAll — grupo fallback offline', () => {
+  it('usa nomeGrupo da tabela grupos quando _raw não tem grupo.nomeGrupo', async () => {
+    (queryAll as jest.Mock).mockImplementation(async (sql: string) => {
+      if (sql.includes('FROM lotes')) {
+        return [{
+          _raw: JSON.stringify({
+            id: 'l1', nomeLote: 'P1', idGrupo: 'g1',
+            grupo: { idGrupo: 'g1' }, // offline: sem nomeGrupo
+            geoMapa: { coordinates: [[[0,0],[1,0],[1,1],[0,0]]] },
+          }),
+        }];
+      }
+      if (sql.includes('FROM grupos')) {
+        return [{ _raw: JSON.stringify({ idGrupo: 'g1', id: 'g1', nomeGrupo: 'Pastagem A', color: '#FFAA00' }) }];
+      }
+      return [];
+    });
+
+    const piquetes = await piqueteService.getAll('prop1');
+    expect(piquetes[0].grupoNome).toBe('Pastagem A');
+    expect(piquetes[0].grupoCor).toBe('#FFAA00');
+  });
+});
