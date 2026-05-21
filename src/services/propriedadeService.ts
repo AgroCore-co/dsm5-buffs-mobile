@@ -2,7 +2,7 @@ import { apiFetch } from "../lib/apiClient";
 import { getStats } from './dashboardService';
 
 // Service para propriedades
-export const getPropriedades = async (token?: string) => {
+export const getPropriedades = async () => {
   try {
     const result = await apiFetch("/propriedades");
     const propriedades = result?.propriedades?.map((p: any) => ({

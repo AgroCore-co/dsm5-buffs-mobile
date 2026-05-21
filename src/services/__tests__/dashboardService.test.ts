@@ -13,12 +13,12 @@ const mockQueryFirst = queryFirst as jest.Mock;
 beforeEach(() => jest.clearAllMocks());
 
 const bufalos = [
-  { sexo: 'M', status: 1, nivelMaturidade: 'Touro', idRaca: 'raca-1' },
-  { sexo: 'F', status: 1, nivelMaturidade: 'Vaca', idRaca: 'raca-1' },
-  { sexo: 'F', status: 1, nivelMaturidade: 'Vaca', idRaca: 'raca-2' },
-  { sexo: 'F', status: 1, nivelMaturidade: 'Novilha', idRaca: 'raca-1' },
-  { sexo: 'F', status: 1, nivelMaturidade: 'Bezerro', idRaca: 'raca-2' },
-  { sexo: 'F', status: 0, nivelMaturidade: 'Vaca', idRaca: 'raca-1' }, // inativa
+  { sexo: 'M', status: 1, nivelMaturidade: 'T', idRaca: 'raca-1' },
+  { sexo: 'F', status: 1, nivelMaturidade: 'V', idRaca: 'raca-1' },
+  { sexo: 'F', status: 1, nivelMaturidade: 'V', idRaca: 'raca-2' },
+  { sexo: 'F', status: 1, nivelMaturidade: 'N', idRaca: 'raca-1' },
+  { sexo: 'F', status: 1, nivelMaturidade: 'B', idRaca: 'raca-2' },
+  { sexo: 'F', status: 0, nivelMaturidade: 'V', idRaca: 'raca-1' }, // inativa
 ];
 
 const racas = [
@@ -90,16 +90,17 @@ describe('getStats', () => {
 });
 
 describe('getReproducaoMetricas', () => {
-  test('conta reproduções por status', async () => {
+  test('conta reproduções por status e trata Concluída como Confirmada', async () => {
     mockQueryAll.mockResolvedValue([
       { _raw: JSON.stringify({ status: 'Em andamento', dtEvento: '2026-04-01' }) },
       { _raw: JSON.stringify({ status: 'Em andamento', dtEvento: '2026-04-15' }) },
       { _raw: JSON.stringify({ status: 'Confirmada', dtEvento: '2026-03-10' }) },
+      { _raw: JSON.stringify({ status: 'Concluída', dtEvento: '2026-03-05' }) },
       { _raw: JSON.stringify({ status: 'Falha', dtEvento: '2026-02-20' }) },
     ]);
     const result = await getReproducaoMetricas('prop-1');
     expect(result.totalEmAndamento).toBe(2);
-    expect(result.totalConfirmada).toBe(1);
+    expect(result.totalConfirmada).toBe(2); // Confirmada + Concluída
     expect(result.totalFalha).toBe(1);
   });
 

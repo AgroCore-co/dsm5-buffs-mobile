@@ -13,10 +13,10 @@ export async function getStats(propriedadeId: string) {
   const qtd_macho_ativos = ativos.filter(b => b.sexo === 'M').length;
   const qtd_femeas_ativas = ativos.filter(b => b.sexo === 'F').length;
   const qtd_bufalos_registradas = bufalos.length;
-  const qtd_bufalos_bezerro = ativos.filter(b => b.nivelMaturidade === 'Bezerro').length;
-  const qtd_bufalos_novilha = ativos.filter(b => b.nivelMaturidade === 'Novilha').length;
-  const qtd_bufalos_vaca = ativos.filter(b => b.nivelMaturidade === 'Vaca').length;
-  const qtd_bufalos_touro = ativos.filter(b => b.nivelMaturidade === 'Touro').length;
+  const qtd_bufalos_bezerro = ativos.filter(b => b.nivelMaturidade === 'B').length;
+  const qtd_bufalos_novilha = ativos.filter(b => b.nivelMaturidade === 'N').length;
+  const qtd_bufalos_vaca = ativos.filter(b => b.nivelMaturidade === 'V').length;
+  const qtd_bufalos_touro = ativos.filter(b => b.nivelMaturidade === 'T').length;
 
   const lactRow = await queryFirst<{ total: number }>(
     `SELECT COUNT(*) as total FROM ciclos_lactacao WHERE propriedadeId = ? AND status = 'Em Lactação' AND deletedAt IS NULL`,
@@ -68,7 +68,7 @@ export async function getReproducaoMetricas(propriedadeId: string) {
   const reproducoes = rows.map(r => JSON.parse(r._raw));
 
   const totalEmAndamento = reproducoes.filter(r => r.status === 'Em andamento').length;
-  const totalConfirmada = reproducoes.filter(r => r.status === 'Confirmada').length;
+  const totalConfirmada = reproducoes.filter(r => r.status === 'Confirmada' || r.status === 'Concluída').length;
   const totalFalha = reproducoes.filter(r => r.status === 'Falha').length;
 
   const datas = reproducoes

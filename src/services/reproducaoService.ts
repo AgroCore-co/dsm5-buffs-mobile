@@ -69,7 +69,14 @@ export const getReproducoes = async (
 
   const offset = (page - 1) * limit;
   const rows = await queryAll<{ _raw: string }>(
-    `SELECT _raw FROM reproducoes WHERE propriedadeId = ? ORDER BY updatedAt DESC LIMIT ? OFFSET ?`,
+    `SELECT _raw FROM reproducoes WHERE propriedadeId = ?
+     ORDER BY CASE status
+       WHEN 'Em andamento' THEN 0
+       WHEN 'Confirmada'   THEN 1
+       WHEN 'Concluída'    THEN 2
+       ELSE 3
+     END, updatedAt DESC
+     LIMIT ? OFFSET ?`,
     [propriedadeId, limit, offset],
   );
 

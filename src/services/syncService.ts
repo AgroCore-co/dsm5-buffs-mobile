@@ -51,6 +51,8 @@ async function upsertBatch(entity: string, records: any[]): Promise<void> {
   }
 }
 
+const CORE_ENTITIES = ['bufalos', 'ciclos_lactacao', 'reproducoes'];
+
 class SyncService {
   private running = false;
 
@@ -60,6 +62,29 @@ class SyncService {
     try {
       await this.push();
       await this.pull(propriedadeId);
+    } finally {
+      this.running = false;
+    }
+  }
+
+  // Syncs somente entidades core (bufalos, ciclos_lactacao, reproducoes) + push.
+  // Usado na tela de sync inicial para liberar o app rapidamente.
+  async syncCore(
+    propriedadeId: string,
+    onProgress?: (done: number, total: number) => void,
+  ): Promise<void> {
+    if (this.running || !(await isConnected())) return;
+    this.running = true;
+    try {
+      await this.push();
+      let done = 0;
+      const total = CORE_ENTITIES.length;
+      await Promise.allSettled(
+        CORE_ENTITIES.map(async entity => {
+          await this.pullEntity(entity, propriedadeId);
+          onProgress?.(++done, total);
+        }),
+      );
     } finally {
       this.running = false;
     }

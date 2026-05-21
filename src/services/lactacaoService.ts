@@ -94,7 +94,9 @@ export const getCiclosLactacao = async (
 
   const offset = (page - 1) * limit;
   const rows = await queryAll<{ _raw: string }>(
-    `SELECT _raw FROM ciclos_lactacao WHERE propriedadeId = ? ORDER BY updatedAt DESC LIMIT ? OFFSET ?`,
+    `SELECT _raw FROM ciclos_lactacao WHERE propriedadeId = ?
+     ORDER BY CASE WHEN status = 'Em Lactação' THEN 0 ELSE 1 END, updatedAt DESC
+     LIMIT ? OFFSET ?`,
     [propriedadeId, limit, offset],
   );
 
