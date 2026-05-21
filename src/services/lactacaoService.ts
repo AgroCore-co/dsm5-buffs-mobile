@@ -105,6 +105,21 @@ export const getCiclosLactacao = async (
   );
   const total = countRow?.total ?? 0;
 
+  const bufaloRows = await queryAll<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE propriedadeId = ?`,
+    [propriedadeId],
+  );
+  const bufaloMap: Record<string, { brinco: string; nome: string; raca: string }> = {};
+  bufaloRows.forEach((br) => {
+    const b = JSON.parse(br._raw);
+    const key = b.idBufalo ?? b.id;
+    if (key) bufaloMap[key] = {
+      brinco: b.brinco ?? '-',
+      nome: b.nome ?? 'Não informado',
+      raca: b.raca?.nome ?? b.nomeRaca ?? 'Não informado',
+    };
+  });
+
   const ciclos = rows.map((r) => {
     const c = JSON.parse(r._raw);
 
@@ -129,10 +144,10 @@ export const getCiclosLactacao = async (
       idCicloLactacao: c.idCicloLactacao,
       idBufala: c.idBufala,
       cicloAtual,
-      nome: c.bufala?.nome ?? c.nomeBufala ?? "Não informado",
-      brinco: c.bufala?.brinco ?? c.brincoBufala ?? "-",
+      nome: c.bufala?.nome ?? c.nomeBufala ?? bufaloMap[c.idBufala]?.nome ?? "Não informado",
+      brinco: c.bufala?.brinco ?? c.brincoBufala ?? bufaloMap[c.idBufala]?.brinco ?? "-",
       status: c.status,
-      raca: c.bufala?.raca ?? c.racaBufala ?? "Não informado",
+      raca: c.bufala?.raca ?? c.racaBufala ?? bufaloMap[c.idBufala]?.raca ?? "Não informado",
       diasEmLactacao,
       dtSecagemPrevista: dtSecagem ? formatarDataBR(dtSecagem) : "—",
     };

@@ -89,10 +89,23 @@ export const getReproducoes = async (
   );
   const total = countRow?.total ?? 0;
 
+  const bufaloRows = await queryAll<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE propriedadeId = ?`,
+    [propriedadeId],
+  );
+  const bufaloMap: Record<string, { brinco: string; nome: string }> = {};
+  bufaloRows.forEach((br) => {
+    const b = JSON.parse(br._raw);
+    const key = b.idBufalo ?? b.id;
+    if (key) bufaloMap[key] = { brinco: b.brinco ?? '-', nome: b.nome ?? 'Não informado' };
+  });
+
   const reproducoes = rows.map((row) => {
     const r = JSON.parse(row._raw);
     const femea = r.bufalo_idBufala;
     const macho = r.bufalo_idBufalo;
+    const femeaFallback = bufaloMap[r.idBufala];
+    const machoFallback = bufaloMap[r.idBufalo];
     return {
       id: r.idReproducao ?? r.id,
       status: r.status,
@@ -104,11 +117,11 @@ export const getReproducoes = async (
       dtEvento: r.dtEvento ? formatarDataBR(r.dtEvento) : "-",
       ocorrencia: r.ocorrencia ?? "-",
       idBufala: r.idBufala,
-      nomeFemea: femea?.nome ?? "Não informado",
-      brincoFemea: femea?.brinco ?? "-",
+      nomeFemea: femea?.nome ?? femeaFallback?.nome ?? "Não informado",
+      brincoFemea: femea?.brinco ?? femeaFallback?.brinco ?? "-",
       idBufalo: r.idBufalo,
-      nomeMacho: macho?.nome ?? (r.idSemen ? "Sêmen" : "-"),
-      brincoMacho: macho?.brinco ?? (r.idSemen || r.idOvulo ? (r.idSemen || r.idOvulo).slice(0, 5) : "-"),
+      nomeMacho: macho?.nome ?? machoFallback?.nome ?? (r.idSemen ? "Sêmen" : "-"),
+      brincoMacho: macho?.brinco ?? machoFallback?.brinco ?? (r.idSemen || r.idOvulo ? (r.idSemen || r.idOvulo).slice(0, 5) : "-"),
       idSemen: r.idSemen,
       idOvulo: r.idOvulo,
       previsaoParto: r.previsaoParto,
