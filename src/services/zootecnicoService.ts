@@ -2,6 +2,17 @@ import { zootecToApiAdapter } from "./adapters/bufaloAdapter";
 import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
+import { normalizePayload } from '../utils/normalizePayload';
+
+const ZOOTEC_FIELD_MAP = {
+  condicaoCorporal: ['condicao_corporal'],
+  corPelagem:       ['cor_pelagem'],
+  formatoChifre:    ['formato_chifre'],
+  porteCorporal:    ['porte_corporal'],
+  tipoPesagem:      ['tipo_pesagem'],
+  dtRegistro:       ['dt_registro'],
+  idPropriedade:    ['id_propriedade'],
+};
 
 export const zootecService = {
   getHistorico: async (id_bufalo: string, page = 1, limit = 10) => {
@@ -18,21 +29,24 @@ export const zootecService = {
     const total = countRow?.total ?? 0;
 
     return {
-      data: rows.map((r) => JSON.parse(r._raw)),
+      data: rows.map((r) => {
+        const item = JSON.parse(r._raw);
+        return { ...item, idZootec: item.idZootec ?? item.id };
+      }),
       meta: { page, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
     };
   },
 
   add: async (id_bufalo: string, payload: any) => {
+    const d = normalizePayload(payload, ZOOTEC_FIELD_MAP);
     const id = uuid.v4() as string;
     const now = new Date().toISOString();
-    const adapted = zootecToApiAdapter(payload);
-    const newRecord = { ...adapted, id, bufaloId: id_bufalo, createdAt: now, updatedAt: now };
+    const newRecord = { ...d, id, idZootec: id, bufaloId: id_bufalo, createdAt: now, updatedAt: now };
 
     await execute(
       `INSERT INTO pesagens (id, bufaloId, propriedadeId, _raw, _synced, updatedAt)
        VALUES (?, ?, ?, ?, 0, ?)`,
-      [id, id_bufalo, adapted.idPropriedade ?? null, JSON.stringify(newRecord), now],
+      [id, id_bufalo, d.idPropriedade ?? null, JSON.stringify(newRecord), now],
     );
     await enqueue("pesagens", "CREATE", newRecord);
     return newRecord;

@@ -50,12 +50,25 @@ export const sanitarioService = {
     );
     const total = countRow?.total ?? 0;
 
+    const medRows = await queryAll<{ _raw: string }>(`SELECT _raw FROM medicamentos`);
+    const medMap: Record<string, string> = {};
+    medRows.forEach((r) => {
+      const med = JSON.parse(r._raw);
+      const key = med.idMedicacao ?? med.id;
+      if (key) medMap[key] = med.medicacao ?? med.nome ?? '';
+    });
+
     const data = rows.map((r) => {
       const reg = JSON.parse(r._raw);
+      const nomeMed =
+        reg.medicacoe?.medicacao ??
+        medMap[reg.idMedicao] ??
+        'Medicamento Desconhecido';
       return {
         ...reg,
-        nome_medicamento: reg.medicacoe?.medicacao ?? "Medicamento Desconhecido",
-        tipo_tratamento: reg.medicacoe?.tipoTratamento ?? "-",
+        idSanit: reg.idSanit ?? reg.id,
+        nome_medicamento: nomeMed,
+        tipo_tratamento: reg.medicacoe?.tipoTratamento ?? '-',
       };
     });
 

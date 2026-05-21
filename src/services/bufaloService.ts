@@ -21,9 +21,17 @@ export const getBufalos = async (
   const total = countRow?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
+  const racaRows = await queryAll<{ id: string; _raw: string }>(`SELECT id, _raw FROM racas`);
+  const racaMap: Record<string, string> = {};
+  racaRows.forEach((r) => {
+    const raca = JSON.parse(r._raw);
+    racaMap[r.id] = raca.nome ?? '';
+  });
+
   const bufalos = rows.map((r) => {
     const b = JSON.parse(r._raw);
-    return { ...b, racaNome: b.raca?.nome || b.nomeRaca || 'Desconhecida' };
+    const racaNome = b.raca?.nome || b.nomeRaca || racaMap[b.idRaca] || 'Desconhecida';
+    return { ...b, racaNome };
   });
 
   return {
@@ -67,9 +75,15 @@ export const getBufaloDetalhes = async (id: string) => {
     (await lookupBrinco(bufalo.idMae)) ??
     'Desconhecida';
 
+  let racaNome = bufalo.nomeRaca || bufalo.raca?.nome;
+  if (!racaNome && bufalo.idRaca) {
+    const racaRow = await queryFirst<{ _raw: string }>(`SELECT _raw FROM racas WHERE id = ?`, [bufalo.idRaca]);
+    if (racaRow) racaNome = JSON.parse(racaRow._raw)?.nome ?? null;
+  }
+
   return {
     ...bufalo,
-    racaNome: bufalo.nomeRaca || bufalo.raca?.nome || 'Desconhecida',
+    racaNome: racaNome || 'Desconhecida',
     paiNome,
     maeNome,
   };
