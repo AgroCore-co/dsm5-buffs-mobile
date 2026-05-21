@@ -1,5 +1,5 @@
-import { apiFetch } from "../lib/apiClient";
 import { formatarDataBR } from "../utils/date";
+import { getReproducaoMetricas } from './dashboardService';
 import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
@@ -44,23 +44,18 @@ export interface RegistrarPartoPayload {
   padrao_dias_lactacao?: number;
 }
 
-// Dashboard stats — dados computados, mantém API
+// Dashboard stats — lê SQLite via dashboardService
 export const getReproducaoDashboardStats = async (propriedadeId: string): Promise<ReproducaoDashboardStats> => {
   if (!propriedadeId) {
-    return { totalEmAndamento: 0, totalConfirmada: 0, totalFalha: 0, ultimaDataReproducao: "-" };
+    return { totalEmAndamento: 0, totalConfirmada: 0, totalFalha: 0, ultimaDataReproducao: '-' };
   }
-  try {
-    const response = await apiFetch(`/dashboard/reproducao/${propriedadeId}`);
-    return {
-      totalEmAndamento: response.totalEmAndamento || 0,
-      totalConfirmada: response.totalConfirmada || 0,
-      totalFalha: response.totalFalha || 0,
-      ultimaDataReproducao: response.ultimaDataReproducao || "-",
-    };
-  } catch (error) {
-    console.error("Erro ao buscar estatísticas do dashboard de reprodução:", error);
-    return { totalEmAndamento: 0, totalConfirmada: 0, totalFalha: 0, ultimaDataReproducao: "-" };
-  }
+  const result = await getReproducaoMetricas(propriedadeId);
+  return {
+    totalEmAndamento: result.totalEmAndamento,
+    totalConfirmada: result.totalConfirmada,
+    totalFalha: result.totalFalha,
+    ultimaDataReproducao: result.ultimaDataReproducao ?? '-',
+  };
 };
 
 export const getReproducoes = async (

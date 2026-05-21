@@ -1,5 +1,6 @@
 import { apiFetch } from "../lib/apiClient";
 import { formatarDataBR } from "../utils/date";
+import { getEstatisticasLactacao as getEstatisticasLactacaoLocal } from './dashboardService';
 import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
@@ -131,20 +132,10 @@ export const getCiclosLactacao = async (
 ========================= */
 
 export const getEstatisticasLactacao = async (propriedadeId: string) => {
-  try {
-    if (!propriedadeId) throw new Error("ID da propriedade é obrigatório.");
-    return await apiFetch(`/lactacao/propriedade/${propriedadeId}/estatisticas`);
-  } catch (error) {
-    console.error("Erro ao buscar estatísticas de lactação:", error);
-    return {
-      total_ciclos: 0,
-      ciclos_ativos: 0,
-      ciclos_secos: 0,
-      media_dias_lactacao: 0,
-      ciclos_proximos_secagem: 0,
-      ciclos_secagem_atrasada: 0,
-    };
+  if (!propriedadeId) {
+    return { total_ciclos: 0, ciclos_ativos: 0, ciclos_secos: 0, media_dias_lactacao: 0, ciclos_proximos_secagem: 0, ciclos_secagem_atrasada: 0 };
   }
+  return getEstatisticasLactacaoLocal(propriedadeId);
 };
 
 /* =========================
