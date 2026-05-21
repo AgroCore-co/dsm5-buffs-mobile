@@ -31,7 +31,7 @@ export const getBufalos = async (
   const bufalos = rows.map((r) => {
     const b = JSON.parse(r._raw);
     const racaNome = b.raca?.nome || b.nomeRaca || racaMap[b.idRaca] || 'Desconhecida';
-    return { ...b, racaNome };
+    return { ...b, idBufalo: b.idBufalo ?? b.id, racaNome };
   });
 
   return {
@@ -83,6 +83,7 @@ export const getBufaloDetalhes = async (id: string) => {
 
   return {
     ...bufalo,
+    idBufalo: bufalo.idBufalo ?? bufalo.id,
     racaNome: racaNome || 'Desconhecida',
     paiNome,
     maeNome,
@@ -234,7 +235,9 @@ export const getBufaloByBrincoAndSexo = async (
     `SELECT _raw FROM bufalos WHERE propriedadeId = ? AND brinco = ? AND sexo = ? LIMIT 1`,
     [propriedadeId, brinco, sexo],
   );
-  return row ? JSON.parse(row._raw) : null;
+  if (!row) return null;
+  const item = JSON.parse(row._raw);
+  return { ...item, idBufalo: item.idBufalo ?? item.id };
 };
 
 export const getGrupos = async (idPropriedade: string): Promise<Grupo[]> => {
