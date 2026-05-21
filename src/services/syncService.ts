@@ -125,9 +125,30 @@ class SyncService {
     }
   }
 
+  private async pullMaterialGenetico(propriedadeId: string): Promise<void> {
+    try {
+      const response: any = await apiFetch(`/sync/${propriedadeId}/material-genetico?page=1&limit=500`);
+      const records: any[] = Array.isArray(response) ? response : response.data ?? [];
+      if (!records.length) return;
+      const now = new Date().toISOString();
+      const normalized = records.map((r: any) => ({
+        ...r,
+        id: r.id ?? r.idMaterial ?? null,
+        propriedadeId,
+        updatedAt: r.updatedAt ?? now,
+      }));
+      await upsertBatch('material_genetico', normalized);
+    } catch (err) {
+      console.warn('[sync] pullMaterialGenetico falhou:', err);
+    }
+  }
+
   private async pullEntity(entity: string, propriedadeId: string): Promise<void> {
     if (entity === 'industrias') {
       return this.pullIndustrias(propriedadeId);
+    }
+    if (entity === 'material_genetico') {
+      return this.pullMaterialGenetico(propriedadeId);
     }
     try {
       const syncPropId = entity === 'racas' ? 'global' : propriedadeId;

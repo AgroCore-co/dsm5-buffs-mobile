@@ -136,16 +136,16 @@ test('pull de lotes usa /sync/lotes (flat) em vez do REST /lotes/propriedade/:id
   );
 });
 
-test('pull de material_genetico chama /sync/material-genetico', async () => {
+test('pull de material_genetico chama /sync/:id/material-genetico (endpoint paginado)', async () => {
   mockQueryFirst.mockResolvedValue(null);
-  mockApiFetch.mockResolvedValue([
+  mockApiFetch.mockResolvedValue({ data: [
     { idMaterial: 'mat1', idPropriedade: 'p1', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null },
-  ]);
+  ], meta: { page: 1, totalPages: 1 } });
   mockExecute.mockResolvedValue(undefined);
 
   await (syncService as any).pullEntity('material_genetico', 'p1');
 
-  expect(mockApiFetch).toHaveBeenCalledWith(expect.stringContaining('/sync/material-genetico'));
+  expect(mockApiFetch).toHaveBeenCalledWith(expect.stringContaining('/p1/material-genetico'));
   expect(mockExecute).toHaveBeenCalledWith(
     expect.stringContaining('INSERT INTO material_genetico'),
     expect.any(Array)
@@ -188,4 +188,32 @@ test('push de entidade fire-and-forget (retiradas) não tenta UPDATE em tabela l
     ([sql]: [string]) => typeof sql === 'string' && sql.includes('UPDATE retiradas')
   );
   expect(updateCalls).toHaveLength(0);
+});
+
+describe('syncService — pullMaterialGenetico', () => {
+  it('usa endpoint paginado /sync/:id/material-genetico (não o flat)', async () => {
+    __setConnected(true);
+    const capturedUrls: string[] = [];
+    mockApiFetch.mockImplementation(async (url: string) => {
+      capturedUrls.push(url);
+      if (url.includes('/prop1/material-genetico')) {
+        return { data: [{ idMaterial: 'mat1', tipo: 'Sêmen', fornecedor: 'Central XYZ', idPropriedade: 'prop1', updatedAt: '2026-01-01T00:00:00Z' }], meta: { page: 1, totalPages: 1 } };
+      }
+      return [];
+    });
+    mockQueryFirst.mockResolvedValue(null);
+    mockExecute.mockResolvedValue(undefined);
+    mockGetPending.mockResolvedValue([]);
+
+    await syncService.sync('prop1');
+
+    const matUrl = capturedUrls.find(u => u.includes('material-genetico'));
+    expect(matUrl).toBeDefined();
+    expect(matUrl).toMatch(/\/prop1\/material-genetico/);
+
+    const insertCalls = mockExecute.mock.calls.filter(c =>
+      typeof c[0] === 'string' && c[0].includes('material_genetico')
+    );
+    expect(insertCalls.length).toBeGreaterThan(0);
+  });
 });
