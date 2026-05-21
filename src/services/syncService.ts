@@ -77,14 +77,11 @@ class SyncService {
     this.running = true;
     try {
       await this.push();
-      let done = 0;
       const total = CORE_ENTITIES.length;
-      await Promise.allSettled(
-        CORE_ENTITIES.map(async entity => {
-          await this.pullEntity(entity, propriedadeId);
-          onProgress?.(++done, total);
-        }),
-      );
+      for (let i = 0; i < total; i++) {
+        await this.pullEntity(CORE_ENTITIES[i], propriedadeId);
+        onProgress?.(i + 1, total);
+      }
     } finally {
       this.running = false;
     }

@@ -15,8 +15,8 @@ export function SyncStatusBanner() {
     }
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(shimmer, { toValue: 1, duration: 900, useNativeDriver: false }),
-        Animated.timing(shimmer, { toValue: 0, duration: 900, useNativeDriver: false }),
+        Animated.timing(shimmer, { toValue: 1, duration: 1400, useNativeDriver: false }),
+        Animated.timing(shimmer, { toValue: 0, duration: 0, useNativeDriver: false }),
       ]),
     );
     loop.start();
@@ -33,7 +33,7 @@ export function SyncStatusBanner() {
   else if (hasFailed) message = 'Operações com falha. Toque para tentar novamente.';
   else if (pendingCount > 0) message = `${pendingCount} operação(ões) aguardando sync.`;
 
-  const progressWidth = shimmer.interpolate({ inputRange: [0, 1], outputRange: ['30%', '85%'] });
+  const barLeft = shimmer.interpolate({ inputRange: [0, 1], outputRange: ['-35%', '100%'] });
 
   return (
     <View style={[styles.wrapper, { backgroundColor: bgColor }]}>
@@ -47,7 +47,7 @@ export function SyncStatusBanner() {
       </View>
       {isSyncing && (
         <View style={styles.progressTrack}>
-          <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
+          <Animated.View style={[styles.progressFill, { left: barLeft }]} />
         </View>
       )}
     </View>
@@ -84,11 +84,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.12)',
     borderRadius: 2,
     overflow: 'hidden',
+    position: 'relative',
   },
   progressFill: {
+    position: 'absolute',
+    width: '35%',
     height: '100%',
     backgroundColor: colors.brown.base,
     borderRadius: 2,
-    opacity: 0.6,
+    opacity: 0.7,
   },
 });
