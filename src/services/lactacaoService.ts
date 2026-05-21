@@ -191,12 +191,18 @@ export const registrarLactacaoApi = async (payload: LactacaoRegistroPayload) => 
 
 export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {
   const id = uuid.v4() as string;
-  await enqueue("ciclos_lactacao", "CREATE", { ...payload, id });
+  await enqueue("retiradas", "CREATE", { ...payload, id });
 };
 
 export const registrarEstoqueApi = async (payload: EstoqueRegistroPayload) => {
   const id = uuid.v4() as string;
-  await enqueue("ciclos_lactacao", "CREATE", { ...payload, id });
+  await enqueue("producao_diaria", "CREATE", {
+    id,
+    idPropriedade: String(payload.id_propriedade),
+    quantidade: payload.quantidade,
+    dtRegistro: payload.dt_registro,
+    observacao: payload.observacao,
+  });
 };
 
 export const encerrarLactacao = async (idCiclo: string | number) => {
