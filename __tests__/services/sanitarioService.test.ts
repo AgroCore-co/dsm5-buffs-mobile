@@ -7,9 +7,6 @@ jest.mock('../../src/services/pendingOperationsService', () => ({
   enqueue: jest.fn(),
 }));
 jest.mock('react-native-uuid', () => ({ v4: () => 'new-uuid' }));
-jest.mock('../../src/services/adapters/bufaloAdapter', () => ({
-  sanitarioToApiAdapter: (p: any) => ({ ...p, adapted: true }),
-}));
 
 import { queryAll, queryFirst, execute } from '../../src/database/db';
 import { enqueue } from '../../src/services/pendingOperationsService';

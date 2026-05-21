@@ -12,6 +12,10 @@ function clean(obj: Record<string, any>): Record<string, any> {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
 
+function cleanStrict(obj: Record<string, any>): Record<string, any> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null));
+}
+
 function shapeBufaloCreate(p: any) {
   return clean({
     id: p.id,
@@ -65,7 +69,7 @@ function shapeSanitarioCreate(p: any) {
 }
 
 function shapeReproducaoCreate(p: any) {
-  return clean({
+  return cleanStrict({
     id: p.id,
     idPropriedade: p.idPropriedade,
     idSemen: p.idSemen,
@@ -113,7 +117,7 @@ function shapeLoteCreate(p: any) {
     status: p.status,
     descricao: p.descricao,
     qtd_max: p.qtd_max ?? p.qtdMax,
-    area_m2: p.area_m2 ?? p.areaMq,
+    area_m2: p.area_m2 ?? p.areaMq ?? p.areaM2,
     geo_mapa: p.geo_mapa ?? (p.geoMapa ? JSON.stringify(p.geoMapa) : undefined),
   });
 }

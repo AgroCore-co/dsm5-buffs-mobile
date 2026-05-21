@@ -373,3 +373,34 @@ describe('producao_diaria resolver', () => {
     expect(result.body).not.toHaveProperty('observacao');
   });
 });
+
+describe('shapeLoteCreate — areaM2 fallback', () => {
+  it('inclui area_m2 quando payload tem areaM2', () => {
+    const result = resolvePushEndpoint('lotes', 'CREATE', {
+      id: 'l1', nomeLote: 'P1', idPropriedade: 'prop1', idGrupo: 'g1',
+      tipoLote: 'Pasto', status: 'ativo', qtdMax: 50, areaM2: 12345,
+      geoMapa: null,
+    });
+    expect(result.body.area_m2).toBe(12345);
+  });
+});
+
+describe('shapeReproducaoCreate — null filtering', () => {
+  it('não inclui idBufalo quando é null (IA)', () => {
+    const result = resolvePushEndpoint('reproducoes', 'CREATE', {
+      id: 'r1', idPropriedade: 'prop1', idBufala: 'buf1',
+      idBufalo: null, tipoInseminacao: 'IA', status: 'Em andamento',
+      dtEvento: '2026-05-21',
+    });
+    expect(result.body).not.toHaveProperty('idBufalo');
+  });
+
+  it('inclui idBufalo quando é UUID válido (Monta Natural)', () => {
+    const result = resolvePushEndpoint('reproducoes', 'CREATE', {
+      id: 'r1', idPropriedade: 'prop1', idBufala: 'buf1',
+      idBufalo: 'touro-uuid', tipoInseminacao: 'Monta Natural',
+      status: 'Em andamento', dtEvento: '2026-05-21',
+    });
+    expect(result.body.idBufalo).toBe('touro-uuid');
+  });
+});
