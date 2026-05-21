@@ -7,6 +7,7 @@ import uuid from "react-native-uuid";
 export interface ReproducaoDashboardStats {
   totalEmAndamento: number;
   totalConfirmada: number;
+  totalConcluida: number;
   totalFalha: number;
   ultimaDataReproducao: string;
 }
@@ -47,12 +48,13 @@ export interface RegistrarPartoPayload {
 // Dashboard stats — lê SQLite via dashboardService
 export const getReproducaoDashboardStats = async (propriedadeId: string): Promise<ReproducaoDashboardStats> => {
   if (!propriedadeId) {
-    return { totalEmAndamento: 0, totalConfirmada: 0, totalFalha: 0, ultimaDataReproducao: '-' };
+    return { totalEmAndamento: 0, totalConfirmada: 0, totalConcluida: 0, totalFalha: 0, ultimaDataReproducao: '-' };
   }
   const result = await getReproducaoMetricas(propriedadeId);
   return {
     totalEmAndamento: result.totalEmAndamento,
     totalConfirmada: result.totalConfirmada,
+    totalConcluida: result.totalConcluida,
     totalFalha: result.totalFalha,
     ultimaDataReproducao: result.ultimaDataReproducao ?? '-',
   };

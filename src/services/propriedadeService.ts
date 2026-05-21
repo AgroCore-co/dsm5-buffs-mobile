@@ -1,5 +1,8 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch } from "../lib/apiClient";
 import { getStats } from './dashboardService';
+
+const PROPS_CACHE_KEY = "cachedPropriedades";
 
 // Service para propriedades
 export const getPropriedades = async () => {
@@ -10,12 +13,21 @@ export const getPropriedades = async () => {
       nome: p.nome,
     })) || [];
 
+    if (propriedades.length > 0) {
+      AsyncStorage.setItem(PROPS_CACHE_KEY, JSON.stringify(propriedades)).catch(() => {});
+    }
+
     return { propriedades };
   } catch (error: any) {
-    if (error.status === 401 || error.message.includes("Nenhuma Propriedade")) {
+    if (error.status === 401 || error.message?.includes("Nenhuma Propriedade")) {
       return { propriedades: [] };
     }
-    throw error;
+    // Offline or server unreachable — use cache
+    try {
+      const cached = await AsyncStorage.getItem(PROPS_CACHE_KEY);
+      if (cached) return { propriedades: JSON.parse(cached) };
+    } catch {}
+    return { propriedades: [] };
   }
 };
 

@@ -49,6 +49,7 @@ export const ReproducaoScreen = () => {
     useState<ReproducaoDashboardStats>({
       totalEmAndamento: 0,
       totalConfirmada: 0,
+      totalConcluida: 0,
       totalFalha: 0,
       ultimaDataReproducao: '-',
     });
@@ -139,12 +140,9 @@ export const ReproducaoScreen = () => {
             <DashReproduction
               emProcesso={dashboardStats.totalEmAndamento}
               confirmadas={dashboardStats.totalConfirmada}
+              concluidas={dashboardStats.totalConcluida}
               falhas={dashboardStats.totalFalha}
-              ultimaData={
-                dashboardStats.ultimaDataReproducao === '-'
-                  ? '-'
-                  : dashboardStats.ultimaDataReproducao
-              }
+              ultimaData={dashboardStats.ultimaDataReproducao}
             />
           }
 
