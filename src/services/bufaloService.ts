@@ -78,12 +78,33 @@ export const getBufaloDetalhes = async (id: string) => {
 export const createBufalo = async (data: any) => {
   const id = data.id ?? (uuid.v4() as string);
   const now = new Date().toISOString();
-  const newRecord = { ...data, id, createdAt: now, updatedAt: now };
+
+  // Normaliza: form envia snake_case, service e API esperam camelCase
+  const propriedadeId   = data.propriedadeId   ?? data.id_propriedade   ?? null;
+  const nivelMaturidade = data.nivelMaturidade  ?? data.nivel_maturidade ?? null;
+  const idRaca          = data.idRaca           ?? data.id_raca          ?? null;
+  const idPai           = data.idPai            ?? data.id_pai           ?? null;
+  const idMae           = data.idMae            ?? data.id_mae           ?? null;
+  const dtNascimento    = data.dtNascimento      ?? data.dt_nascimento    ?? null;
+
+  const newRecord = {
+    ...data,
+    id,
+    propriedadeId,
+    idPropriedade: propriedadeId, // shapeBufaloCreate usa p.idPropriedade
+    nivelMaturidade,
+    idRaca,
+    idPai,
+    idMae,
+    dtNascimento,
+    createdAt: now,
+    updatedAt: now,
+  };
 
   await execute(
     `INSERT INTO bufalos (id, propriedadeId, brinco, sexo, nivelMaturidade, status, idRaca, _raw, _synced, updatedAt)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-    [id, data.propriedadeId, data.brinco, data.sexo, data.nivelMaturidade, data.status ? 1 : 0, data.idRaca, JSON.stringify(newRecord), now],
+    [id, propriedadeId, data.brinco, data.sexo, nivelMaturidade, data.status ? 1 : 0, idRaca, JSON.stringify(newRecord), now],
   );
 
   await enqueue('bufalos', 'CREATE', newRecord);

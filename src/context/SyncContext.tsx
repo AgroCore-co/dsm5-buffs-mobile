@@ -61,6 +61,9 @@ export const SyncProvider: React.FC<SyncProviderProps> = ({ children, propriedad
     }
   }, [propriedadeId, refreshCounts]);
 
+  // Carrega contagens iniciais sem disparar sync completo
+  useEffect(() => { refreshCounts(); }, [refreshCounts]);
+
   // Gatilho 1 — app volta ao foreground
   useEffect(() => {
     const sub = AppState.addEventListener('change', s => { if (s === 'active') sync(); });
