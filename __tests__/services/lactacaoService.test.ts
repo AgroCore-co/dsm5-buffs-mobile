@@ -61,12 +61,13 @@ describe('registrarLactacaoApi', () => {
 
 describe('encerrarLactacao', () => {
   it('updates local status and enqueues UPDATE', async () => {
+    (queryFirst as jest.Mock).mockResolvedValue({ _raw: JSON.stringify({ id: 'c1', status: 'Em Lactação' }) });
     (execute as jest.Mock).mockResolvedValue(undefined);
     (enqueue as jest.Mock).mockResolvedValue(undefined);
 
     await encerrarLactacao('c1');
 
-    expect(execute).toHaveBeenCalledWith(expect.stringContaining('UPDATE ciclos_lactacao'), ['seco', 'c1']);
+    expect(execute).toHaveBeenCalledWith(expect.stringContaining('UPDATE ciclos_lactacao'), expect.arrayContaining(['seco', 'c1']));
     expect(enqueue).toHaveBeenCalledWith('ciclos_lactacao', 'UPDATE', expect.objectContaining({ id: 'c1', status: 'seco' }));
   });
 

@@ -243,13 +243,25 @@ export const encerrarLactacao = async (idCiclo: string | number) => {
   if (!idCiclo) throw new Error("ID do ciclo é obrigatório.");
 
   const hoje = new Date().toISOString().split("T")[0];
-  const updatePayload = { id: String(idCiclo), dt_secagem_real: hoje, observacao: "Seca", status: "seco" };
+  const now = new Date().toISOString();
+
+  const existing = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM ciclos_lactacao WHERE id = ?`,
+    [String(idCiclo)],
+  );
+  const merged = {
+    ...(existing ? JSON.parse(existing._raw) : {}),
+    status: "seco",
+    dtSecagemReal: hoje,
+    observacao: "Seca",
+    updatedAt: now,
+  };
 
   await execute(
-    `UPDATE ciclos_lactacao SET status = ?, _synced = 0 WHERE id = ?`,
-    ["seco", String(idCiclo)],
+    `UPDATE ciclos_lactacao SET status = ?, _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
+    ["seco", JSON.stringify(merged), now, String(idCiclo)],
   );
-  await enqueue("ciclos_lactacao", "UPDATE", updatePayload);
+  await enqueue("ciclos_lactacao", "UPDATE", { id: String(idCiclo), dt_secagem_real: hoje, observacao: "Seca", status: "seco" });
 };
 
 /* =========================

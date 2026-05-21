@@ -110,9 +110,9 @@ export const getReproducoes = async (
       id: r.idReproducao ?? r.id,
       status: r.status,
       tipoInseminacao:
-        r.tipoInseminacao === "Inseminação Artificial" ? "IA"
+        (r.tipoInseminacao === "Inseminação Artificial" || r.tipoInseminacao === "IA") ? "IA"
         : r.tipoInseminacao === "Monta Natural" ? "Natural"
-        : "-",
+        : r.tipoInseminacao ?? "-",
       tipoParto: r.tipoParto ?? "-",
       dtEvento: r.dtEvento ? formatarDataBR(r.dtEvento) : "-",
       ocorrencia: r.ocorrencia ?? "-",
