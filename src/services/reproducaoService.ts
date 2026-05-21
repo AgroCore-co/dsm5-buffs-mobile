@@ -70,7 +70,7 @@ export const getReproducoes = async (
   const offset = (page - 1) * limit;
   const rows = await queryAll<{ _raw: string }>(
     `SELECT _raw FROM reproducoes WHERE propriedadeId = ?
-     ORDER BY CASE status
+     ORDER BY CASE json_extract(_raw, '$.status')
        WHEN 'Em andamento' THEN 0
        WHEN 'Confirmada'   THEN 1
        WHEN 'Concluída'    THEN 2

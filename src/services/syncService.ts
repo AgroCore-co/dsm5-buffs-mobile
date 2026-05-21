@@ -109,7 +109,26 @@ class SyncService {
     }
   }
 
+  private async pullIndustrias(propriedadeId: string): Promise<void> {
+    try {
+      const records: any[] = await apiFetch(`/laticinios/propriedade/${propriedadeId}`);
+      if (!Array.isArray(records) || records.length === 0) return;
+      const normalized = records.map((r: any) => ({
+        ...r,
+        id: r.id_industria ?? r.idIndustria ?? r.id,
+        propriedadeId,
+        updatedAt: new Date().toISOString(),
+      }));
+      await upsertBatch('industrias', normalized);
+    } catch (err) {
+      console.warn('[sync] pullIndustrias falhou:', err);
+    }
+  }
+
   private async pullEntity(entity: string, propriedadeId: string): Promise<void> {
+    if (entity === 'industrias') {
+      return this.pullIndustrias(propriedadeId);
+    }
     try {
       const syncPropId = entity === 'racas' ? 'global' : propriedadeId;
       const meta = await queryFirst<{ lastSyncedAt: string | null }>(
