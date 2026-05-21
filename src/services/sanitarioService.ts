@@ -2,6 +2,7 @@ import { sanitarioToApiAdapter } from "./adapters/bufaloAdapter";
 import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
+import { normalizePayload } from '../utils/normalizePayload';
 
 export interface Medicacao {
   id_medicacao: string;
@@ -10,17 +11,27 @@ export interface Medicacao {
   tipo_tratamento: string;
 }
 
+const SANITARIO_FIELD_MAP = {
+  idBufalo:         ['id_bufalo'],
+  idPropriedade:    ['id_propriedade'],
+  idMedicao:        ['id_medicao', 'idMedicacao', 'id_medicacao'],
+  dtAplicacao:      ['dt_aplicacao'],
+  dtRetorno:        ['dt_retorno'],
+  unidadeMedida:    ['unidade_medida'],
+  necessitaRetorno: ['necessita_retorno'],
+};
+
 export const sanitarioService = {
   add: async (payload: any) => {
+    const d = normalizePayload(payload, SANITARIO_FIELD_MAP);
     const id = uuid.v4() as string;
     const now = new Date().toISOString();
-    const adapted = sanitarioToApiAdapter(payload);
-    const newRecord = { ...adapted, id, createdAt: now, updatedAt: now };
+    const newRecord = { ...d, id, createdAt: now, updatedAt: now };
 
     await execute(
       `INSERT INTO eventos_sanitarios (id, bufaloId, propriedadeId, tipo, _raw, _synced, updatedAt)
        VALUES (?, ?, ?, ?, ?, 0, ?)`,
-      [id, payload.id_bufalo, payload.id_propriedade, payload.tipo ?? null, JSON.stringify(newRecord), now],
+      [id, d.idBufalo ?? null, d.idPropriedade ?? null, d.tipo ?? null, JSON.stringify(newRecord), now],
     );
     await enqueue("eventos_sanitarios", "CREATE", newRecord);
     return newRecord;
