@@ -1,4 +1,3 @@
-import { zootecToApiAdapter } from "./adapters/bufaloAdapter";
 import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
@@ -53,14 +52,14 @@ export const zootecService = {
   },
 
   update: async (id_zootec: string, payload: any) => {
-    const adapted = zootecToApiAdapter(payload);
+    const normalized = normalizePayload(payload, ZOOTEC_FIELD_MAP);
     const now = new Date().toISOString();
 
     const existing = await queryFirst<{ _raw: string }>(
       `SELECT _raw FROM pesagens WHERE id = ?`,
       [id_zootec],
     );
-    const merged = { ...(existing ? JSON.parse(existing._raw) : {}), ...adapted, id: id_zootec, updatedAt: now };
+    const merged = { ...(existing ? JSON.parse(existing._raw) : {}), ...normalized, id: id_zootec, updatedAt: now };
 
     await execute(
       `UPDATE pesagens SET _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,

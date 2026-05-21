@@ -1,4 +1,3 @@
-import { sanitarioToApiAdapter } from "./adapters/bufaloAdapter";
 import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
@@ -109,8 +108,8 @@ export const sanitarioService = {
     );
 
     const now = new Date().toISOString();
-    const adapted = sanitarioToApiAdapter(payload);
-    const merged = { ...(existing ? JSON.parse(existing._raw) : {}), ...adapted, id: id_sanit, updatedAt: now };
+    const normalized = normalizePayload(payload, SANITARIO_FIELD_MAP);
+    const merged = { ...(existing ? JSON.parse(existing._raw) : {}), ...normalized, id: id_sanit, updatedAt: now };
 
     await execute(
       `UPDATE eventos_sanitarios SET _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
