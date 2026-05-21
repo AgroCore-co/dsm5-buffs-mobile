@@ -72,41 +72,37 @@ class SyncService {
         await apiFetch(op.endpoint, { method: op.method, body: op.payload });
         await markSynced(op.id);
         const pk = ENTITY_PK_MAP[op.entity];
-        const localId = JSON.parse(op.payload)[pk] ?? JSON.parse(op.payload).id;
-        if (localId) {
-          await execute(`UPDATE ${op.entity} SET _synced = 1 WHERE ${pk} = ? OR id = ?`, [localId, localId]);
+        if (pk) {
+          const localId = JSON.parse(op.payload)[pk] ?? JSON.parse(op.payload).id;
+          if (localId) {
+            await execute(`UPDATE ${op.entity} SET _synced = 1 WHERE ${pk} = ? OR id = ?`, [localId, localId]);
+          }
         }
       } catch {
         await incrementRetry(op.id);
+        // CREATE failure may leave dependent ops (CREATE B, UPDATE A) without a server-side id.
+        // Stop the queue so order is preserved on the next retry.
+        if (op.operation === 'CREATE') break;
       }
     }
   }
 
   private async pullEntity(entity: string, propriedadeId: string): Promise<void> {
     try {
-      // ordenha ainda não tem endpoint de sync flat — registro é write-only até a Fase 4
-      if (entity === 'ordenhas') return;
-
       const syncPropId = entity === 'racas' ? 'global' : propriedadeId;
       const meta = await queryFirst<{ lastSyncedAt: string | null }>(
         'SELECT lastSyncedAt FROM sync_meta WHERE entity = ? AND propriedadeId = ?',
         [entity, syncPropId]
       );
 
-      let response: any;
-      if (entity === 'lotes') {
-        // Sem /sync/lotes flat ainda — usa o REST existente (Fase 4 troca por flat)
-        response = await apiFetch(`/lotes/propriedade/${propriedadeId}`);
-      } else {
-        const path = SYNC_ENTITY_PATH[entity];
-        const qs = new URLSearchParams();
-        if (entity !== 'racas') {
-          qs.append('propriedadeId', propriedadeId);
-        }
-        if (meta?.lastSyncedAt) qs.append('updated_at', meta.lastSyncedAt);
-
-        response = await apiFetch(`/sync/${path}?${qs.toString()}`);
+      const path = SYNC_ENTITY_PATH[entity];
+      const qs = new URLSearchParams();
+      if (entity !== 'racas') {
+        qs.append('propriedadeId', propriedadeId);
       }
+      if (meta?.lastSyncedAt) qs.append('updated_at', meta.lastSyncedAt);
+
+      const response = await apiFetch(`/sync/${path}?${qs.toString()}`);
 
       const data = Array.isArray(response) ? response : response.data || [];
       const syncedAt = response.synced_at || response.meta?.synced_at || new Date().toISOString();
