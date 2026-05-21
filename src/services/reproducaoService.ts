@@ -3,6 +3,7 @@ import { getReproducaoMetricas } from './dashboardService';
 import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
+import { normalizePayload } from '../utils/normalizePayload';
 
 export interface ReproducaoDashboardStats {
   totalEmAndamento: number;
@@ -135,9 +136,34 @@ export const createReproducao = async (data: any) => {
   return newRecord;
 };
 
-export const createCicloLactacao = async (data: CicloLactacaoPayload) => {
+const CICLO_FIELD_MAP = {
+  idPropriedade: ['id_propriedade', 'idPropriedade'],
+  idBufala:      ['id_bufala'],
+  dtParto:       ['dt_parto'],
+  padraoDias:    ['padrao_dias', 'padrao_dias_lactacao'],
+  dtSecagemReal: ['dt_secagem_real'],
+};
+
+export const createCicloLactacao = async (data: any) => {
+  const d = normalizePayload(data, CICLO_FIELD_MAP);
   const id = uuid.v4() as string;
-  await enqueue("ciclos_lactacao", "CREATE", { ...data, id });
+  const now = new Date().toISOString();
+
+  const newRecord = {
+    ...d,
+    id,
+    status: 'Em Lactação',
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await execute(
+    `INSERT INTO ciclos_lactacao (id, propriedadeId, idBufala, status, _raw, _synced, updatedAt)
+     VALUES (?, ?, ?, ?, ?, 0, ?)`,
+    [id, d.idPropriedade ?? null, d.idBufala ?? null, 'Em Lactação', JSON.stringify(newRecord), now],
+  );
+
+  await enqueue('ciclos_lactacao', 'CREATE', newRecord);
   return { id };
 };
 
@@ -162,6 +188,12 @@ export const updateReproducao = async (id: string, data: ReproducaoUpdatePayload
 export const registrarParto = async (id: string, data: RegistrarPartoPayload) => {
   if (!id) throw new Error("ID da reprodução é obrigatório.");
 
+  const existing = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM reproducoes WHERE id = ?`,
+    [id],
+  );
+  const reproducaoRaw = existing ? JSON.parse(existing._raw) : {};
+
   const now = new Date().toISOString();
   const payload = { id, ...data, status: "CONCLUIDA", updatedAt: now };
 
@@ -170,5 +202,16 @@ export const registrarParto = async (id: string, data: RegistrarPartoPayload) =>
     [JSON.stringify({ status: "CONCLUIDA", ...data }), now, id],
   );
   await enqueue("reproducoes", "UPDATE", payload);
+
+  if (data.criar_ciclo_lactacao === true) {
+    await createCicloLactacao({
+      id_bufala: reproducaoRaw.idBufala,
+      id_propriedade: reproducaoRaw.idPropriedade,
+      dt_parto: data.dt_parto,
+      padrao_dias: data.padrao_dias_lactacao ?? 305,
+      observacao: data.observacao ?? '',
+    });
+  }
+
   return payload;
 };
