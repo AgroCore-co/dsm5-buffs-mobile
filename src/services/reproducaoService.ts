@@ -5,6 +5,19 @@ import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
 import { normalizePayload } from '../utils/normalizePayload';
 
+export const getMaterialGenetico = async (propriedadeId: string) => {
+  const rows = await queryAll<{ _raw: string }>(
+    `SELECT _raw FROM material_genetico WHERE propriedadeId = ?`,
+    [propriedadeId],
+  );
+  return rows.map(r => {
+    const m = JSON.parse(r._raw);
+    const id = m.idMaterial ?? m.id;
+    const label = [m.fornecedor, m.tipo].filter(Boolean).join(' — ') || id;
+    return { id, label, tipo: m.tipo ?? '', fornecedor: m.fornecedor ?? '' };
+  });
+};
+
 export interface ReproducaoDashboardStats {
   totalEmAndamento: number;
   totalConfirmada: number;
@@ -100,6 +113,20 @@ export const getReproducoes = async (
     if (key) bufaloMap[key] = { brinco: b.brinco ?? '-', nome: b.nome ?? 'Não informado' };
   });
 
+  const matRows = await queryAll<{ _raw: string }>(
+    `SELECT _raw FROM material_genetico WHERE propriedadeId = ?`,
+    [propriedadeId],
+  );
+  const matMap: Record<string, { label: string; fornecedor: string }> = {};
+  matRows.forEach((mr) => {
+    const m = JSON.parse(mr._raw);
+    const key = m.idMaterial ?? m.id;
+    if (key) matMap[key] = {
+      label: [m.fornecedor, m.tipo].filter(Boolean).join(' — ') || key.slice(0, 8),
+      fornecedor: m.fornecedor ?? key.slice(0, 8),
+    };
+  });
+
   const reproducoes = rows.map((row) => {
     const r = JSON.parse(row._raw);
     const femea = r.bufalo_idBufala;
@@ -120,8 +147,8 @@ export const getReproducoes = async (
       nomeFemea: femea?.nome ?? femeaFallback?.nome ?? "Não informado",
       brincoFemea: femea?.brinco ?? femeaFallback?.brinco ?? "-",
       idBufalo: r.idBufalo,
-      nomeMacho: macho?.nome ?? machoFallback?.nome ?? (r.idSemen ? "Sêmen" : "-"),
-      brincoMacho: macho?.brinco ?? machoFallback?.brinco ?? (r.idSemen || r.idOvulo ? (r.idSemen || r.idOvulo).slice(0, 5) : "-"),
+      nomeMacho: macho?.nome ?? machoFallback?.nome ?? (r.idSemen ? matMap[r.idSemen]?.fornecedor ?? "Sêmen" : (r.idOvulo ? matMap[r.idOvulo]?.fornecedor ?? "Óvulo" : "-")),
+      brincoMacho: macho?.brinco ?? machoFallback?.brinco ?? (r.idSemen ? matMap[r.idSemen]?.label ?? r.idSemen.slice(0, 8) : (r.idOvulo ? matMap[r.idOvulo]?.label ?? r.idOvulo.slice(0, 8) : "-")),
       idSemen: r.idSemen,
       idOvulo: r.idOvulo,
       previsaoParto: r.previsaoParto,

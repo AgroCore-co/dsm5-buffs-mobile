@@ -19,7 +19,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import "dayjs/locale/pt-br"; 
 import { usePropriedade } from "../../context/PropriedadeContext";
 import bufaloService from "../../services/bufaloService";
-import { createReproducao } from "../../services/reproducaoService";
+import { createReproducao, getMaterialGenetico } from "../../services/reproducaoService";
 
 import { colors } from "../../styles/colors";
 import YellowButton from "../Button";
@@ -53,8 +53,10 @@ export const ReproducaoAddBottomSheet: React.FC<
   // Estado do Formulário
   const [tagBufalo, setTagBufalo] = useState("");
   const [tagBufala, setTagBufala] = useState("");
-  const [idOvulo, setIdOvulo] = useState("");
-  const [idSemen, setIdSemen] = useState("");
+  const [matGeneticoSemen, setMatGeneticoSemen] = useState<{ id: string; label: string }[]>([]);
+  const [matGeneticoOvulo, setMatGeneticoOvulo] = useState<{ id: string; label: string }[]>([]);
+  const [idSemenSelecionado, setIdSemenSelecionado] = useState<string | null>(null);
+  const [idOvuloSelecionado, setIdOvuloSelecionado] = useState<string | null>(null);
   const [tipoInseminacao, setTipoInseminacao] = useState<string | null>(null);
   
   // O status padrão é "Em andamento" e não é alterável no ADD
@@ -70,6 +72,14 @@ export const ReproducaoAddBottomSheet: React.FC<
     { label: "IA (Inseminação Artificial)", value: "IA" },
     { label: "Monta Natural", value: "Monta Natural" },
   ], []);
+
+  useEffect(() => {
+    if (!propriedadeSelecionada) return;
+    getMaterialGenetico(propriedadeSelecionada).then((mats) => {
+      setMatGeneticoSemen(mats.filter(m => m.tipo.toLowerCase().includes('sêmen') || m.tipo.toLowerCase().includes('semen') || m.tipo === ''));
+      setMatGeneticoOvulo(mats.filter(m => m.tipo.toLowerCase().includes('óvulo') || m.tipo.toLowerCase().includes('ovulo')));
+    }).catch(() => {});
+  }, [propriedadeSelecionada]);
 
   const handleSheetChange = useCallback(
     (index: number) => {
@@ -99,8 +109,8 @@ export const ReproducaoAddBottomSheet: React.FC<
 
     let idBufaloMachoUUID: string | null = null; // Armazenará o UUID do macho
     let idBufalaFemeaUUID: string | null = null; // Armazenará o UUID da fêmea
-    let idOvuloUsado = idOvulo || null;
-    let idSemenUsado = idSemen || null;
+    let idOvuloUsado = idOvuloSelecionado || null;
+    let idSemenUsado = idSemenSelecionado || null;
     let brincoInvalido = null;
 
     try {
@@ -249,23 +259,39 @@ export const ReproducaoAddBottomSheet: React.FC<
                 editable={false} />
         </View>
         
-        {/* --- Extras (Opcional) --- */}
+        {/* --- Extras (Material Genético) --- */}
         <Text style={styles.sectionTitle}>Material Genético (Opcional)</Text>
-        
-        <View style={styles.listContainer}>
-            <Text style={styles.label}>ID do Óvulo (se for FIV)</Text>
-            <TextInput
-                style={styles.inputBase}
-                value={idOvulo}
-                onChangeText={setIdOvulo}
-                placeholder="Digite o identificador do Óvulo"/>
 
-            <Text style={styles.label}>ID do Sêmen (se for IA)</Text>
-            <TextInput
-                style={styles.inputBase}
-                value={idSemen}
-                onChangeText={setIdSemen}
-                placeholder="Digite o identificador do Sêmen"/>
+        <View style={styles.listContainer}>
+          <Text style={styles.label}>Sêmen</Text>
+          {matGeneticoSemen.length === 0 ? (
+            <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
+              Nenhum sêmen cadastrado — sincronize primeiro.
+            </Text>
+          ) : (
+            <SelectBottomSheet
+              items={matGeneticoSemen.map(m => ({ label: m.label, value: m.id }))}
+              value={idSemenSelecionado}
+              onChange={(val: any) => setIdSemenSelecionado(val)}
+              title="Selecionar Sêmen"
+              placeholder="Selecione o Sêmen"
+            />
+          )}
+
+          <Text style={styles.label}>Óvulo (FIV)</Text>
+          {matGeneticoOvulo.length === 0 ? (
+            <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
+              Nenhum óvulo cadastrado — sincronize primeiro.
+            </Text>
+          ) : (
+            <SelectBottomSheet
+              items={matGeneticoOvulo.map(m => ({ label: m.label, value: m.id }))}
+              value={idOvuloSelecionado}
+              onChange={(val: any) => setIdOvuloSelecionado(val)}
+              title="Selecionar Óvulo"
+              placeholder="Selecione o Óvulo (FIV)"
+            />
+          )}
         </View>
 
         {/* Footer (Botões Salvar e Cancelar) */}
