@@ -42,14 +42,15 @@ export const ReproducaoAddBottomSheet: React.FC<
 > = ({ onClose, onSuccess }) => {
   const sheetRef = useRef<BottomSheet>(null);
   const { propriedadeSelecionada } = usePropriedade();
-  const { getBufaloByBrincoAndSexo } = bufaloService; // Assumindo o bufaloService.ts
+  const { getBufaloByBrincoAndSexo, getBufaloById } = bufaloService; // Assumindo o bufaloService.ts
   // SnapPoints ajustados para acomodar mais campos
   const snapPoints = useMemo(() => ["70%", "90%"], []); 
 
   // Estado do Formulário
   const [tagBufalo, setTagBufalo] = useState("");
   const [tagBufala, setTagBufala] = useState("");
-  const [tagDoadora, setTagDoadora] = useState("");
+  const [idDoadora, setIdDoadora] = useState<string | null>(null);
+  const [nomeDoadora, setNomeDoadora] = useState<string>('');
   const [matGeneticoSemen, setMatGeneticoSemen] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
   const [matGeneticoOvulo, setMatGeneticoOvulo] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
   const [idSemenSelecionado, setIdSemenSelecionado] = useState<string | null>(null);
@@ -65,6 +66,11 @@ export const ReproducaoAddBottomSheet: React.FC<
     { label: "TE (Transferência de Embrião)", value: "TE" },
     { label: "Monta Natural", value: "Monta Natural" },
   ], []);
+
+  const embrioesFiltrados = useMemo(
+    () => matGeneticoOvulo.filter(m => m.idBufalOrigem != null),
+    [matGeneticoOvulo],
+  );
 
   useEffect(() => {
     if (!propriedadeSelecionada) return;
@@ -108,13 +114,12 @@ export const ReproducaoAddBottomSheet: React.FC<
     if ((tipoInseminacao === "IA" || tipoInseminacao === "IATF") && !idSemenSelecionado) {
       return showToast(`${tipoInseminacao} requer a seleção de um Sêmen.`, true);
     }
-    if (tipoInseminacao === "TE" && (!idOvuloSelecionado || !tagDoadora)) {
-      return showToast("TE requer um Embrião e a Tag da Búfala Doadora.", true);
+    if (tipoInseminacao === "TE" && (!idOvuloSelecionado || !idDoadora)) {
+      return showToast("TE requer a seleção de um Embrião.", true);
     }
 
     let idBufaloMachoUUID: string | null = null;
     let idBufalaFemeaUUID: string | null = null;
-    let idDoadoraUUID: string | null = null;
     let idSemenUsado = idSemenSelecionado || null;
     let brincoInvalido = null;
 
@@ -139,12 +144,7 @@ export const ReproducaoAddBottomSheet: React.FC<
             idSemenUsado = null;
 
         } else if (tipoInseminacao === "TE") {
-            const bufalaDoadora = await getBufaloByBrincoAndSexo(propriedadeSelecionada, tagDoadora, "F");
-            if (!bufalaDoadora?.idBufalo) {
-                brincoInvalido = tagDoadora;
-                return showToast(`Búfala doadora (Tag: ${brincoInvalido}) não encontrada ou não é fêmea.`, true);
-            }
-            idDoadoraUUID = bufalaDoadora.idBufalo;
+            // idDoadora já foi derivado do idBufaloOrigem do embrião selecionado
         }
 
         // --- 3. Payload ---
@@ -154,7 +154,7 @@ export const ReproducaoAddBottomSheet: React.FC<
             idBufalo: idBufaloMachoUUID,
             idBufala: idBufalaFemeaUUID,
             idSemen: tipoInseminacao === 'TE' ? (idOvuloSelecionado ?? null) : idSemenUsado,
-            idDoadora: tipoInseminacao === 'TE' ? idDoadoraUUID : null,
+            idDoadora: tipoInseminacao === 'TE' ? idDoadora : null,
             tipoInseminacao: tipoInseminacao,
             status: status,
             dtEvento: new Date().toISOString().split("T")[0],
@@ -208,10 +208,10 @@ export const ReproducaoAddBottomSheet: React.FC<
             value={tipoInseminacao}
             onChange={(val: any) => {
               setTipoInseminacao(val);
-              // limpa campos do tipo anterior
               setTagBufalo('');
-              setTagBufalo('');
-              setTagDoadora('');
+              setTagBufala('');
+              setIdDoadora(null);
+              setNomeDoadora('');
               setIdSemenSelecionado(null);
               setIdOvuloSelecionado(null);
             }}
@@ -274,7 +274,7 @@ export const ReproducaoAddBottomSheet: React.FC<
           </>
         )}
 
-        {/* --- TE: Embrião + Tag da Búfala Doadora --- */}
+        {/* --- TE: Embrião (doadora auto-derivada) --- */}
         {tipoInseminacao === "TE" && (
           <>
             <Text style={styles.sectionTitle}>Material Genético</Text>
@@ -282,29 +282,35 @@ export const ReproducaoAddBottomSheet: React.FC<
               <Text style={styles.label}>
                 Embrião <Text style={{ color: mergedColors.red.base }}>*</Text>
               </Text>
-              {matGeneticoOvulo.length === 0 ? (
+              {embrioesFiltrados.length === 0 ? (
                 <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
                   Nenhum embrião cadastrado — sincronize primeiro.
                 </Text>
               ) : (
                 <SelectBottomSheet
-                  items={matGeneticoOvulo.map(m => ({ label: m.label, value: m.id }))}
+                  items={embrioesFiltrados.map(m => ({ label: m.label, value: m.id }))}
                   value={idOvuloSelecionado}
-                  onChange={(val: any) => setIdOvuloSelecionado(val)}
+                  onChange={async (val: any) => {
+                    setIdOvuloSelecionado(val);
+                    const item = embrioesFiltrados.find(m => m.id === val);
+                    const doadoraUUID = item?.idBufalOrigem ?? null;
+                    setIdDoadora(doadoraUUID);
+                    if (doadoraUUID) {
+                      const bufala = await getBufaloById(doadoraUUID);
+                      setNomeDoadora(bufala ? `${bufala.brinco} — ${bufala.nome}` : doadoraUUID.slice(0, 8));
+                    } else {
+                      setNomeDoadora('');
+                    }
+                  }}
                   title="Selecionar Embrião"
                   placeholder="Selecione o Embrião"
                 />
               )}
-
-              <Text style={styles.label}>
-                Tag da Búfala Doadora <Text style={{ color: mergedColors.red.base }}>*</Text>
-              </Text>
-              <TextInput
-                style={styles.inputBase}
-                value={tagDoadora}
-                onChangeText={setTagDoadora}
-                placeholder="Digite a tag da búfala doadora"
-              />
+              {nomeDoadora ? (
+                <Text style={[styles.label, { color: mergedColors.text.secondary, marginTop: 8 }]}>
+                  Doadora: {nomeDoadora}
+                </Text>
+              ) : null}
             </View>
           </>
         )}
