@@ -8,11 +8,16 @@ jest.mock('../../lib/apiClient');
 jest.mock('../pendingOperationsService');
 
 import { enqueue } from '../pendingOperationsService';
+import { execute } from '../../database/db';
 import { registrarColetaApi, registrarEstoqueApi } from '../lactacaoService';
 
 const mockEnqueue = enqueue as jest.Mock;
+const mockExecute = execute as jest.Mock;
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockExecute.mockResolvedValue(undefined);
+});
 
 test('registrarColetaApi enfileira em "retiradas" (não em ciclos_lactacao)', async () => {
   mockEnqueue.mockResolvedValue(undefined);
@@ -47,6 +52,27 @@ test('registrarEstoqueApi enfileira em "producao_diaria" (não em ciclos_lactaca
   }));
   const [entity] = mockEnqueue.mock.calls[0];
   expect(entity).not.toBe('ciclos_lactacao');
+});
+
+test('registrarEstoqueApi persiste localmente em producao_diaria E enfileira', async () => {
+  mockEnqueue.mockResolvedValue(undefined);
+  await registrarEstoqueApi({
+    id_propriedade: 'prop-1',
+    id_usuario: 'usr-1',
+    quantidade: 100,
+    dt_registro: '2026-05-22',
+    observacao: 'Teste',
+  });
+
+  expect(mockExecute).toHaveBeenCalledWith(
+    expect.stringContaining('INSERT INTO producao_diaria'),
+    expect.arrayContaining(['prop-1', 100, '2026-05-22'])
+  );
+
+  expect(mockEnqueue).toHaveBeenCalledWith('producao_diaria', 'CREATE', expect.objectContaining({
+    idPropriedade: 'prop-1',
+    quantidade: 100,
+  }));
 });
 
 test('registrarEstoqueApi adapta snake_case → camelCase e remove id_usuario', async () => {

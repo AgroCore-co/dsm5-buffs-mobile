@@ -230,13 +230,22 @@ export const registrarColetaApi = async (payload: ColetaRegistroPayload) => {
 
 export const registrarEstoqueApi = async (payload: EstoqueRegistroPayload) => {
   const id = uuid.v4() as string;
-  await enqueue("producao_diaria", "CREATE", {
+  const now = new Date().toISOString();
+  const body = {
     id,
     idPropriedade: String(payload.id_propriedade),
     quantidade: payload.quantidade,
     dtRegistro: payload.dt_registro,
-    observacao: payload.observacao,
-  });
+    observacao: payload.observacao ?? null,
+  };
+
+  await execute(
+    `INSERT INTO producao_diaria (id, propriedadeId, quantidade, dtRegistro, observacao, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [body.id, body.idPropriedade, body.quantidade, body.dtRegistro, body.observacao, now],
+  );
+
+  await enqueue("producao_diaria", "CREATE", body);
 };
 
 export const encerrarLactacao = async (idCiclo: string | number) => {
@@ -261,7 +270,7 @@ export const encerrarLactacao = async (idCiclo: string | number) => {
     `UPDATE ciclos_lactacao SET status = ?, _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
     ["seco", JSON.stringify(merged), now, String(idCiclo)],
   );
-  await enqueue("ciclos_lactacao", "UPDATE", { id: String(idCiclo), dt_secagem_real: hoje, observacao: "Seca", status: "seco" });
+  await enqueue("ciclos_lactacao", "UPDATE", { id: String(idCiclo), dtSecagemReal: hoje, observacao: "Seca", status: "seco" });
 };
 
 /* =========================
