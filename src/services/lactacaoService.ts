@@ -280,16 +280,9 @@ export const encerrarLactacao = async (idCiclo: string | number) => {
 export const getProducaoDiariaAtual = async (propriedadeId: string) => {
   if (!propriedadeId) return { quantidade: 0, dataAtualizacao: "N/D" };
   const hoje = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const rows = await queryAll<{ _raw: string }>(
-    `SELECT _raw FROM ordenhas WHERE propriedadeId = ? AND deletedAt IS NULL`,
-    [propriedadeId],
+  const row = await queryFirst<{ total: number }>(
+    `SELECT SUM(quantidade) as total FROM producao_diaria WHERE propriedadeId = ? AND dtRegistro LIKE ?`,
+    [propriedadeId, `${hoje}%`],
   );
-  let total = 0;
-  for (const row of rows) {
-    const o = JSON.parse(row._raw);
-    if (o.dtOrdenha && (o.dtOrdenha as string).startsWith(hoje)) {
-      total += Number(o.qtOrdenha ?? 0);
-    }
-  }
-  return { quantidade: total, dataAtualizacao: formatarDataBR(hoje) };
+  return { quantidade: row?.total ?? 0, dataAtualizacao: formatarDataBR(hoje) };
 };
