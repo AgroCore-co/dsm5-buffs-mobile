@@ -49,6 +49,7 @@ export const ReproducaoAddBottomSheet: React.FC<
   // Estado do Formulário
   const [tagBufalo, setTagBufalo] = useState("");
   const [tagBufala, setTagBufala] = useState("");
+  const [tagDoadora, setTagDoadora] = useState("");
   const [matGeneticoSemen, setMatGeneticoSemen] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
   const [matGeneticoOvulo, setMatGeneticoOvulo] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
   const [idSemenSelecionado, setIdSemenSelecionado] = useState<string | null>(null);
@@ -107,75 +108,53 @@ export const ReproducaoAddBottomSheet: React.FC<
     if ((tipoInseminacao === "IA" || tipoInseminacao === "IATF") && !idSemenSelecionado) {
       return showToast(`${tipoInseminacao} requer a seleção de um Sêmen.`, true);
     }
-    if (tipoInseminacao === "TE" && !idOvuloSelecionado) {
-      return showToast("TE requer a seleção de um Embrião.", true);
-    }
-    const embryoMat = tipoInseminacao === "TE"
-      ? matGeneticoOvulo.find(m => m.id === idOvuloSelecionado)
-      : null;
-    if (tipoInseminacao === "TE" && !embryoMat?.idBufalOrigem) {
-      return showToast("O embrião selecionado não possui búfala doadora cadastrada (idBufaloOrigem).", true);
+    if (tipoInseminacao === "TE" && (!idOvuloSelecionado || !tagDoadora)) {
+      return showToast("TE requer um Embrião e a Tag da Búfala Doadora.", true);
     }
 
-    let idBufaloMachoUUID: string | null = null; // Armazenará o UUID do macho
-    let idBufalaFemeaUUID: string | null = null; // Armazenará o UUID da fêmea
-    let idOvuloUsado = idOvuloSelecionado || null;
+    let idBufaloMachoUUID: string | null = null;
+    let idBufalaFemeaUUID: string | null = null;
+    let idDoadoraUUID: string | null = null;
     let idSemenUsado = idSemenSelecionado || null;
     let brincoInvalido = null;
 
     try {
-        // --- 1. Validação e Obtenção do UUID da Búfala Receptora (Fêmea) ---
-        const bufalaFemea = await getBufaloByBrincoAndSexo(
-            propriedadeSelecionada,
-            tagBufala, // Busca pelo Brinco
-            "F"
-        );
-        
-        if (!bufalaFemea || !bufalaFemea.idBufalo) { // Assumindo que o ID é 'id_bufalo' no objeto retornado
+        // --- 1. Búfala receptora ---
+        const bufalaFemea = await getBufaloByBrincoAndSexo(propriedadeSelecionada, tagBufala, "F");
+        if (!bufalaFemea?.idBufalo) {
             brincoInvalido = tagBufala;
-            return showToast(`Erro: Búfala receptora (Tag: ${brincoInvalido}) não encontrada, não é fêmea, ou o ID interno está faltando.`, true);
+            return showToast(`Búfala receptora (Tag: ${brincoInvalido}) não encontrada ou não é fêmea.`, true);
         }
-        // 🎯 CAPTURA O UUID DA FÊMEA
-        idBufalaFemeaUUID = bufalaFemea.idBufalo; 
+        idBufalaFemeaUUID = bufalaFemea.idBufalo;
 
-        // --- 2. Validação e Obtenção do UUID do Búfalo (Macho) para Monta Natural ---
-        if (tipoInseminacao === "Monta Natural") { // Usando o valor CORRETO
-            if (!tagBufalo) {
-                return showToast("O Búfalo Macho é obrigatório para Monta Natural.", true);
-            }
-            
-            const bufaloMacho = await getBufaloByBrincoAndSexo(
-                propriedadeSelecionada,
-                tagBufalo, // Busca pelo Brinco
-                "M"
-            );
-            
-            if (!bufaloMacho || !bufaloMacho.idBufalo) {
+        // --- 2. Macho (Monta Natural) ou Búfala Doadora (TE) ---
+        if (tipoInseminacao === "Monta Natural") {
+            if (!tagBufalo) return showToast("O Búfalo Macho é obrigatório para Monta Natural.", true);
+            const bufaloMacho = await getBufaloByBrincoAndSexo(propriedadeSelecionada, tagBufalo, "M");
+            if (!bufaloMacho?.idBufalo) {
                 brincoInvalido = tagBufalo;
-                return showToast(`Erro: Búfalo macho (Tag: ${brincoInvalido}) não encontrado, não é macho, ou o ID interno está faltando.`, true);
+                return showToast(`Búfalo macho (Tag: ${brincoInvalido}) não encontrado ou não é macho.`, true);
             }
-            // 🎯 CAPTURA O UUID DO MACHO
-            idBufaloMachoUUID = bufaloMacho.idBufalo; 
-            
-            // Limpa sêmen/óvulo, pois é Monta Natural
+            idBufaloMachoUUID = bufaloMacho.idBufalo;
             idSemenUsado = null;
-            idOvuloUsado = null;
 
-        } else {
-            // Se for IA, IATF ou TE, o campo do Búfalo Macho (brinco) não deve ser enviado como UUID
-            idBufaloMachoUUID = null; 
+        } else if (tipoInseminacao === "TE") {
+            const bufalaDoadora = await getBufaloByBrincoAndSexo(propriedadeSelecionada, tagDoadora, "F");
+            if (!bufalaDoadora?.idBufalo) {
+                brincoInvalido = tagDoadora;
+                return showToast(`Búfala doadora (Tag: ${brincoInvalido}) não encontrada ou não é fêmea.`, true);
+            }
+            idDoadoraUUID = bufalaDoadora.idBufalo;
         }
 
-        // --- 3. Preparação do Payload Final ---
-        // IA/IATF: idSemen (material sêmen), sem idDoadora
-        // TE: idSemen (material embrião) + idDoadora (idBufaloOrigem = búfala doadora)
-        // Monta Natural: idBufalo, sem material genético
+        // --- 3. Payload ---
+        // IA/IATF: idSemen; TE: idSemen (embrião) + idDoadora (búfala doadora); Monta Natural: idBufalo
         const payload = {
             idPropriedade: propriedadeSelecionada,
             idBufalo: idBufaloMachoUUID,
             idBufala: idBufalaFemeaUUID,
             idSemen: tipoInseminacao === 'TE' ? (idOvuloSelecionado ?? null) : idSemenUsado,
-            idDoadora: tipoInseminacao === 'TE' ? (embryoMat?.idBufalOrigem ?? null) : null,
+            idDoadora: tipoInseminacao === 'TE' ? idDoadoraUUID : null,
             tipoInseminacao: tipoInseminacao,
             status: status,
             dtEvento: new Date().toISOString().split("T")[0],
@@ -231,6 +210,8 @@ export const ReproducaoAddBottomSheet: React.FC<
               setTipoInseminacao(val);
               // limpa campos do tipo anterior
               setTagBufalo('');
+              setTagBufalo('');
+              setTagDoadora('');
               setIdSemenSelecionado(null);
               setIdOvuloSelecionado(null);
             }}
@@ -293,7 +274,7 @@ export const ReproducaoAddBottomSheet: React.FC<
           </>
         )}
 
-        {/* --- Material Genético: TE = Embrião obrigatório (idBufaloOrigem vira idDoadora) --- */}
+        {/* --- TE: Embrião + Tag da Búfala Doadora --- */}
         {tipoInseminacao === "TE" && (
           <>
             <Text style={styles.sectionTitle}>Material Genético</Text>
@@ -314,6 +295,16 @@ export const ReproducaoAddBottomSheet: React.FC<
                   placeholder="Selecione o Embrião"
                 />
               )}
+
+              <Text style={styles.label}>
+                Tag da Búfala Doadora <Text style={{ color: mergedColors.red.base }}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.inputBase}
+                value={tagDoadora}
+                onChangeText={setTagDoadora}
+                placeholder="Digite a tag da búfala doadora"
+              />
             </View>
           </>
         )}
