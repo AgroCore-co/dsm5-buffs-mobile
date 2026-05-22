@@ -53,7 +53,6 @@ export const ReproducaoAddBottomSheet: React.FC<
   const [matGeneticoOvulo, setMatGeneticoOvulo] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
   const [idSemenSelecionado, setIdSemenSelecionado] = useState<string | null>(null);
   const [idOvuloSelecionado, setIdOvuloSelecionado] = useState<string | null>(null);
-  const [idDoadora, setIdDoadora] = useState<string | null>(null);
   const [tipoInseminacao, setTipoInseminacao] = useState<string | null>(null);
   
   // O status padrão é "Em andamento" e não é alterável no ADD
@@ -107,6 +106,9 @@ export const ReproducaoAddBottomSheet: React.FC<
 
     if ((tipoInseminacao === "IA" || tipoInseminacao === "IATF") && !idSemenSelecionado) {
       return showToast(`${tipoInseminacao} requer a seleção de um Sêmen.`, true);
+    }
+    if (tipoInseminacao === "TE" && !idSemenSelecionado) {
+      return showToast("TE requer a seleção de um Sêmen.", true);
     }
     if (tipoInseminacao === "TE" && !idOvuloSelecionado) {
       return showToast("TE requer a seleção de um Óvulo / Embrião (doadora).", true);
@@ -162,15 +164,15 @@ export const ReproducaoAddBottomSheet: React.FC<
         }
 
         // --- 3. Preparação do Payload Final ---
-        // Para TE: idSemen = ID do embrião, idDoadora = id_bufalo_origem (búfala doadora)
-        // Para IA/IATF: idSemen = ID do sêmen, idDoadora = null
-        // Para Monta Natural: idBufalo = macho, sem material genético
+        // IA/IATF: idSemen obrigatório, sem idDoadora
+        // TE: idSemen (sêmen) + idDoadora (material de óvulo/embrião) ambos obrigatórios
+        // Monta Natural: idBufalo, sem material genético
         const payload = {
             idPropriedade: propriedadeSelecionada,
             idBufalo: idBufaloMachoUUID,
             idBufala: idBufalaFemeaUUID,
-            idSemen: tipoInseminacao === 'TE' ? idOvuloSelecionado : idSemenUsado,
-            idDoadora: tipoInseminacao === 'TE' ? idDoadora : null,
+            idSemen: idSemenUsado,
+            idDoadora: tipoInseminacao === 'TE' ? (idOvuloSelecionado ?? null) : null,
             tipoInseminacao: tipoInseminacao,
             status: status,
             dtEvento: new Date().toISOString().split("T")[0],
@@ -228,7 +230,6 @@ export const ReproducaoAddBottomSheet: React.FC<
               setTagBufalo('');
               setIdSemenSelecionado(null);
               setIdOvuloSelecionado(null);
-              setIdDoadora(null);
             }}
             title="Selecione o Tipo de Inseminação"
             placeholder="Selecione o Tipo de Inseminação"
@@ -289,11 +290,28 @@ export const ReproducaoAddBottomSheet: React.FC<
           </>
         )}
 
-        {/* --- Material Genético: TE = Óvulo/Embrião obrigatório --- */}
+        {/* --- Material Genético: TE = Sêmen + Óvulo/Embrião (doadora) obrigatórios --- */}
         {tipoInseminacao === "TE" && (
           <>
             <Text style={styles.sectionTitle}>Material Genético</Text>
             <View style={styles.listContainer}>
+              <Text style={styles.label}>
+                Sêmen <Text style={{ color: mergedColors.red.base }}>*</Text>
+              </Text>
+              {matGeneticoSemen.length === 0 ? (
+                <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
+                  Nenhum sêmen cadastrado — sincronize primeiro.
+                </Text>
+              ) : (
+                <SelectBottomSheet
+                  items={matGeneticoSemen.map(m => ({ label: m.label, value: m.id }))}
+                  value={idSemenSelecionado}
+                  onChange={(val: any) => setIdSemenSelecionado(val)}
+                  title="Selecionar Sêmen"
+                  placeholder="Selecione o Sêmen"
+                />
+              )}
+
               <Text style={styles.label}>
                 Óvulo / Embrião (Doadora) <Text style={{ color: mergedColors.red.base }}>*</Text>
               </Text>
@@ -305,11 +323,7 @@ export const ReproducaoAddBottomSheet: React.FC<
                 <SelectBottomSheet
                   items={matGeneticoOvulo.map(m => ({ label: m.label, value: m.id }))}
                   value={idOvuloSelecionado}
-                  onChange={(val: any) => {
-                    setIdOvuloSelecionado(val);
-                    const mat = matGeneticoOvulo.find(m => m.id === val);
-                    setIdDoadora(mat?.idBufalOrigem ?? null);
-                  }}
+                  onChange={(val: any) => setIdOvuloSelecionado(val)}
                   title="Selecionar Óvulo / Embrião"
                   placeholder="Selecione o Óvulo / Embrião"
                 />
