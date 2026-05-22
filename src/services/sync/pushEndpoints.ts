@@ -69,16 +69,18 @@ function shapeSanitarioCreate(p: any) {
 }
 
 function shapeReproducaoCreate(p: any) {
-  const isTE = p.tipoInseminacao === 'TE';
   const isMontaNatural = p.tipoInseminacao === 'Monta Natural';
+  // A API usa idSemen para todo material genético (sêmen, óvulo/embrião para TE).
+  // TE armazena localmente como idDoadora → remapeia para idSemen ao enviar.
+  const idSemenParaApi = !isMontaNatural
+    ? (p.idSemen ?? p.idDoadora ?? undefined)
+    : undefined;
   return cleanStrict({
     id: p.id,
     idPropriedade: p.idPropriedade,
-    // TE usa doadora; IA/IATF usam sêmen; Monta Natural usa idBufalo
-    idDoadora: isTE ? (p.idDoadora ?? undefined) : undefined,
-    idSemen:   !isTE && !isMontaNatural ? (p.idSemen ?? undefined) : undefined,
-    idBufalo:  isMontaNatural ? (p.idBufalo ?? undefined) : undefined,
-    idBufala:  p.idBufala,
+    idSemen:  idSemenParaApi,
+    idBufalo: isMontaNatural ? (p.idBufalo ?? undefined) : undefined,
+    idBufala: p.idBufala,
     tipoInseminacao: p.tipoInseminacao,
     dtEvento: p.dtEvento,
     status: p.status,
