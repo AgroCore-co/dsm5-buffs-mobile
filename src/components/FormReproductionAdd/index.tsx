@@ -143,8 +143,6 @@ export const ReproducaoAddBottomSheet: React.FC<
             idBufaloMachoUUID = bufaloMacho.idBufalo;
             idSemenUsado = null;
 
-        } else if (tipoInseminacao === "TE") {
-            // idDoadora já foi derivado do idBufaloOrigem do embrião selecionado
         }
 
         // --- 3. Payload ---
