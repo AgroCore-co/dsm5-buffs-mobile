@@ -5,8 +5,6 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Animated,
-  Easing,
   Platform as RNPlatform,
   ToastAndroid,
   Alert,
@@ -15,8 +13,6 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
-import DropDownPicker from "react-native-dropdown-picker";
-import "dayjs/locale/pt-br"; 
 import { usePropriedade } from "../../context/PropriedadeContext";
 import bufaloService from "../../services/bufaloService";
 import { createReproducao, getMaterialGenetico } from "../../services/reproducaoService";
@@ -61,11 +57,6 @@ export const ReproducaoAddBottomSheet: React.FC<
   
   // O status padrão é "Em andamento" e não é alterável no ADD
   const status = "Em andamento"; 
-
-  const [openTipo, setOpenTipo] = useState(false);
-  
-  // ZIndex para garantir que o Dropdown que está aberto fique por cima
-  const zIndexTipo = openTipo ? 200 : 100;
 
   const tipoItems = useMemo(() => [
     { label: "IATF", value: "IATF" },
@@ -215,93 +206,103 @@ export const ReproducaoAddBottomSheet: React.FC<
         />
       )}
     >
-      <BottomSheetScrollView 
-        contentContainerStyle={styles.container} 
-        // Scroll habilitado se o dropdown não estiver aberto
-        scrollEnabled={!openTipo}
-      >
+      <BottomSheetScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
             <Text style={styles.headerTitle}>Nova Reprodução</Text>
+        </View>
+
+        {/* --- Tipo de Inseminação (primeiro para guiar os campos seguintes) --- */}
+        <Text style={styles.sectionTitle}>Tipo de Inseminação</Text>
+
+        <View style={styles.listContainer}>
+          <SelectBottomSheet
+            items={tipoItems}
+            value={tipoInseminacao}
+            onChange={(val: any) => {
+              setTipoInseminacao(val);
+              // limpa campos do tipo anterior
+              setTagBufalo('');
+              setIdSemenSelecionado(null);
+              setIdOvuloSelecionado(null);
+            }}
+            title="Selecione o Tipo de Inseminação"
+            placeholder="Selecione o Tipo de Inseminação"
+          />
         </View>
 
         {/* --- Animais --- */}
         <Text style={styles.sectionTitle}>Animais</Text>
 
         <View style={styles.listContainer}>
-            <Text style={styles.label}>Tag do Búfalo (Macho/Touro)</Text>
-            <TextInput
+          {/* Macho só aparece para Monta Natural */}
+          {tipoInseminacao === "Monta Natural" && (
+            <>
+              <Text style={styles.label}>Tag do Búfalo Macho <Text style={{ color: mergedColors.red.base }}>*</Text></Text>
+              <TextInput
                 style={styles.inputBase}
                 value={tagBufalo}
                 onChangeText={setTagBufalo}
-                placeholder="Digite a tag do búfalo"/>
+                placeholder="Digite a tag do búfalo macho"
+              />
+            </>
+          )}
 
-            <Text style={styles.label}>Tag da Búfala (Fêmea Receptora)</Text>
-            <TextInput
-                style={styles.inputBase}
-                value={tagBufala}
-                onChangeText={setTagBufala}
-                placeholder="Digite a tag da búfala"/>
+          <Text style={styles.label}>
+            Tag da Búfala {tipoInseminacao === "Monta Natural" ? "(Fêmea Receptora)" : "(Receptora/Gestora)"}
+            {" "}<Text style={{ color: mergedColors.red.base }}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.inputBase}
+            value={tagBufala}
+            onChangeText={setTagBufala}
+            placeholder="Digite a tag da búfala"
+          />
         </View>
 
-        {/* --- Tipo de Inseminação --- */}
-        <Text style={styles.sectionTitle}>Tipo e Status</Text>
-        
-        <View style={styles.listContainer}>
-            {/* Dropdown Tipo de Inseminação */}
-            <View style={{ zIndex: zIndexTipo, marginBottom: 12 }}>
-                <Text style={styles.label}>Tipo de Inseminação:</Text>
+        {/* --- Material Genético: só para IA e IATF --- */}
+        {(tipoInseminacao === "IA" || tipoInseminacao === "IATF") && (
+          <>
+            <Text style={styles.sectionTitle}>
+              Material Genético
+            </Text>
+
+            <View style={styles.listContainer}>
+              {/* Sêmen — obrigatório */}
+              <Text style={styles.label}>
+                Sêmen <Text style={{ color: mergedColors.red.base }}>*</Text>
+              </Text>
+              {matGeneticoSemen.length === 0 ? (
+                <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
+                  Nenhum sêmen cadastrado — sincronize primeiro.
+                </Text>
+              ) : (
                 <SelectBottomSheet
-                    items={tipoItems}
-                    value={tipoInseminacao}
-                    onChange={(val: any) => setTipoInseminacao(val)}
-                    title="Selecione o Tipo de Inseminação"
-                    placeholder="Selecione o Tipo de Inseminação"
+                  items={matGeneticoSemen.map(m => ({ label: m.label, value: m.id }))}
+                  value={idSemenSelecionado}
+                  onChange={(val: any) => setIdSemenSelecionado(val)}
+                  title="Selecionar Sêmen"
+                  placeholder="Selecione o Sêmen"
                 />
+              )}
+
+              {/* Óvulo/Embrião — opcional (FIV) */}
+              <Text style={styles.label}>Óvulo / Embrião — opcional (FIV)</Text>
+              {matGeneticoOvulo.length === 0 ? (
+                <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
+                  Nenhum óvulo/embrião cadastrado.
+                </Text>
+              ) : (
+                <SelectBottomSheet
+                  items={matGeneticoOvulo.map(m => ({ label: m.label, value: m.id }))}
+                  value={idOvuloSelecionado}
+                  onChange={(val: any) => setIdOvuloSelecionado(val)}
+                  title="Selecionar Óvulo / Embrião"
+                  placeholder="Selecione o Óvulo / Embrião (opcional)"
+                />
+              )}
             </View>
-            
-            {/* Campo Status (Não Editável) */}
-            <Text style={styles.label}>Status Inicial</Text>
-            <TextInput
-                style={[styles.inputBase, styles.inputDisabled]}
-                value={status}
-                onChangeText={() => {}} // Não editável
-                editable={false} />
-        </View>
-        
-        {/* --- Extras (Material Genético) --- */}
-        <Text style={styles.sectionTitle}>Material Genético (Opcional)</Text>
-
-        <View style={styles.listContainer}>
-          <Text style={styles.label}>Sêmen</Text>
-          {matGeneticoSemen.length === 0 ? (
-            <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
-              Nenhum sêmen cadastrado — sincronize primeiro.
-            </Text>
-          ) : (
-            <SelectBottomSheet
-              items={matGeneticoSemen.map(m => ({ label: m.label, value: m.id }))}
-              value={idSemenSelecionado}
-              onChange={(val: any) => setIdSemenSelecionado(val)}
-              title="Selecionar Sêmen"
-              placeholder="Selecione o Sêmen"
-            />
-          )}
-
-          <Text style={styles.label}>Óvulo / Embrião (FIV)</Text>
-          {matGeneticoOvulo.length === 0 ? (
-            <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
-              Nenhum óvulo/embrião cadastrado — sincronize primeiro.
-            </Text>
-          ) : (
-            <SelectBottomSheet
-              items={matGeneticoOvulo.map(m => ({ label: m.label, value: m.id }))}
-              value={idOvuloSelecionado}
-              onChange={(val: any) => setIdOvuloSelecionado(val)}
-              title="Selecionar Óvulo"
-              placeholder="Selecione o Óvulo (FIV)"
-            />
-          )}
-        </View>
+          </>
+        )}
 
         {/* Footer (Botões Salvar e Cancelar) */}
         <View style={styles.footer}>
@@ -364,23 +365,6 @@ const styles = StyleSheet.create({
         overflow: "visible", 
         zIndex: 100, // ZIndex padrão para o conteúdo
         marginBottom: 8,
-    },
-    
-    // --- Estilos do Dropdown (Padrão) ---
-    dropdownLabel: {
-        fontSize: 14,
-        color: mergedColors.text.secondary,
-        fontWeight: "500",
-        marginBottom: 4,
-    },
-    dropdownStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
-        height: 50,
-    },
-    dropdownContainerStyle: { 
-        borderColor: mergedColors.border,
-        height: 50,
     },
     
     // --- Footer ---
