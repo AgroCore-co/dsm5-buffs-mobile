@@ -136,7 +136,7 @@ test('pull de lotes usa /sync/lotes (flat) em vez do REST /lotes/propriedade/:id
   );
 });
 
-test('pull de material_genetico chama /sync/:id/material-genetico (endpoint paginado)', async () => {
+test('pull de material_genetico chama /sync/:id/material-genetico com limit=200 (paginado)', async () => {
   mockQueryFirst.mockResolvedValue(null);
   mockApiFetch.mockResolvedValue({ data: [
     { idMaterial: 'mat1', idPropriedade: 'p1', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null },
@@ -146,6 +146,8 @@ test('pull de material_genetico chama /sync/:id/material-genetico (endpoint pagi
   await (syncService as any).pullEntity('material_genetico', 'p1');
 
   expect(mockApiFetch).toHaveBeenCalledWith(expect.stringContaining('/p1/material-genetico'));
+  expect(mockApiFetch).toHaveBeenCalledWith(expect.stringContaining('limit=200'));
+  expect(mockApiFetch).not.toHaveBeenCalledWith(expect.stringContaining('limit=500'));
   expect(mockExecute).toHaveBeenCalledWith(
     expect.stringContaining('INSERT INTO material_genetico'),
     expect.any(Array)
@@ -210,6 +212,8 @@ describe('syncService — pullMaterialGenetico', () => {
     const matUrl = capturedUrls.find(u => u.includes('material-genetico'));
     expect(matUrl).toBeDefined();
     expect(matUrl).toMatch(/\/prop1\/material-genetico/);
+    expect(matUrl).toContain('limit=200');
+    expect(matUrl).not.toContain('limit=500');
 
     const insertCalls = mockExecute.mock.calls.filter(c =>
       typeof c[0] === 'string' && c[0].includes('material_genetico')

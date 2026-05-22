@@ -107,6 +107,10 @@ export const ReproducaoAddBottomSheet: React.FC<
       return showToast("Preencha a Tag da Búfala e o Tipo de Inseminação.", true);
     }
 
+    if ((tipoInseminacao === "IA" || tipoInseminacao === "IATF") && !idSemenSelecionado) {
+      return showToast(`${tipoInseminacao} requer a seleção de um Sêmen.`, true);
+    }
+
     let idBufaloMachoUUID: string | null = null; // Armazenará o UUID do macho
     let idBufalaFemeaUUID: string | null = null; // Armazenará o UUID da fêmea
     let idOvuloUsado = idOvuloSelecionado || null;

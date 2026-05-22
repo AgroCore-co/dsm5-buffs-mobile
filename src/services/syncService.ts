@@ -131,18 +131,27 @@ class SyncService {
   }
 
   private async pullMaterialGenetico(propriedadeId: string): Promise<void> {
+    const PAGE_SIZE = 200;
     try {
-      const response: any = await apiFetch(`/sync/${propriedadeId}/material-genetico?page=1&limit=500`);
-      const records: any[] = Array.isArray(response) ? response : response.data ?? [];
-      if (!records.length) return;
-      const now = new Date().toISOString();
-      const normalized = records.map((r: any) => ({
-        ...r,
-        id: r.id ?? r.idMaterial ?? null,
-        propriedadeId,
-        updatedAt: r.updatedAt ?? now,
-      }));
-      await upsertBatch('material_genetico', normalized);
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const response: any = await apiFetch(
+          `/sync/${propriedadeId}/material-genetico?page=${page}&limit=${PAGE_SIZE}`
+        );
+        const records: any[] = Array.isArray(response) ? response : response.data ?? [];
+        totalPages = response?.meta?.totalPages ?? 1;
+        if (!records.length) break;
+        const now = new Date().toISOString();
+        const normalized = records.map((r: any) => ({
+          ...r,
+          id: r.id ?? r.idMaterial ?? null,
+          propriedadeId,
+          updatedAt: r.updatedAt ?? now,
+        }));
+        await upsertBatch('material_genetico', normalized);
+        page++;
+      } while (page <= totalPages);
     } catch (err) {
       console.warn('[sync] pullMaterialGenetico falhou:', err);
     }
