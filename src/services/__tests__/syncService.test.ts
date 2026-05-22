@@ -100,7 +100,7 @@ test('push para ao primeiro CREATE que falha — operações seguintes não são
 
   expect(mockApiFetch).toHaveBeenCalledTimes(1);
   expect(mockMarkSynced).not.toHaveBeenCalled();
-  expect(mockIncrementRetry).toHaveBeenCalledWith('op-1');
+  expect(mockIncrementRetry).toHaveBeenCalledWith('op-1', 'Network error');
 });
 
 test('pull de ordenhas chama /sync/ordenha (não pula mais)', async () => {

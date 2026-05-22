@@ -51,7 +51,7 @@ describe('incrementRetry', () => {
   it('increments retryCount for the given id', async () => {
     (execute as jest.Mock).mockResolvedValue(undefined);
     await incrementRetry('op-1');
-    expect(execute).toHaveBeenCalledWith(expect.stringContaining('retryCount + 1'), ['op-1']);
+    expect(execute).toHaveBeenCalledWith(expect.stringContaining('retryCount + 1'), [null, 'op-1']);
   });
 });
 

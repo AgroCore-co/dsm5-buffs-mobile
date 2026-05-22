@@ -46,10 +46,20 @@ export async function markSynced(id: string): Promise<void> {
   await execute('DELETE FROM pending_operations WHERE id = ?', [id]);
 }
 
-export async function incrementRetry(id: string): Promise<void> {
+export async function incrementRetry(id: string, errorMessage?: string): Promise<void> {
   await execute(
-    'UPDATE pending_operations SET retryCount = retryCount + 1 WHERE id = ?',
-    [id]
+    `UPDATE pending_operations
+     SET retryCount = retryCount + 1,
+         errorMessage = ?,
+         status = CASE WHEN retryCount + 1 >= 5 THEN 'FAILED' ELSE status END
+     WHERE id = ?`,
+    [errorMessage ?? null, id]
+  );
+}
+
+export async function getFailedOperations(): Promise<PendingOperation[]> {
+  return queryAll<PendingOperation>(
+    'SELECT * FROM pending_operations WHERE retryCount >= 5 ORDER BY createdAt ASC'
   );
 }
 
@@ -75,4 +85,5 @@ export const pendingOperationsService = {
   incrementRetry,
   getPendingCount,
   getFailedCount,
+  getFailedOperations,
 };

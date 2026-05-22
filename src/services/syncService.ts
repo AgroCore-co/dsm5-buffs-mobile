@@ -100,8 +100,13 @@ class SyncService {
             await execute(`UPDATE ${op.entity} SET _synced = 1 WHERE ${pk} = ? OR id = ?`, [localId, localId]);
           }
         }
-      } catch {
-        await incrementRetry(op.id);
+      } catch (err: any) {
+        const errMsg = err?.message ?? String(err);
+        console.error(
+          `[sync] push falhou — entity: ${op.entity}, op: ${op.operation}, endpoint: ${op.endpoint}\n` +
+          `Payload: ${op.payload}\nErro: ${errMsg}`
+        );
+        await incrementRetry(op.id, errMsg);
         // CREATE failure may leave dependent ops (CREATE B, UPDATE A) without a server-side id.
         // Stop the queue so order is preserved on the next retry.
         if (op.operation === 'CREATE') break;

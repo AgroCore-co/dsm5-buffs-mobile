@@ -4,7 +4,7 @@ import React, {
 import { AppState } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { syncService } from '../services/syncService';
-import { getPendingCount, getFailedCount } from '../services/pendingOperationsService';
+import { getPendingCount, getFailedCount, getFailedOperations, PendingOperation } from '../services/pendingOperationsService';
 import { usePropriedade } from './PropriedadeContext';
 
 interface SyncContextValue {
@@ -12,6 +12,7 @@ interface SyncContextValue {
   lastSyncedAt: string | null;
   pendingCount: number;
   hasFailed: boolean;
+  failedOperations: PendingOperation[];
   sync: () => void;
 }
 
@@ -20,6 +21,7 @@ const SyncContext = createContext<SyncContextValue>({
   lastSyncedAt: null,
   pendingCount: 0,
   hasFailed: false,
+  failedOperations: [],
   sync: () => {},
 });
 
@@ -32,17 +34,20 @@ export const SyncProvider: React.FC<SyncProviderProps> = ({ children, propriedad
   const { propriedadeSelecionada } = usePropriedade();
   const propriedadeId = propPropId || propriedadeSelecionada;
   
-  const [isSyncing, setIsSyncing]       = useState(false);
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [hasFailed, setHasFailed]       = useState(false);
+  const [isSyncing, setIsSyncing]               = useState(false);
+  const [lastSyncedAt, setLastSyncedAt]         = useState<string | null>(null);
+  const [pendingCount, setPendingCount]         = useState(0);
+  const [hasFailed, setHasFailed]               = useState(false);
+  const [failedOperations, setFailedOperations] = useState<PendingOperation[]>([]);
   const isSyncingRef = useRef(false);
 
   const refreshCounts = useCallback(async () => {
     const pending = await getPendingCount();
     const failed  = await getFailedCount();
+    const failedOps = failed > 0 ? await getFailedOperations() : [];
     setPendingCount(pending);
     setHasFailed(failed > 0);
+    setFailedOperations(failedOps);
   }, []);
 
   const sync = useCallback(async () => {
@@ -84,7 +89,7 @@ export const SyncProvider: React.FC<SyncProviderProps> = ({ children, propriedad
   }, [sync]);
 
   return (
-    <SyncContext.Provider value={{ isSyncing, lastSyncedAt, pendingCount, hasFailed, sync }}>
+    <SyncContext.Provider value={{ isSyncing, lastSyncedAt, pendingCount, hasFailed, failedOperations, sync }}>
       {children}
     </SyncContext.Provider>
   );

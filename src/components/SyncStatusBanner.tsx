@@ -1,10 +1,24 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSyncStatus } from '../context/SyncContext';
 import { colors } from '../styles/colors';
 
 export function SyncStatusBanner() {
-  const { isSyncing, pendingCount, hasFailed, sync: triggerSync } = useSyncStatus();
+  const { isSyncing, pendingCount, hasFailed, failedOperations, sync: triggerSync } = useSyncStatus();
+
+  const showFailedDetails = () => {
+    if (!failedOperations.length) {
+      Alert.alert('Falhas de Sync', 'Nenhum detalhe disponível.');
+      return;
+    }
+    const details = failedOperations.map((op, i) =>
+      `${i + 1}. [${op.entity}] ${op.operation} → ${op.endpoint}\n   Erro: ${op.errorMessage ?? 'desconhecido'}`
+    ).join('\n\n');
+    Alert.alert('Operações com Falha', details, [
+      { text: 'Tentar novamente', onPress: triggerSync },
+      { text: 'Fechar', style: 'cancel' },
+    ]);
+  };
 
   const shimmer = useRef(new Animated.Value(0)).current;
 
@@ -30,7 +44,7 @@ export function SyncStatusBanner() {
 
   let message = '';
   if (isSyncing) message = 'Sincronizando dados…';
-  else if (hasFailed) message = 'Operações com falha. Toque para tentar novamente.';
+  else if (hasFailed) message = `${failedOperations.length} operação(ões) com falha. Toque para detalhes.`;
   else if (pendingCount > 0) message = `${pendingCount} operação(ões) aguardando sync.`;
 
   const barLeft = shimmer.interpolate({ inputRange: [0, 1], outputRange: ['-35%', '100%'] });
@@ -38,7 +52,9 @@ export function SyncStatusBanner() {
   return (
     <View style={[styles.wrapper, { backgroundColor: bgColor }]}>
       <View style={styles.row}>
-        <Text style={[styles.text, { color: textColor }]}>{message}</Text>
+        <TouchableOpacity onPress={hasFailed ? showFailedDetails : undefined} disabled={!hasFailed} style={{ flex: 1 }}>
+          <Text style={[styles.text, { color: textColor }]}>{message}</Text>
+        </TouchableOpacity>
         {!isSyncing && pendingCount > 0 && (
           <TouchableOpacity onPress={triggerSync} style={styles.button}>
             <Text style={[styles.buttonText, { color: textColor }]}>Sincronizar agora</Text>

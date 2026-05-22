@@ -60,6 +60,6 @@ test('incrementRetry atualiza retryCount via SQL', async () => {
   await incrementRetry('op-id-2');
   expect(mockExecute).toHaveBeenCalledWith(
     expect.stringContaining('retryCount + 1'),
-    ['op-id-2']
+    [null, 'op-id-2']
   );
 });
