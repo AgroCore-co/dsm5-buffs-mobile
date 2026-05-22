@@ -37,3 +37,19 @@ describe('schema — ordenhas', () => {
     expect(hasOrdenhas).toBe(true);
   });
 });
+
+describe('schema — producao_diaria', () => {
+  test('producao_diaria está em CREATE_TABLES_SQL', () => {
+    const hasTable = CREATE_TABLES_SQL.some(sql =>
+      /CREATE TABLE IF NOT EXISTS producao_diaria/.test(sql)
+    );
+    expect(hasTable).toBe(true);
+  });
+
+  test('CREATE_TABLES_SQL inclui índice em producao_diaria(propriedadeId)', () => {
+    const hasIndex = CREATE_TABLES_SQL.some(sql =>
+      /CREATE INDEX IF NOT EXISTS idx_producao_prop ON producao_diaria/.test(sql)
+    );
+    expect(hasIndex).toBe(true);
+  });
+});

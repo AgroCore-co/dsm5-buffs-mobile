@@ -228,6 +228,15 @@ export const CREATE_TABLES_SQL: string[] = [
     _raw          TEXT NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS idx_industrias_prop ON industrias(propriedadeId)`,
+  `CREATE TABLE IF NOT EXISTS producao_diaria (
+    id            TEXT PRIMARY KEY,
+    propriedadeId TEXT NOT NULL,
+    quantidade    REAL NOT NULL,
+    dtRegistro    TEXT NOT NULL,
+    observacao    TEXT,
+    createdAt     TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_producao_prop ON producao_diaria(propriedadeId)`,
   `CREATE TABLE IF NOT EXISTS sync_meta (
     entity        TEXT NOT NULL,
     propriedadeId TEXT NOT NULL,
