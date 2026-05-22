@@ -76,14 +76,13 @@ export const ReproducaoAddBottomSheet: React.FC<
   useEffect(() => {
     if (!propriedadeSelecionada) return;
     getMaterialGenetico(propriedadeSelecionada).then((mats) => {
-      const tipoOvulo = (t: string) => t.includes('vulo'); // óvulo / ovulo
-      const tipoSemen = (t: string) =>
-        t.includes('men') || t.includes('êmen') || t === '';  // sêmen / semen / sem tipo
-      const ovulos = mats.filter(m => tipoOvulo(m.tipo.toLowerCase()));
-      // materiais que não são óvulo vão para sêmen (inclui sem tipo)
-      const semen = mats.filter(m => !tipoOvulo(m.tipo.toLowerCase()));
+      const tipoFiv = (t: string) =>
+        t.includes('vulo') || t.includes('embri'); // óvulo / ovulo / embrião / embriao
+      const fiv = mats.filter(m => tipoFiv(m.tipo.toLowerCase()));
+      // tudo que não é óvulo/embrião vai para sêmen (inclui sem tipo)
+      const semen = mats.filter(m => !tipoFiv(m.tipo.toLowerCase()));
       setMatGeneticoSemen(semen);
-      setMatGeneticoOvulo(ovulos);
+      setMatGeneticoOvulo(fiv);
     }).catch(() => {});
   }, [propriedadeSelecionada]);
 
@@ -288,10 +287,10 @@ export const ReproducaoAddBottomSheet: React.FC<
             />
           )}
 
-          <Text style={styles.label}>Óvulo (FIV)</Text>
+          <Text style={styles.label}>Óvulo / Embrião (FIV)</Text>
           {matGeneticoOvulo.length === 0 ? (
             <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
-              Nenhum óvulo cadastrado — sincronize primeiro.
+              Nenhum óvulo/embrião cadastrado — sincronize primeiro.
             </Text>
           ) : (
             <SelectBottomSheet
