@@ -49,10 +49,11 @@ export const ReproducaoAddBottomSheet: React.FC<
   // Estado do Formulário
   const [tagBufalo, setTagBufalo] = useState("");
   const [tagBufala, setTagBufala] = useState("");
-  const [matGeneticoSemen, setMatGeneticoSemen] = useState<{ id: string; label: string }[]>([]);
-  const [matGeneticoOvulo, setMatGeneticoOvulo] = useState<{ id: string; label: string }[]>([]);
+  const [matGeneticoSemen, setMatGeneticoSemen] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
+  const [matGeneticoOvulo, setMatGeneticoOvulo] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
   const [idSemenSelecionado, setIdSemenSelecionado] = useState<string | null>(null);
   const [idOvuloSelecionado, setIdOvuloSelecionado] = useState<string | null>(null);
+  const [idDoadora, setIdDoadora] = useState<string | null>(null);
   const [tipoInseminacao, setTipoInseminacao] = useState<string | null>(null);
   
   // O status padrão é "Em andamento" e não é alterável no ADD
@@ -161,19 +162,18 @@ export const ReproducaoAddBottomSheet: React.FC<
         }
 
         // --- 3. Preparação do Payload Final ---
+        // Para TE: idSemen = ID do embrião, idDoadora = id_bufalo_origem (búfala doadora)
+        // Para IA/IATF: idSemen = ID do sêmen, idDoadora = null
+        // Para Monta Natural: idBufalo = macho, sem material genético
         const payload = {
             idPropriedade: propriedadeSelecionada,
-            // 🎯 ENVIANDO OS UUIDs (corrigindo o erro 1 e 2)
-            idBufalo: idBufaloMachoUUID,      // UUID do Touro (se Monta Natural)
-            idBufala: idBufalaFemeaUUID,      // UUID da Búfala
-            
-            idSemen: idSemenUsado,            // ID do Sêmen
-            idDoadora: idOvuloUsado,          // ID do Óvulo (assumindo que id_doadora = id_ovulo na API)
-            
-            // 🎯 ENVIANDO O VALOR CORRETO (corrigindo o erro 3)
-            tipoInseminacao: tipoInseminacao, 
+            idBufalo: idBufaloMachoUUID,
+            idBufala: idBufalaFemeaUUID,
+            idSemen: tipoInseminacao === 'TE' ? idOvuloSelecionado : idSemenUsado,
+            idDoadora: tipoInseminacao === 'TE' ? idDoadora : null,
+            tipoInseminacao: tipoInseminacao,
             status: status,
-            dtEvento: new Date().toISOString().split("T")[0], 
+            dtEvento: new Date().toISOString().split("T")[0],
         };
         // ... (restante da chamada da API)
         await createReproducao(payload);
@@ -228,6 +228,7 @@ export const ReproducaoAddBottomSheet: React.FC<
               setTagBufalo('');
               setIdSemenSelecionado(null);
               setIdOvuloSelecionado(null);
+              setIdDoadora(null);
             }}
             title="Selecione o Tipo de Inseminação"
             placeholder="Selecione o Tipo de Inseminação"
@@ -304,7 +305,11 @@ export const ReproducaoAddBottomSheet: React.FC<
                 <SelectBottomSheet
                   items={matGeneticoOvulo.map(m => ({ label: m.label, value: m.id }))}
                   value={idOvuloSelecionado}
-                  onChange={(val: any) => setIdOvuloSelecionado(val)}
+                  onChange={(val: any) => {
+                    setIdOvuloSelecionado(val);
+                    const mat = matGeneticoOvulo.find(m => m.id === val);
+                    setIdDoadora(mat?.idBufalOrigem ?? null);
+                  }}
                   title="Selecionar Óvulo / Embrião"
                   placeholder="Selecione o Óvulo / Embrião"
                 />
