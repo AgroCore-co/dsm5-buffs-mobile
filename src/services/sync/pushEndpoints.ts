@@ -69,13 +69,16 @@ function shapeSanitarioCreate(p: any) {
 }
 
 function shapeReproducaoCreate(p: any) {
+  const isTE = p.tipoInseminacao === 'TE';
+  const isMontaNatural = p.tipoInseminacao === 'Monta Natural';
   return cleanStrict({
     id: p.id,
     idPropriedade: p.idPropriedade,
-    idSemen: p.idSemen,
-    idDoadora: p.idDoadora,
-    idBufala: p.idBufala,
-    idBufalo: p.idBufalo,
+    // TE usa doadora; IA/IATF usam sêmen; Monta Natural usa idBufalo
+    idDoadora: isTE ? (p.idDoadora ?? undefined) : undefined,
+    idSemen:   !isTE && !isMontaNatural ? (p.idSemen ?? undefined) : undefined,
+    idBufalo:  isMontaNatural ? (p.idBufalo ?? undefined) : undefined,
+    idBufala:  p.idBufala,
     tipoInseminacao: p.tipoInseminacao,
     dtEvento: p.dtEvento,
     status: p.status,

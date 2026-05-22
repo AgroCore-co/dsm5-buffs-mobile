@@ -61,6 +61,7 @@ export const ReproducaoAddBottomSheet: React.FC<
   const tipoItems = useMemo(() => [
     { label: "IATF", value: "IATF" },
     { label: "IA (Inseminação Artificial)", value: "IA" },
+    { label: "TE (Transferência de Embrião)", value: "TE" },
     { label: "Monta Natural", value: "Monta Natural" },
   ], []);
 
@@ -105,6 +106,9 @@ export const ReproducaoAddBottomSheet: React.FC<
 
     if ((tipoInseminacao === "IA" || tipoInseminacao === "IATF") && !idSemenSelecionado) {
       return showToast(`${tipoInseminacao} requer a seleção de um Sêmen.`, true);
+    }
+    if (tipoInseminacao === "TE" && !idOvuloSelecionado) {
+      return showToast("TE requer a seleção de um Óvulo / Embrião (doadora).", true);
     }
 
     let idBufaloMachoUUID: string | null = null; // Armazenará o UUID do macho
@@ -259,15 +263,11 @@ export const ReproducaoAddBottomSheet: React.FC<
           />
         </View>
 
-        {/* --- Material Genético: só para IA e IATF --- */}
+        {/* --- Material Genético: IA/IATF = Sêmen obrigatório --- */}
         {(tipoInseminacao === "IA" || tipoInseminacao === "IATF") && (
           <>
-            <Text style={styles.sectionTitle}>
-              Material Genético
-            </Text>
-
+            <Text style={styles.sectionTitle}>Material Genético</Text>
             <View style={styles.listContainer}>
-              {/* Sêmen — obrigatório */}
               <Text style={styles.label}>
                 Sêmen <Text style={{ color: mergedColors.red.base }}>*</Text>
               </Text>
@@ -284,12 +284,21 @@ export const ReproducaoAddBottomSheet: React.FC<
                   placeholder="Selecione o Sêmen"
                 />
               )}
+            </View>
+          </>
+        )}
 
-              {/* Óvulo/Embrião — opcional (FIV) */}
-              <Text style={styles.label}>Óvulo / Embrião — opcional (FIV)</Text>
+        {/* --- Material Genético: TE = Óvulo/Embrião obrigatório --- */}
+        {tipoInseminacao === "TE" && (
+          <>
+            <Text style={styles.sectionTitle}>Material Genético</Text>
+            <View style={styles.listContainer}>
+              <Text style={styles.label}>
+                Óvulo / Embrião (Doadora) <Text style={{ color: mergedColors.red.base }}>*</Text>
+              </Text>
               {matGeneticoOvulo.length === 0 ? (
                 <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
-                  Nenhum óvulo/embrião cadastrado.
+                  Nenhum óvulo/embrião cadastrado — sincronize primeiro.
                 </Text>
               ) : (
                 <SelectBottomSheet
@@ -297,7 +306,7 @@ export const ReproducaoAddBottomSheet: React.FC<
                   value={idOvuloSelecionado}
                   onChange={(val: any) => setIdOvuloSelecionado(val)}
                   title="Selecionar Óvulo / Embrião"
-                  placeholder="Selecione o Óvulo / Embrião (opcional)"
+                  placeholder="Selecione o Óvulo / Embrião"
                 />
               )}
             </View>
