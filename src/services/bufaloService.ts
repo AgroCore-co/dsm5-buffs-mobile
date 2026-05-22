@@ -267,8 +267,21 @@ export const moverBufaloDeGrupo = async (
   await enqueue('bufalos', 'UPDATE', { id: idBufalo, ...payload });
 };
 
+export const getBufaloById = async (
+  uuid: string,
+): Promise<{ brinco: string; nome: string } | null> => {
+  const row = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE id = ?`,
+    [uuid],
+  );
+  if (!row) return null;
+  const b = JSON.parse(row._raw);
+  return { brinco: b.brinco ?? '-', nome: b.nome ?? 'Não informado' };
+};
+
 export default {
   getGrupos,
+  getBufaloById,
   moverBufaloDeGrupo,
   getBufalos,
   getBufaloDetalhes,

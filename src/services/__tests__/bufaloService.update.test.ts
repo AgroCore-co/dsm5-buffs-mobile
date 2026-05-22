@@ -1,5 +1,5 @@
 // src/services/__tests__/bufaloService.update.test.ts
-import { updateBufalo } from '../bufaloService';
+import { updateBufalo, getBufaloById } from '../bufaloService';
 import { queryFirst, execute } from '../../database/db';
 import { enqueue } from '../pendingOperationsService';
 
@@ -47,5 +47,33 @@ describe('updateBufalo', () => {
     await updateBufalo('b1', { id_raca: 'raca-abc', brinco: '001' });
     // índice 4 = idRaca
     expect(mockExecute.mock.calls[0][1][4]).toBe('raca-abc');
+  });
+});
+
+describe('getBufaloById', () => {
+  it('retorna brinco e nome quando bufalo existe', async () => {
+    mockQueryFirst.mockResolvedValueOnce({
+      _raw: JSON.stringify({ brinco: 'A001', nome: 'Estrela' }),
+    });
+    const result = await getBufaloById('uuid-1');
+    expect(result).toEqual({ brinco: 'A001', nome: 'Estrela' });
+    expect(mockQueryFirst).toHaveBeenCalledWith(
+      expect.stringContaining('SELECT _raw FROM bufalos WHERE id = ?'),
+      ['uuid-1'],
+    );
+  });
+
+  it('retorna null quando bufalo não existe', async () => {
+    mockQueryFirst.mockResolvedValueOnce(null);
+    const result = await getBufaloById('uuid-nao-existe');
+    expect(result).toBeNull();
+  });
+
+  it('usa nome "Não informado" quando bufalo não tem nome', async () => {
+    mockQueryFirst.mockResolvedValueOnce({
+      _raw: JSON.stringify({ brinco: 'B002' }),
+    });
+    const result = await getBufaloById('uuid-2');
+    expect(result).toEqual({ brinco: 'B002', nome: 'Não informado' });
   });
 });
