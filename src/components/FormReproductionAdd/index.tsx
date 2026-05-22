@@ -107,11 +107,14 @@ export const ReproducaoAddBottomSheet: React.FC<
     if ((tipoInseminacao === "IA" || tipoInseminacao === "IATF") && !idSemenSelecionado) {
       return showToast(`${tipoInseminacao} requer a seleção de um Sêmen.`, true);
     }
-    if (tipoInseminacao === "TE" && !idSemenSelecionado) {
-      return showToast("TE requer a seleção de um Sêmen.", true);
-    }
     if (tipoInseminacao === "TE" && !idOvuloSelecionado) {
-      return showToast("TE requer a seleção de um Óvulo / Embrião (doadora).", true);
+      return showToast("TE requer a seleção de um Embrião.", true);
+    }
+    const embryoMat = tipoInseminacao === "TE"
+      ? matGeneticoOvulo.find(m => m.id === idOvuloSelecionado)
+      : null;
+    if (tipoInseminacao === "TE" && !embryoMat?.idBufalOrigem) {
+      return showToast("O embrião selecionado não possui búfala doadora cadastrada (idBufaloOrigem).", true);
     }
 
     let idBufaloMachoUUID: string | null = null; // Armazenará o UUID do macho
@@ -164,15 +167,15 @@ export const ReproducaoAddBottomSheet: React.FC<
         }
 
         // --- 3. Preparação do Payload Final ---
-        // IA/IATF: idSemen obrigatório, sem idDoadora
-        // TE: idSemen (sêmen) + idDoadora (material de óvulo/embrião) ambos obrigatórios
+        // IA/IATF: idSemen (material sêmen), sem idDoadora
+        // TE: idSemen (material embrião) + idDoadora (idBufaloOrigem = búfala doadora)
         // Monta Natural: idBufalo, sem material genético
         const payload = {
             idPropriedade: propriedadeSelecionada,
             idBufalo: idBufaloMachoUUID,
             idBufala: idBufalaFemeaUUID,
-            idSemen: idSemenUsado,
-            idDoadora: tipoInseminacao === 'TE' ? (idOvuloSelecionado ?? null) : null,
+            idSemen: tipoInseminacao === 'TE' ? (idOvuloSelecionado ?? null) : idSemenUsado,
+            idDoadora: tipoInseminacao === 'TE' ? (embryoMat?.idBufalOrigem ?? null) : null,
             tipoInseminacao: tipoInseminacao,
             status: status,
             dtEvento: new Date().toISOString().split("T")[0],
@@ -290,42 +293,25 @@ export const ReproducaoAddBottomSheet: React.FC<
           </>
         )}
 
-        {/* --- Material Genético: TE = Sêmen + Óvulo/Embrião (doadora) obrigatórios --- */}
+        {/* --- Material Genético: TE = Embrião obrigatório (idBufaloOrigem vira idDoadora) --- */}
         {tipoInseminacao === "TE" && (
           <>
             <Text style={styles.sectionTitle}>Material Genético</Text>
             <View style={styles.listContainer}>
               <Text style={styles.label}>
-                Sêmen <Text style={{ color: mergedColors.red.base }}>*</Text>
-              </Text>
-              {matGeneticoSemen.length === 0 ? (
-                <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
-                  Nenhum sêmen cadastrado — sincronize primeiro.
-                </Text>
-              ) : (
-                <SelectBottomSheet
-                  items={matGeneticoSemen.map(m => ({ label: m.label, value: m.id }))}
-                  value={idSemenSelecionado}
-                  onChange={(val: any) => setIdSemenSelecionado(val)}
-                  title="Selecionar Sêmen"
-                  placeholder="Selecione o Sêmen"
-                />
-              )}
-
-              <Text style={styles.label}>
-                Óvulo / Embrião (Doadora) <Text style={{ color: mergedColors.red.base }}>*</Text>
+                Embrião <Text style={{ color: mergedColors.red.base }}>*</Text>
               </Text>
               {matGeneticoOvulo.length === 0 ? (
                 <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
-                  Nenhum óvulo/embrião cadastrado — sincronize primeiro.
+                  Nenhum embrião cadastrado — sincronize primeiro.
                 </Text>
               ) : (
                 <SelectBottomSheet
                   items={matGeneticoOvulo.map(m => ({ label: m.label, value: m.id }))}
                   value={idOvuloSelecionado}
                   onChange={(val: any) => setIdOvuloSelecionado(val)}
-                  title="Selecionar Óvulo / Embrião"
-                  placeholder="Selecione o Óvulo / Embrião"
+                  title="Selecionar Embrião"
+                  placeholder="Selecione o Embrião"
                 />
               )}
             </View>
