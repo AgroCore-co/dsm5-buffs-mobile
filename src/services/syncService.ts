@@ -149,6 +149,12 @@ class SyncService {
           propriedadeId,
           updatedAt: r.updatedAt ?? now,
         }));
+        if (__DEV__) {
+          console.log(
+            `[sync] pullMaterialGenetico p${page}/${totalPages}: ${records.length} registros. ` +
+            `Sample: id="${normalized[0]?.id?.slice(0, 8)}", tipo="${normalized[0]?.tipo}", prop="${normalized[0]?.propriedadeId?.slice(0, 8)}"`
+          );
+        }
         await upsertBatch('material_genetico', normalized);
         page++;
       } while (page <= totalPages);

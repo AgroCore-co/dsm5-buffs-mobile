@@ -10,6 +10,24 @@ export const getMaterialGenetico = async (propriedadeId: string) => {
     `SELECT _raw FROM material_genetico WHERE propriedadeId = ?`,
     [propriedadeId],
   );
+
+  if (__DEV__ && rows.length === 0) {
+    const all = await queryAll<{ id: string; propriedadeId: string }>(
+      `SELECT id, propriedadeId FROM material_genetico LIMIT 20`
+    );
+    console.warn(
+      `[getMaterialGenetico] 0 rows para propriedadeId="${propriedadeId}". ` +
+      `Total na tabela: ${all.length}. IDs/props: ` +
+      JSON.stringify(all.map(r => ({ id: r.id?.slice(0, 8), prop: r.propriedadeId?.slice(0, 8) })))
+    );
+  } else if (__DEV__) {
+    const sample = JSON.parse(rows[0]._raw);
+    console.log(
+      `[getMaterialGenetico] ${rows.length} materiais encontrados. ` +
+      `Sample tipo="${sample.tipo}", fornecedor="${sample.fornecedor}", idMaterial="${sample.idMaterial ?? sample.id}"`
+    );
+  }
+
   return rows.map(r => {
     const m = JSON.parse(r._raw);
     const id = m.idMaterial ?? m.id;

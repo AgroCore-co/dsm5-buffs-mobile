@@ -76,8 +76,14 @@ export const ReproducaoAddBottomSheet: React.FC<
   useEffect(() => {
     if (!propriedadeSelecionada) return;
     getMaterialGenetico(propriedadeSelecionada).then((mats) => {
-      setMatGeneticoSemen(mats.filter(m => m.tipo.toLowerCase().includes('sêmen') || m.tipo.toLowerCase().includes('semen') || m.tipo === ''));
-      setMatGeneticoOvulo(mats.filter(m => m.tipo.toLowerCase().includes('óvulo') || m.tipo.toLowerCase().includes('ovulo')));
+      const tipoOvulo = (t: string) => t.includes('vulo'); // óvulo / ovulo
+      const tipoSemen = (t: string) =>
+        t.includes('men') || t.includes('êmen') || t === '';  // sêmen / semen / sem tipo
+      const ovulos = mats.filter(m => tipoOvulo(m.tipo.toLowerCase()));
+      // materiais que não são óvulo vão para sêmen (inclui sem tipo)
+      const semen = mats.filter(m => !tipoOvulo(m.tipo.toLowerCase()));
+      setMatGeneticoSemen(semen);
+      setMatGeneticoOvulo(ovulos);
     }).catch(() => {});
   }, [propriedadeSelecionada]);
 
