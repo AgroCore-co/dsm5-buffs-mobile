@@ -33,7 +33,7 @@ export const getMaterialGenetico = async (propriedadeId: string) => {
     const id = m.idMaterial ?? m.id;
     const label = [m.fornecedor, m.tipo].filter(Boolean).join(' — ') || id;
     // id_bufalo_origem = búfala doadora do óvulo, necessário para TE como idDoadora
-    const idBufalOrigem = m.id_bufalo_origem ?? m.idBufalOrigem ?? m.idBufaloOrigem ?? null;
+    const idBufalOrigem = m.idBufaloOrigem ?? m.id_bufalo_origem ?? null;
     return { id, label, tipo: m.tipo ?? '', fornecedor: m.fornecedor ?? '', idBufalOrigem };
   });
 };
