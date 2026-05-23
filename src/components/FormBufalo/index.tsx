@@ -56,7 +56,7 @@ export function FormBufalo({ onSuccess }: FormBufaloProps) {
       // Validar pai
       let idPai: number | null = null;
       if (brincoPai) {
-        const { raw } = await bufaloService.getBufalos(propriedadeSelecionada ?? undefined);
+        const { bufalos: raw } = await bufaloService.getBufalos(propriedadeSelecionada!);
         const paiEncontrado = raw.find(
           (b: any) => b.brinco === brincoPai && b.sexo === "M"
         );
@@ -70,7 +70,7 @@ export function FormBufalo({ onSuccess }: FormBufaloProps) {
       // Validar mãe
       let idMae: number | null = null;
       if (brincoMae) {
-        const { raw } = await bufaloService.getBufalos(propriedadeSelecionada ?? undefined);
+        const { bufalos: raw } = await bufaloService.getBufalos(propriedadeSelecionada!);
         const maeEncontrada = raw.find(
           (b: any) => b.brinco === brincoMae && b.sexo === "F"
         );

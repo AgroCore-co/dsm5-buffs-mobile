@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useDimensions } from '../../utils/useDimensions';
+import { SyncStatusBanner } from '../../components/SyncStatusBanner';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         },
       ]}
     >
+      <SyncStatusBanner />
       {children}
     </View>
   );

@@ -109,21 +109,22 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
     }, [onClose]);
 
     useEffect(() => {
-            const fetchRacas = async () => {
+        const fetchRacas = async () => {
             try {
-                // Verifica se a estrutura de raças retornada é compatível
                 const racasApi = await bufaloService.getRacas();
-                const mappedRacas = racasApi.map((r: { nome: any; idRaca: any; }) => ({ 
-                    label: r.nome, 
-                    value: r.idRaca 
+                const mappedRacas = racasApi.map((r: any) => ({
+                    label: r.nome,
+                    value: r.idRaca ?? r.id,
                 }));
                 setRacas(mappedRacas);
             } catch (err) {
                 console.error("Erro ao buscar raças:", err);
+            } finally {
+                setLoading(false);
             }
-            };
-            fetchRacas();
-        }, []);
+        };
+        fetchRacas();
+    }, []);
 
     const showToast = (message: string, isError: boolean = false) => {
         if (Platform.OS === 'android') {

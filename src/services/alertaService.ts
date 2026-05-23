@@ -1,4 +1,5 @@
-import { apiFetch } from "../lib/apiClient";
+import { queryAll, queryFirst, execute } from "../database/db";
+import { enqueue } from "./pendingOperationsService";
 
 export type Filtro = "TODOS" | "PENDENTES";
 
@@ -18,70 +19,67 @@ export type Alerta = {
   idPropriedade: string;
   created_at: string;
   updated_at: string;
-
-  // 🔹 Dados agregados do búfalo (vindos do backend)
   nome_animal: string;
   brinco_animal?: string | null;
 };
 
-/**
- * Busca alertas por propriedade
- */
 export const getAlertasPorPropriedade = async (
   propriedadeId: string | null,
   filtro: Filtro = "PENDENTES",
-  page: number = 1,
-  limit: number = 10
+  page = 1,
+  limit = 10,
 ) => {
-  try {
-    const incluirVistos = filtro !== "PENDENTES";
+  if (!propriedadeId) {
+    return { alertas: [], meta: { page: 1, limit, total: 0, totalPages: 1 } };
+  }
 
-    const result = await apiFetch(
-      `/alertas/propriedade/${propriedadeId}?incluirVistos=${incluirVistos}&page=${page}&limit=${limit}`
-    );
+  const offset = (page - 1) * limit;
+  const vistoFilter = filtro === "PENDENTES" ? `AND json_extract(_raw, '$.visto') = 0` : "";
 
-    const alertas: Alerta[] = result.data
-      .map((a: any) => ({
+  const rows = await queryAll<{ _raw: string }>(
+    `SELECT _raw FROM alertas WHERE propriedadeId = ? ${vistoFilter} ORDER BY updatedAt DESC LIMIT ? OFFSET ?`,
+    [propriedadeId, limit, offset],
+  );
+
+  const countRow = await queryFirst<{ total: number }>(
+    `SELECT COUNT(*) as total FROM alertas WHERE propriedadeId = ? ${vistoFilter}`,
+    [propriedadeId],
+  );
+  const total = countRow?.total ?? 0;
+
+  const alertas: Alerta[] = rows
+    .map((r) => {
+      const a = JSON.parse(r._raw);
+      return {
         ...a,
         prioridade: a.prioridade?.toUpperCase(),
         nome_animal: a.bufalo?.nome ?? "Sem nome",
         brinco_animal: a.bufalo?.brinco ?? null,
-      }))
-      // 🔹 não vistos primeiro
-      .sort((a: Alerta, b: Alerta) => Number(a.visto) - Number(b.visto));
+      };
+    })
+    .sort((a, b) => Number(a.visto) - Number(b.visto));
 
-    return {
-      alertas,
-      meta: result.meta,
-    };
-  } catch (err) {
-    console.error("Erro ao buscar alertas:", err);
-    return {
-      alertas: [],
-      meta: {
-        page: 1,
-        limit,
-        total: 0,
-        totalPages: 1,
-      },
-    };
-  }
+  return {
+    alertas,
+    meta: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+  };
 };
 
-/**
- * Marca alerta como visto
- */
 export const marcarAlertaVisto = async (id_alerta: string) => {
-  try {
-    return await apiFetch(
-      `/alertas/${id_alerta}/visto?status=true`,
-      { method: "PATCH" }
+  const now = new Date().toISOString();
+
+  const existing = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM alertas WHERE id = ?`,
+    [id_alerta],
+  );
+
+  if (existing) {
+    const updated = { ...JSON.parse(existing._raw), visto: true, updatedAt: now };
+    await execute(
+      `UPDATE alertas SET _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
+      [JSON.stringify(updated), now, id_alerta],
     );
-  } catch (err) {
-    console.error(
-      `Erro ao marcar alerta ${id_alerta} como visto:`,
-      err
-    );
-    throw err;
   }
+
+  await enqueue("alertas", "UPDATE", { id: id_alerta, visto: true });
 };

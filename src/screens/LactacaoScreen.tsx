@@ -27,6 +27,7 @@ import BuffaloLoader from "../components/BufaloLoader";
 
 export interface AnimalLac {
   id: string;
+  idBufala?: string;
   brinco: string;
   nome: string;
   diasEmLactacao: number;
@@ -81,7 +82,8 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
     );
 
     const animaisFormatados: AnimalLac[] = ciclos.map((c: any) => ({
-      id: c.idBufala,
+      id: c.idCicloLactacao,
+      idBufala: c.idBufala,
       nome: c.nome,
       brinco: c.brinco,
       status: c.status,
@@ -294,7 +296,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
         <EstoqueAddBottomSheet
           propriedadeId={propriedadeSelecionada!}
           onClose={() => setIsAddingEstoque(false)}
-          onSuccess={fetchCiclos}
+          onSuccess={fetchProducaoAtual}
         />
       )}
 
@@ -310,7 +312,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
         <LactacaoAddBottomSheet
           animais={[
             {
-              id_bufala: selectedBufala.id,
+              id_bufala: selectedBufala.idBufala ?? selectedBufala.id,
               brinco: selectedBufala.brinco,
               id_ciclo_lactacao: selectedBufala.idCicloLactacao || "",
             },

@@ -38,6 +38,14 @@ export const MapLeaflet = React.forwardRef<WebView, MapLeafletProps>(({ piquetes
           <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
           <style>
             html, body, #map { height: 100%; margin: 0; }
+            
+            .piquete-label {
+              color: #fff;
+              font-weight: 800;
+              font-size: 9px;
+              text-align: center;
+              text-shadow: 3px 3px 3px rgba(0,0,0,0.8);
+            }
           </style>
         </head>
         <body>
@@ -45,14 +53,52 @@ export const MapLeaflet = React.forwardRef<WebView, MapLeafletProps>(({ piquetes
 
           <script>
             const map = L.map('map').setView([-15, -48], 4);
+            const ZOOM_MOSTRAR_PIQUETES = 16;
             let previewPolyline = null;
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
             const piquetes = [${piquetesJS}];
 
-            piquetes.forEach(p => {
-              L.polygon(p.coords, { color: p.color }).addTo(map);
+            const labelMarkers = [];
+
+            let labelsCreated = false;
+
+            function updateLabelsVisibility() {
+              const zoom = map.getZoom();
+
+              if (zoom >= ZOOM_MOSTRAR_PIQUETES) {
+                if (!labelsCreated) {
+                  labelMarkers.forEach(label => label.addTo(map));
+                  labelsCreated = true;
+                }
+              } else {
+                if (labelsCreated) {
+                  labelMarkers.forEach(label => map.removeLayer(label));
+                  labelsCreated = false;
+                }
+              }
+            }
+
+            piquetes.forEach((p, index) => {
+              const polygon = L.polygon(p.coords, { color: p.color }).addTo(map);
+
+              const match = (p.nome || '').match(/\d+/);
+              const shortName = p.nome
+                ? p.nome.replace(/(\d+)/, '<br/>$1')
+                : 'P' + (index + 1);
+
+              const center = getPolygonCenter(p.coords);
+
+              const label = L.marker(center, {
+                icon: L.divIcon({
+                  className: 'piquete-label',
+                  html: shortName,
+                  iconSize: [40, 30]
+                })
+              });
+
+              labelMarkers.push(label);
             });
 
             map.whenReady(function() {
@@ -149,6 +195,23 @@ export const MapLeaflet = React.forwardRef<WebView, MapLeafletProps>(({ piquetes
                 }
               }));
             });
+
+            function getPolygonCenter(coords) {
+              let latSum = 0;
+              let lngSum = 0;
+
+              coords.forEach(c => {
+                latSum += c[0];
+                lngSum += c[1];
+              });
+
+              return [
+                latSum / coords.length,
+                lngSum / coords.length
+              ];
+            }
+            updateLabelsVisibility();
+            map.on('zoomend', updateLabelsVisibility);
           </script>
         </body>
       </html>

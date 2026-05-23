@@ -74,3 +74,11 @@ yarn-error.log
 !.yarn/sdks
 !.yarn/versions
 .env
+# Ferramentas de IA e contexto interno
+.claude/
+
+# Docs internos (issues, specs, planos de IA)
+docs/superpowers/
+docs/sql/
+docs/issue-*.md
+docs/spec-*.md

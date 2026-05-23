@@ -5,7 +5,9 @@ import { PortalProvider } from '@gorhom/portal';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 // App.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { runMigrations } from './src/database/migrations';
+import { SyncProvider } from './src/context/SyncContext';
 import { Platform, StatusBar, useColorScheme, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -24,7 +26,7 @@ import { LactacaoScreen } from './src/screens/LactacaoScreen';
 import { ReproducaoScreen } from './src/screens/ReproducaoScreen';
 import { PiquetesScreen } from './src/screens/PiquetesScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
-import { PropriedadeProvider } from './src/context/PropriedadeContext';
+import { PropriedadeProvider, usePropriedade } from './src/context/PropriedadeContext';
 import { AnimalDetailScreen } from './src/screens/AnimalDetailScreen';
 import { NotificacoesScreen } from './src/screens/NotificacoesScreen';
 
@@ -37,6 +39,8 @@ import GlobeIcon from './src/icons/sex';
 import Fance from './src/icons/fance';
 import { NfcScannerScreen } from './src/screens/NfcScannerScreen';
 import BuffaloLoader from './src/components/BufaloLoader';
+import { InitialSyncScreen } from './src/screens/InitialSyncScreen';
+import { isFirstSync } from './src/database/db';
 
 
 export type RootStackParamList = {
@@ -158,11 +162,20 @@ function MainTab() {
   );
 }
 
-// App.tsx (parte relevante)
 function AppContent() {
   const { userToken, loading } = useAuth();
-  
-  if (loading) {
+  const { propriedadeSelecionada } = usePropriedade();
+  const [needsInitialSync, setNeedsInitialSync] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (userToken && propriedadeSelecionada) {
+      isFirstSync(propriedadeSelecionada).then(setNeedsInitialSync);
+    } else {
+      setNeedsInitialSync(false);
+    }
+  }, [userToken, propriedadeSelecionada]);
+
+  if (loading || needsInitialSync === null) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <BuffaloLoader />
@@ -170,6 +183,14 @@ function AppContent() {
     );
   }
 
+  if (userToken && propriedadeSelecionada && needsInitialSync) {
+    return (
+      <InitialSyncScreen
+        propriedadeId={propriedadeSelecionada}
+        onSyncComplete={() => setNeedsInitialSync(false)}
+      />
+    );
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -188,8 +209,27 @@ function AppContent() {
 }
 
 
+function AppWithSync() {
+  const { propriedadeSelecionada } = usePropriedade();
+  return (
+    <SyncProvider propriedadeId={propriedadeSelecionada ?? undefined}>
+      <PortalProvider>
+        <BottomSheetModalProvider>
+          <NavigationContainer>
+            <AppContent />
+          </NavigationContainer>
+        </BottomSheetModalProvider>
+      </PortalProvider>
+    </SyncProvider>
+  );
+}
+
 export default function App() {
   const isDarkMode = useColorScheme() === 'dark';
+
+  useEffect(() => {
+    runMigrations().catch(console.error);
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -198,13 +238,7 @@ export default function App() {
 
         <AuthProvider>
           <PropriedadeProvider>
-            <PortalProvider>
-              <BottomSheetModalProvider>
-                <NavigationContainer>
-                  <AppContent />
-                </NavigationContainer>
-              </BottomSheetModalProvider>
-            </PortalProvider>
+            <AppWithSync />
           </PropriedadeProvider>
         </AuthProvider>
 
