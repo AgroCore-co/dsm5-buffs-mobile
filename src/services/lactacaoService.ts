@@ -279,10 +279,11 @@ export const encerrarLactacao = async (idCiclo: string | number) => {
 
 export const getProducaoDiariaAtual = async (propriedadeId: string) => {
   if (!propriedadeId) return { quantidade: 0, dataAtualizacao: "N/D" };
-  const hoje = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const row = await queryFirst<{ total: number }>(
-    `SELECT SUM(quantidade) as total FROM producao_diaria WHERE propriedadeId = ? AND dtRegistro LIKE ?`,
-    [propriedadeId, `${hoje}%`],
+  // Último registro de estoque — valor sobreposto, não acumulado
+  const row = await queryFirst<{ quantidade: number; dtRegistro: string }>(
+    `SELECT quantidade, dtRegistro FROM producao_diaria WHERE propriedadeId = ? ORDER BY createdAt DESC LIMIT 1`,
+    [propriedadeId],
   );
-  return { quantidade: row?.total ?? 0, dataAtualizacao: formatarDataBR(hoje) };
+  const dataRef = row?.dtRegistro?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
+  return { quantidade: row?.quantidade ?? 0, dataAtualizacao: formatarDataBR(dataRef) };
 };

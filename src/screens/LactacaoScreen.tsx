@@ -296,7 +296,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
         <EstoqueAddBottomSheet
           propriedadeId={propriedadeSelecionada!}
           onClose={() => setIsAddingEstoque(false)}
-          onSuccess={fetchCiclos}
+          onSuccess={fetchProducaoAtual}
         />
       )}
 
