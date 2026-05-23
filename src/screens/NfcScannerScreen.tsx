@@ -52,10 +52,11 @@ export const NfcScannerScreen = () => {
                     await NfcManager.cancelTechnologyRequest();
                     isScanningRef.current = false; 
                     
-                    if (bufalo && bufalo.id_bufalo) {
+                    const bufaloId = bufalo?.id ?? bufalo?.idBufalo;
+                    if (bufalo && bufaloId) {
                         setStatusText(`Búfalo encontrado! Redirecionando...`);
-                        
-                        navigation.replace("AnimalDetail", { id: bufalo.id_bufalo });
+
+                        navigation.replace("AnimalDetail", { id: bufaloId });
                         return; 
                     } else {
                         setStatusText(`Microchip ${microchip} não encontrado. Continue lendo...`);

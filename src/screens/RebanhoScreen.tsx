@@ -86,7 +86,7 @@ export const RebanhoScreen = () => {
       );
 
       const animaisFormatados = bufalos.map((b: any) => ({
-        id: b.idBufalo,
+        id: b.id ?? b.idBufalo,
         status: b.status,
         brinco: b.brinco,
         nome: b.nome,
@@ -122,6 +122,7 @@ export const RebanhoScreen = () => {
   }, [propriedadeSelecionada]);
 
   useEffect(() => {
+    if (!propriedadeSelecionada || initialLoading) return;
     fetchBufalosFiltrados(filtros, 1);
   }, [filtros]);
 

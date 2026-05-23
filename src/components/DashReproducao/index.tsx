@@ -2,18 +2,18 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors } from "../../styles/colors";
 import TextTitle from "../TextTitle";
-import { formatarDataBR } from "../../utils/date";
-
 interface DashReproductionProps {
-  emProcesso: number;       // total de reproduções em andamento
-  confirmadas: number;      // total de reproduções confirmadas
-  falhas: number;           // total de reproduções com falha
-  ultimaData: string;  // data do último registro
+  emProcesso: number;
+  confirmadas: number;
+  concluidas: number;
+  falhas: number;
+  ultimaData: string;
 }
 
 export default function DashReproduction({
   emProcesso,
   confirmadas,
+  concluidas,
   falhas,
   ultimaData,
 }: DashReproductionProps) {
@@ -24,7 +24,7 @@ export default function DashReproduction({
         <TextTitle>Resumo das Reprodução</TextTitle>
       </View>
 
-      {/* Primeira linha */}
+      {/* Linha de status */}
       <View style={styles.row}>
         <View style={styles.item}>
           <Text style={styles.value}>{emProcesso}</Text>
@@ -32,7 +32,11 @@ export default function DashReproduction({
         </View>
         <View style={styles.item}>
           <Text style={styles.value}>{confirmadas}</Text>
-          <Text style={styles.label}>SUCESSO</Text>
+          <Text style={styles.label}>CONFIRMADAS</Text>
+        </View>
+        <View style={styles.item}>
+          <Text style={styles.value}>{concluidas}</Text>
+          <Text style={styles.label}>CONCLUÍDAS</Text>
         </View>
         <View style={styles.item}>
           <Text style={styles.value}>{falhas}</Text>
@@ -40,7 +44,7 @@ export default function DashReproduction({
         </View>
       </View>
       
-      <Text style={styles.footerText}>Última atualização: {formatarDataBR(ultimaData)}</Text>
+      <Text style={styles.footerText}>Última atualização: {ultimaData}</Text>
     </View>
   );
 }

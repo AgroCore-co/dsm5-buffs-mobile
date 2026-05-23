@@ -5,8 +5,6 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Animated,
-  Easing,
   Platform as RNPlatform,
   ToastAndroid,
   Alert,
@@ -15,11 +13,9 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
-import DropDownPicker from "react-native-dropdown-picker";
-import "dayjs/locale/pt-br"; 
 import { usePropriedade } from "../../context/PropriedadeContext";
 import bufaloService from "../../services/bufaloService";
-import { createReproducao } from "../../services/reproducaoService";
+import { createReproducao, getMaterialGenetico } from "../../services/reproducaoService";
 
 import { colors } from "../../styles/colors";
 import YellowButton from "../Button";
@@ -46,30 +42,48 @@ export const ReproducaoAddBottomSheet: React.FC<
 > = ({ onClose, onSuccess }) => {
   const sheetRef = useRef<BottomSheet>(null);
   const { propriedadeSelecionada } = usePropriedade();
-  const { getBufaloByBrincoAndSexo } = bufaloService; // Assumindo o bufaloService.ts
+  const { getBufaloByBrincoAndSexo, getBufaloById } = bufaloService; // Assumindo o bufaloService.ts
   // SnapPoints ajustados para acomodar mais campos
   const snapPoints = useMemo(() => ["70%", "90%"], []); 
 
   // Estado do Formulário
   const [tagBufalo, setTagBufalo] = useState("");
   const [tagBufala, setTagBufala] = useState("");
-  const [idOvulo, setIdOvulo] = useState("");
-  const [idSemen, setIdSemen] = useState("");
+  const [idDoadora, setIdDoadora] = useState<string | null>(null);
+  const [nomeDoadora, setNomeDoadora] = useState<string>('');
+  const [matGeneticoSemen, setMatGeneticoSemen] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
+  const [matGeneticoOvulo, setMatGeneticoOvulo] = useState<{ id: string; label: string; idBufalOrigem?: string | null }[]>([]);
+  const [idSemenSelecionado, setIdSemenSelecionado] = useState<string | null>(null);
+  const [idOvuloSelecionado, setIdOvuloSelecionado] = useState<string | null>(null);
   const [tipoInseminacao, setTipoInseminacao] = useState<string | null>(null);
   
   // O status padrão é "Em andamento" e não é alterável no ADD
   const status = "Em andamento"; 
 
-  const [openTipo, setOpenTipo] = useState(false);
-  
-  // ZIndex para garantir que o Dropdown que está aberto fique por cima
-  const zIndexTipo = openTipo ? 200 : 100;
-
   const tipoItems = useMemo(() => [
     { label: "IATF", value: "IATF" },
     { label: "IA (Inseminação Artificial)", value: "IA" },
+    { label: "TE (Transferência de Embrião)", value: "TE" },
     { label: "Monta Natural", value: "Monta Natural" },
   ], []);
+
+  const embrioesFiltrados = useMemo(
+    () => matGeneticoOvulo.filter(m => m.idBufalOrigem != null),
+    [matGeneticoOvulo],
+  );
+
+  useEffect(() => {
+    if (!propriedadeSelecionada) return;
+    getMaterialGenetico(propriedadeSelecionada).then((mats) => {
+      const tipoFiv = (t: string) =>
+        t.includes('vulo') || t.includes('embri'); // óvulo / ovulo / embrião / embriao
+      const fiv = mats.filter(m => tipoFiv(m.tipo.toLowerCase()));
+      // tudo que não é óvulo/embrião vai para sêmen (inclui sem tipo)
+      const semen = mats.filter(m => !tipoFiv(m.tipo.toLowerCase()));
+      setMatGeneticoSemen(semen);
+      setMatGeneticoOvulo(fiv);
+    }).catch(() => {});
+  }, [propriedadeSelecionada]);
 
   const handleSheetChange = useCallback(
     (index: number) => {
@@ -97,69 +111,51 @@ export const ReproducaoAddBottomSheet: React.FC<
       return showToast("Preencha a Tag da Búfala e o Tipo de Inseminação.", true);
     }
 
-    let idBufaloMachoUUID: string | null = null; // Armazenará o UUID do macho
-    let idBufalaFemeaUUID: string | null = null; // Armazenará o UUID da fêmea
-    let idOvuloUsado = idOvulo || null;
-    let idSemenUsado = idSemen || null;
+    if ((tipoInseminacao === "IA" || tipoInseminacao === "IATF") && !idSemenSelecionado) {
+      return showToast(`${tipoInseminacao} requer a seleção de um Sêmen.`, true);
+    }
+    if (tipoInseminacao === "TE" && (!idOvuloSelecionado || !idDoadora)) {
+      return showToast("TE requer a seleção de um Embrião.", true);
+    }
+
+    let idBufaloMachoUUID: string | null = null;
+    let idBufalaFemeaUUID: string | null = null;
+    let idSemenUsado = idSemenSelecionado || null;
     let brincoInvalido = null;
 
     try {
-        // --- 1. Validação e Obtenção do UUID da Búfala Receptora (Fêmea) ---
-        const bufalaFemea = await getBufaloByBrincoAndSexo(
-            propriedadeSelecionada,
-            tagBufala, // Busca pelo Brinco
-            "F"
-        );
-        
-        if (!bufalaFemea || !bufalaFemea.idBufalo) { // Assumindo que o ID é 'id_bufalo' no objeto retornado
+        // --- 1. Búfala receptora ---
+        const bufalaFemea = await getBufaloByBrincoAndSexo(propriedadeSelecionada, tagBufala, "F");
+        if (!bufalaFemea?.idBufalo) {
             brincoInvalido = tagBufala;
-            return showToast(`Erro: Búfala receptora (Tag: ${brincoInvalido}) não encontrada, não é fêmea, ou o ID interno está faltando.`, true);
+            return showToast(`Búfala receptora (Tag: ${brincoInvalido}) não encontrada ou não é fêmea.`, true);
         }
-        // 🎯 CAPTURA O UUID DA FÊMEA
-        idBufalaFemeaUUID = bufalaFemea.idBufalo; 
+        idBufalaFemeaUUID = bufalaFemea.idBufalo;
 
-        // --- 2. Validação e Obtenção do UUID do Búfalo (Macho) para Monta Natural ---
-        if (tipoInseminacao === "Monta Natural") { // Usando o valor CORRETO
-            if (!tagBufalo) {
-                return showToast("O Búfalo Macho é obrigatório para Monta Natural.", true);
-            }
-            
-            const bufaloMacho = await getBufaloByBrincoAndSexo(
-                propriedadeSelecionada,
-                tagBufalo, // Busca pelo Brinco
-                "M"
-            );
-            
-            if (!bufaloMacho || !bufaloMacho.idBufalo) {
+        // --- 2. Macho (Monta Natural) ou Búfala Doadora (TE) ---
+        if (tipoInseminacao === "Monta Natural") {
+            if (!tagBufalo) return showToast("O Búfalo Macho é obrigatório para Monta Natural.", true);
+            const bufaloMacho = await getBufaloByBrincoAndSexo(propriedadeSelecionada, tagBufalo, "M");
+            if (!bufaloMacho?.idBufalo) {
                 brincoInvalido = tagBufalo;
-                return showToast(`Erro: Búfalo macho (Tag: ${brincoInvalido}) não encontrado, não é macho, ou o ID interno está faltando.`, true);
+                return showToast(`Búfalo macho (Tag: ${brincoInvalido}) não encontrado ou não é macho.`, true);
             }
-            // 🎯 CAPTURA O UUID DO MACHO
-            idBufaloMachoUUID = bufaloMacho.idBufalo; 
-            
-            // Limpa sêmen/óvulo, pois é Monta Natural
+            idBufaloMachoUUID = bufaloMacho.idBufalo;
             idSemenUsado = null;
-            idOvuloUsado = null;
 
-        } else {
-            // Se for IA, IATF ou TE, o campo do Búfalo Macho (brinco) não deve ser enviado como UUID
-            idBufaloMachoUUID = null; 
         }
 
-        // --- 3. Preparação do Payload Final ---
+        // --- 3. Payload ---
+        // IA/IATF: idSemen; TE: idSemen (embrião) + idDoadora (búfala doadora); Monta Natural: idBufalo
         const payload = {
             idPropriedade: propriedadeSelecionada,
-            // 🎯 ENVIANDO OS UUIDs (corrigindo o erro 1 e 2)
-            idBufalo: idBufaloMachoUUID,      // UUID do Touro (se Monta Natural)
-            idBufala: idBufalaFemeaUUID,      // UUID da Búfala
-            
-            idSemen: idSemenUsado,            // ID do Sêmen
-            idDoadora: idOvuloUsado,          // ID do Óvulo (assumindo que id_doadora = id_ovulo na API)
-            
-            // 🎯 ENVIANDO O VALOR CORRETO (corrigindo o erro 3)
-            tipoInseminacao: tipoInseminacao, 
+            idBufalo: idBufaloMachoUUID,
+            idBufala: idBufalaFemeaUUID,
+            idSemen: tipoInseminacao === 'TE' ? (idOvuloSelecionado ?? null) : idSemenUsado,
+            idDoadora: tipoInseminacao === 'TE' ? idDoadora : null,
+            tipoInseminacao: tipoInseminacao,
             status: status,
-            dtEvento: new Date().toISOString().split("T")[0], 
+            dtEvento: new Date().toISOString().split("T")[0],
         };
         // ... (restante da chamada da API)
         await createReproducao(payload);
@@ -196,77 +192,126 @@ export const ReproducaoAddBottomSheet: React.FC<
         />
       )}
     >
-      <BottomSheetScrollView 
-        contentContainerStyle={styles.container} 
-        // Scroll habilitado se o dropdown não estiver aberto
-        scrollEnabled={!openTipo}
-      >
+      <BottomSheetScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
             <Text style={styles.headerTitle}>Nova Reprodução</Text>
+        </View>
+
+        {/* --- Tipo de Inseminação (primeiro para guiar os campos seguintes) --- */}
+        <Text style={styles.sectionTitle}>Tipo de Inseminação</Text>
+
+        <View style={styles.listContainer}>
+          <SelectBottomSheet
+            items={tipoItems}
+            value={tipoInseminacao}
+            onChange={(val: any) => {
+              setTipoInseminacao(val);
+              setTagBufalo('');
+              setTagBufala('');
+              setIdDoadora(null);
+              setNomeDoadora('');
+              setIdSemenSelecionado(null);
+              setIdOvuloSelecionado(null);
+            }}
+            title="Selecione o Tipo de Inseminação"
+            placeholder="Selecione o Tipo de Inseminação"
+          />
         </View>
 
         {/* --- Animais --- */}
         <Text style={styles.sectionTitle}>Animais</Text>
 
         <View style={styles.listContainer}>
-            <Text style={styles.label}>Tag do Búfalo (Macho/Touro)</Text>
-            <TextInput
+          {/* Macho só aparece para Monta Natural */}
+          {tipoInseminacao === "Monta Natural" && (
+            <>
+              <Text style={styles.label}>Tag do Búfalo Macho <Text style={{ color: mergedColors.red.base }}>*</Text></Text>
+              <TextInput
                 style={styles.inputBase}
                 value={tagBufalo}
                 onChangeText={setTagBufalo}
-                placeholder="Digite a tag do búfalo"/>
+                placeholder="Digite a tag do búfalo macho"
+              />
+            </>
+          )}
 
-            <Text style={styles.label}>Tag da Búfala (Fêmea Receptora)</Text>
-            <TextInput
-                style={styles.inputBase}
-                value={tagBufala}
-                onChangeText={setTagBufala}
-                placeholder="Digite a tag da búfala"/>
+          <Text style={styles.label}>
+            Tag da Búfala {tipoInseminacao === "Monta Natural" ? "(Fêmea Receptora)" : "(Receptora/Gestora)"}
+            {" "}<Text style={{ color: mergedColors.red.base }}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.inputBase}
+            value={tagBufala}
+            onChangeText={setTagBufala}
+            placeholder="Digite a tag da búfala"
+          />
         </View>
 
-        {/* --- Tipo de Inseminação --- */}
-        <Text style={styles.sectionTitle}>Tipo e Status</Text>
-        
-        <View style={styles.listContainer}>
-            {/* Dropdown Tipo de Inseminação */}
-            <View style={{ zIndex: zIndexTipo, marginBottom: 12 }}>
-                <Text style={styles.label}>Tipo de Inseminação:</Text>
+        {/* --- Material Genético: IA/IATF = Sêmen obrigatório --- */}
+        {(tipoInseminacao === "IA" || tipoInseminacao === "IATF") && (
+          <>
+            <Text style={styles.sectionTitle}>Material Genético</Text>
+            <View style={styles.listContainer}>
+              <Text style={styles.label}>
+                Sêmen <Text style={{ color: mergedColors.red.base }}>*</Text>
+              </Text>
+              {matGeneticoSemen.length === 0 ? (
+                <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
+                  Nenhum sêmen cadastrado — sincronize primeiro.
+                </Text>
+              ) : (
                 <SelectBottomSheet
-                    items={tipoItems}
-                    value={tipoInseminacao}
-                    onChange={(val: any) => setTipoInseminacao(val)}
-                    title="Selecione o Tipo de Inseminação"
-                    placeholder="Selecione o Tipo de Inseminação"
+                  items={matGeneticoSemen.map(m => ({ label: m.label, value: m.id }))}
+                  value={idSemenSelecionado}
+                  onChange={(val: any) => setIdSemenSelecionado(val)}
+                  title="Selecionar Sêmen"
+                  placeholder="Selecione o Sêmen"
                 />
+              )}
             </View>
-            
-            {/* Campo Status (Não Editável) */}
-            <Text style={styles.label}>Status Inicial</Text>
-            <TextInput
-                style={[styles.inputBase, styles.inputDisabled]}
-                value={status}
-                onChangeText={() => {}} // Não editável
-                editable={false} />
-        </View>
-        
-        {/* --- Extras (Opcional) --- */}
-        <Text style={styles.sectionTitle}>Material Genético (Opcional)</Text>
-        
-        <View style={styles.listContainer}>
-            <Text style={styles.label}>ID do Óvulo (se for FIV)</Text>
-            <TextInput
-                style={styles.inputBase}
-                value={idOvulo}
-                onChangeText={setIdOvulo}
-                placeholder="Digite o identificador do Óvulo"/>
+          </>
+        )}
 
-            <Text style={styles.label}>ID do Sêmen (se for IA)</Text>
-            <TextInput
-                style={styles.inputBase}
-                value={idSemen}
-                onChangeText={setIdSemen}
-                placeholder="Digite o identificador do Sêmen"/>
-        </View>
+        {/* --- TE: Embrião (doadora auto-derivada) --- */}
+        {tipoInseminacao === "TE" && (
+          <>
+            <Text style={styles.sectionTitle}>Material Genético</Text>
+            <View style={styles.listContainer}>
+              <Text style={styles.label}>
+                Embrião <Text style={{ color: mergedColors.red.base }}>*</Text>
+              </Text>
+              {embrioesFiltrados.length === 0 ? (
+                <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
+                  Nenhum embrião cadastrado — sincronize primeiro.
+                </Text>
+              ) : (
+                <SelectBottomSheet
+                  items={embrioesFiltrados.map(m => ({ label: m.label, value: m.id }))}
+                  value={idOvuloSelecionado}
+                  onChange={async (val: any) => {
+                    setIdOvuloSelecionado(val);
+                    const item = embrioesFiltrados.find(m => m.id === val);
+                    const doadoraUUID = item?.idBufalOrigem ?? null;
+                    setIdDoadora(doadoraUUID);
+                    if (doadoraUUID) {
+                      const bufala = await getBufaloById(doadoraUUID);
+                      setNomeDoadora(bufala ? `${bufala.brinco} — ${bufala.nome}` : doadoraUUID.slice(0, 8));
+                    } else {
+                      setNomeDoadora('');
+                    }
+                  }}
+                  title="Selecionar Embrião"
+                  placeholder="Selecione o Embrião"
+                />
+              )}
+              {nomeDoadora ? (
+                <Text style={[styles.label, { color: mergedColors.text.secondary, marginTop: 8 }]}>
+                  Doadora: {nomeDoadora}
+                </Text>
+              ) : null}
+            </View>
+          </>
+        )}
 
         {/* Footer (Botões Salvar e Cancelar) */}
         <View style={styles.footer}>
@@ -329,23 +374,6 @@ const styles = StyleSheet.create({
         overflow: "visible", 
         zIndex: 100, // ZIndex padrão para o conteúdo
         marginBottom: 8,
-    },
-    
-    // --- Estilos do Dropdown (Padrão) ---
-    dropdownLabel: {
-        fontSize: 14,
-        color: mergedColors.text.secondary,
-        fontWeight: "500",
-        marginBottom: 4,
-    },
-    dropdownStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
-        height: 50,
-    },
-    dropdownContainerStyle: { 
-        borderColor: mergedColors.border,
-        height: 50,
     },
     
     // --- Footer ---

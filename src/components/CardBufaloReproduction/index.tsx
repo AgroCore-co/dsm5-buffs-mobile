@@ -16,15 +16,10 @@ type StatusType =
 
 // 🔁 Normaliza qualquer valor inesperado
 const normalizeStatus = (status: string): StatusType => {
-  if (
-    status === "Em andamento" ||
-    status === "Confirmada" ||
-    status === "Concluída" ||
-    status === "Falhou"
-  ) {
-    return status;
-  }
-
+  if (status === "Em andamento") return "Em andamento";
+  if (status === "Confirmada") return "Confirmada";
+  if (status === "Concluída") return "Concluída";
+  if (status === "Falhou" || status === "Falha") return "Falhou";
   return "Em andamento";
 };
 

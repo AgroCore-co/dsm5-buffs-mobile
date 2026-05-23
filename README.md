@@ -1,47 +1,74 @@
-# Projeto Mobile - Plataforma de Controle e Acompanhamento da Produção Leiteira e Manejo de Búfalas - BUFFS
+# DSM5 Buffs Mobile
 
-Este repositório contém a aplicação mobile do projeto, desenvolvida em **React Native**, com estrutura básica das telas e navegação inicial.
+Aplicativo mobile **offline-first** para gestão de búfalas leiteiras em propriedades rurais brasileiras. Desenvolvido em React Native (Android), permite ao fazendeiro registrar e acompanhar todas as operações do rebanho — ordenhas, reprodução, sanitário, pesagens e estoque de leite — mesmo sem internet, sincronizando com o backend quando houver conexão.
+
+---
+
+## Sumário
+
+- [Fluxo Operacional](docs/fluxo-operacional.md) — como o fazendeiro usa o app no dia a dia
+- [Funcionalidade Offline First](docs/offline-first.md) — arquitetura SQLite, fila de sync e limitações
+- [Contexto para IAs](AGENTS.md) — guia completo para ferramentas de IA colaborarem no projeto
+
+---
 
 ## 📱 Dispositivos e Emuladores
 
-- **Emulador principal:** Pixel 3a (Android Studio)  
-- **Dispositivo para testes reais:** Poco X6  
+- **Emulador principal:** Pixel 3a (Android Studio)
+- **Dispositivo para testes reais:** Poco X6
+
+---
 
 ## ⚡ Requisitos
 
-Antes de começar, certifique-se de ter instalado:  
-
-- Node.js (versão recomendada: >=18)  
-- Yarn ou npm  
-- React Native CLI  
-- Android Studio (com SDK e AVD configurados)  
+- Node.js >= 18
+- Yarn ou npm
+- React Native CLI
+- Android Studio (com SDK e AVD configurados)
 - Dispositivo Android ou emulador
+
+---
 
 ## 🚀 Rodando o projeto
 
-Para iniciar o servidor Metro e limpar o cache, execute:  
-
-\`\`\`bash
+```bash
 npx react-native start --reset-cache
-\`\`\`
+```
 
-> **Dica:** O projeto está configurado para testes principalmente no **Pixel 3** e no **Poco X6**, garantindo compatibilidade com diferentes tamanhos de tela.
+Para rodar no Android:
+
+```bash
+npx react-native run-android
+```
+
+---
+
+## 🧪 Testes
+
+```bash
+npx jest
+```
+
+Os testes são unitários com mocks do SQLite e da API. Não há testes de integração ou E2E.
+
+---
 
 ## 📂 Estrutura do projeto
 
-\`\`\`
+```
 /src
-  /components   # Componentes reutilizáveis
-  /screens      # Telas principais
-  /services     # Serviços para consumir API
-  /styles       # Arquivos de estilos
-  /icons        # Ícones SVG usados na UI
-\`\`\`
-
-## 💡 Observações
-
-- Sempre que alterar dependências ou limpar problemas de cache, use:
-
-\`\`\`bash
-npx react-native start --reset-cache
-\`\`\`
+  /components        # Componentes reutilizáveis (cards, bottom sheets, formulários)
+  /context           # Contextos React (Auth, Propriedade)
+  /database          # db.ts, schema.ts, migrations.ts
+  /layouts           # Layouts base de tela
+  /lib               # apiClient.ts (fetch autenticado)
+  /screens           # Telas principais (Home, Rebanho, Lactação, Reprodução, ...)
+  /services          # Serviços de domínio + sync
+    /sync            # pushEndpoints.ts — resolve endpoint por entidade
+    /__tests__       # Testes unitários dos serviços
+  /styles            # Cores e estilos globais
+  /utils             # Utilitários (date, normalizePayload, ...)
+/__tests__
+  /database          # Testes de schema e migrations
+  /services          # Testes de serviços legados
+```

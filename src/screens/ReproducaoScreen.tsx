@@ -49,6 +49,7 @@ export const ReproducaoScreen = () => {
     useState<ReproducaoDashboardStats>({
       totalEmAndamento: 0,
       totalConfirmada: 0,
+      totalConcluida: 0,
       totalFalha: 0,
       ultimaDataReproducao: '-',
     });
@@ -139,12 +140,9 @@ export const ReproducaoScreen = () => {
             <DashReproduction
               emProcesso={dashboardStats.totalEmAndamento}
               confirmadas={dashboardStats.totalConfirmada}
+              concluidas={dashboardStats.totalConcluida}
               falhas={dashboardStats.totalFalha}
-              ultimaData={
-                dashboardStats.ultimaDataReproducao === '-'
-                  ? '-'
-                  : dashboardStats.ultimaDataReproducao
-              }
+              ultimaData={dashboardStats.ultimaDataReproducao}
             />
           }
 
@@ -160,7 +158,8 @@ export const ReproducaoScreen = () => {
                 status: item.status,
                 tipo_parto: item.tipoParto,
                 tipo_inseminacao: item.tipoInseminacao,
-                id_semen: item.id_semen,
+                id_semen: item.idSemen,
+                id_ovulo: item.idOvulo,
               }}
               onPress={() => handleCardPress(item)}
             />

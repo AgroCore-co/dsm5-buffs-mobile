@@ -38,25 +38,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const init = async () => {
       try {
-        const expiresAtStr = await AsyncStorage.getItem("expiresAt");
-        const now = Date.now();
-
-        let expiresAt = 0;
-        if (expiresAtStr) {
-          const parsed = parseInt(expiresAtStr, 10);
-          if (!isNaN(parsed)) expiresAt = parsed * 1000;
-        }
-
-        if (expiresAt > now) {
-          try {
-            await refreshAccessToken();
-          } catch (err) {
-            console.warn("Refresh token falhou:", err);
+        // Sempre tenta refresh; se offline, usa token em cache para não forçar login
+        try {
+          await refreshAccessToken();
+        } catch (err) {
+          console.warn("Refresh token falhou (offline?):", err);
+          const storedToken = await AsyncStorage.getItem("userToken");
+          if (storedToken) {
+            setUserToken(storedToken);
+          } else {
+            await AsyncStorage.multiRemove(["userToken", "refreshToken", "expiresAt", "user"]);
+            setUserToken(null);
+            setUser(null);
           }
-        } else {
-          await AsyncStorage.multiRemove(["userToken", "refreshToken", "expiresAt", "user"]);
-          setUserToken(null);
-          setUser(null);
         }
 
         const userStr = await AsyncStorage.getItem("user");
