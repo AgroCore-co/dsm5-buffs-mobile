@@ -1,328 +1,843 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert } from "react-native";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+
+import {
+  View,
+  Text,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+  Alert,
+  Platform,
+} from "react-native";
+
 import { colors } from "../../styles/colors";
+
 import bufaloService from "../../services/bufaloService";
+
 import Pen from "../../../assets/images/pen.svg";
+
 import { ConfirmModal } from "../ModalStatus";
+
 import { formatarDataBR } from "../../utils/date";
+
 import SelectBottomSheet from "../SelectBottomSheet";
 
 interface Grupo {
-    id_grupo: string;
-    nome_grupo: string;
-    color: string;
+  id: string;
+  nome: string;
+  color: string;
 }
 
-export const AnimalInfoCard = ({ detalhes, onEdit, onRefresh }: { detalhes: any, onEdit: () => void, onRefresh: () => void }) => {
-    
-    const maturidadeMap: Record<string, string> = {
-        B: "Bezerro", N: "Novilha", T: "Touro", V: "Vaca",
-    };
-    
-    const maturidadeTexto = maturidadeMap[detalhes.nivelMaturidade] || detalhes.nivelMaturidade;
-    
-    const [isEnabled, setIsEnabled] = useState(Boolean(detalhes?.status));
-    const [modalVisible, setModalVisible] = useState(false);
-    const [novoStatus, setNovoStatus] = useState<boolean | null>(null);
-    const [grupos, setGrupos] = useState<Grupo[]>([]);
-    const [grupoAtualId, setGrupoAtualId] = useState<string | null>(detalhes?.id_grupo || null);
-    const [novoGrupoSelecionado, setNovoGrupoSelecionado] = useState<string | null>(detalhes?.id_grupo || null);
+export const AnimalInfoCard = ({
+  detalhes,
+  onEdit,
+  onRefresh,
+}: {
+  detalhes: any;
+  onEdit: () => void;
+  onRefresh: () => void;
+}) => {
+  const maturidadeMap: Record<
+    string,
+    string
+  > = {
+    B: "Bezerro",
+    N: "Novilha",
+    T: "Touro",
+    V: "Vaca",
+  };
 
-    const [modalMudarGrupoVisible, setModalMudarGrupoVisible] = useState(false);
-    const [idGrupoParaMudar, setIdGrupoParaMudar] = useState<string | null>(null);
-    const [nomeGrupoParaMudar, setNomeGrupoParaMudar] = useState('');
+  const maturidadeTexto =
+    maturidadeMap[
+      detalhes.nivelMaturidade
+    ] || detalhes.nivelMaturidade;
 
-    const toggleSwitch = () => {
-        const valorPretendido = !isEnabled;
-        setNovoStatus(valorPretendido);
-        setModalVisible(true);
-    };
-    
-    useEffect(() => {
-        const fetchGrupos = async () => {
-            try {
-                const idPropriedade: string | null | undefined = detalhes.idPropriedade;
-                if (idPropriedade) {
-                    const gruposApi: Grupo[] = await bufaloService.getGrupos(idPropriedade);
-                    setGrupos(gruposApi);
-                }
-            } catch (err) {
-                console.error("Erro ao buscar grupos:", err);
-            }
-        };
-        fetchGrupos();
-    }, [detalhes.idPropriedade]);
+  const [isEnabled, setIsEnabled] =
+    useState(
+      Boolean(detalhes?.status)
+    );
 
-    const confirmarMudancaGrupo = useCallback(async () => {
-        setModalMudarGrupoVisible(false);
+  const [modalVisible, setModalVisible] =
+    useState(false);
 
-        if (idGrupoParaMudar === null) return;
-        
+  const [novoStatus, setNovoStatus] =
+    useState<boolean | null>(null);
+
+  const [grupos, setGrupos] =
+    useState<Grupo[]>([]);
+
+  const [
+    grupoAtualId,
+    setGrupoAtualId,
+  ] = useState<string | null>(
+    detalhes?.idGrupo ?? null
+  );
+
+  const [
+    novoGrupoSelecionado,
+    setNovoGrupoSelecionado,
+  ] = useState<string | null>(
+    detalhes?.idGrupo ?? null
+  );
+
+  const [
+    modalMudarGrupoVisible,
+    setModalMudarGrupoVisible,
+  ] = useState(false);
+
+  const [
+    idGrupoParaMudar,
+    setIdGrupoParaMudar,
+  ] = useState<string | null>(
+    null
+  );
+
+  const [
+    nomeGrupoParaMudar,
+    setNomeGrupoParaMudar,
+  ] = useState("");
+
+  const toggleSwitch = () => {
+    const valorPretendido =
+      !isEnabled;
+
+    setNovoStatus(
+      valorPretendido
+    );
+
+    setModalVisible(true);
+  };
+
+  useEffect(() => {
+    const fetchGrupos =
+      async () => {
         try {
-            await bufaloService.moverBufaloDeGrupo(detalhes.idBufalo, idGrupoParaMudar);
-            setGrupoAtualId(idGrupoParaMudar);
-            setNovoGrupoSelecionado(idGrupoParaMudar);
-            Alert.alert("Sucesso", `Movido para o grupo "${nomeGrupoParaMudar}"!`);
-            onRefresh();
-        } catch (error) {
-            console.error("Erro ao alterar grupo:", error);
-            Alert.alert("Erro", "Não foi possível alterar o grupo. Tente novamente.");
-            setNovoGrupoSelecionado(grupoAtualId); 
-        } finally {
-            setIdGrupoParaMudar(null);
-            setNomeGrupoParaMudar('');
+          const idPropriedade =
+            detalhes.idPropriedade;
+
+          if (idPropriedade) {
+            const gruposApi =
+              await bufaloService.getGrupos(
+                idPropriedade
+              );
+
+            setGrupos(gruposApi);
+          }
+        } catch (err) {
+          console.error(
+            "Erro ao buscar grupos:",
+            err
+          );
         }
-    }, [detalhes.idBufalo, idGrupoParaMudar, nomeGrupoParaMudar, grupoAtualId]);
+      };
 
-    const handleMudarGrupo = useCallback(async (idGrupo: string) => {
-        if (idGrupo === grupoAtualId) return;
+    fetchGrupos();
+  }, [detalhes.idPropriedade]);
 
-        const novoNomeGrupo = grupos.find(g => g.id_grupo === idGrupo)?.nome_grupo || 'o grupo selecionado';
+  const confirmarMudancaGrupo =
+    useCallback(async () => {
+      setModalMudarGrupoVisible(
+        false
+      );
 
-        setIdGrupoParaMudar(idGrupo);
-        setNomeGrupoParaMudar(novoNomeGrupo);
-        setModalMudarGrupoVisible(true);
-        setNovoGrupoSelecionado(grupoAtualId); 
+      if (
+        idGrupoParaMudar === null
+      )
+        return;
 
-    }, [grupoAtualId, grupos]);
+      try {
+        await bufaloService.moverBufaloDeGrupo(
+          detalhes.idBufalo,
+          idGrupoParaMudar
+        );
 
-    const grupoItems = useMemo(() => {
-        return grupos.map(g => ({
-            label: g.nome_grupo,
-            value: g.id_grupo,
-        }));
+        setGrupoAtualId(
+          idGrupoParaMudar
+        );
+
+        setNovoGrupoSelecionado(
+          idGrupoParaMudar
+        );
+
+        Alert.alert(
+          "Sucesso",
+          `Movido para o grupo "${nomeGrupoParaMudar}"!`
+        );
+
+        onRefresh();
+      } catch (error) {
+        console.error(
+          "Erro ao alterar grupo:",
+          error
+        );
+
+        Alert.alert(
+          "Erro",
+          "Não foi possível alterar o grupo."
+        );
+
+        setNovoGrupoSelecionado(
+          grupoAtualId
+        );
+      } finally {
+        setIdGrupoParaMudar(
+          null
+        );
+
+        setNomeGrupoParaMudar("");
+      }
+    }, [
+      detalhes.idBufalo,
+      idGrupoParaMudar,
+      nomeGrupoParaMudar,
+      grupoAtualId,
+    ]);
+
+  const handleMudarGrupo =
+    useCallback(
+      async (idGrupo: string) => {
+        if (
+          idGrupo === grupoAtualId
+        )
+          return;
+
+        const novoNomeGrupo =
+          grupos.find(
+            (g) => g.id === idGrupo
+          )?.nome ||
+          "o grupo selecionado";
+
+        setIdGrupoParaMudar(
+          idGrupo
+        );
+
+        setNomeGrupoParaMudar(
+          novoNomeGrupo
+        );
+
+        setModalMudarGrupoVisible(
+          true
+        );
+
+        setNovoGrupoSelecionado(
+          grupoAtualId
+        );
+      },
+      [grupoAtualId, grupos]
+    );
+
+  const grupoItems =
+    useMemo(() => {
+      return grupos.map((g) => ({
+        label: g.nome,
+        value: g.id,
+      }));
     }, [grupos]);
 
-    const confirmarAlteracaoStatus = async () => {
-        if (novoStatus === null) return;
-        try {
-            await bufaloService.updateBufalo(detalhes.idBufalo, { status: novoStatus });
-            setIsEnabled(novoStatus);
-            detalhes.status = novoStatus;
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setModalVisible(false);
-        }
-    };
+  const confirmarAlteracaoStatus =
+    async () => {
+      if (novoStatus === null)
+        return;
 
-    const cancelarAlteracao = () => {
+      try {
+        await bufaloService.updateBufalo(
+          detalhes.idBufalo,
+          {
+            status: novoStatus,
+          }
+        );
+
+        setIsEnabled(
+          novoStatus
+        );
+
+        detalhes.status =
+          novoStatus;
+      } catch (error) {
+        console.error(error);
+      } finally {
         setModalVisible(false);
+      }
     };
-    return (
-        <>
-            <View style={styles.infoCard}>
-                <View style={styles.infoHeader}>
-                    <View>
-                        <View style={styles.nameRow}>
-                            <Text style={styles.nameText}>{detalhes?.nome ?? 'Sem Nome'}</Text>
-                            {detalhes?.categoria && (
-                                <View style={styles.categoryBadge}>
-                                    <Text style={styles.categoryText}>{detalhes.categoria}</Text>
-                                </View>
-                            )}
-                        </View>
-                        <Text style={styles.brincoText}>Brinco Nº: {detalhes?.brinco ?? '-'}</Text>
-                    </View>
-                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                        <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-                            <Pen width={20} height={20} fill={colors.text.accent} />
-                        </TouchableOpacity>
-                        <View style={[styles.statusBadge]}>
-                            <View style={[
-                                styles.statusDot,
-                                { backgroundColor: isEnabled ? colors.status.success : colors.status.error },
-                            ]} />
-                            <Text style={[
-                                styles.statusText,
-                                { color: isEnabled ? colors.status.successText : colors.status.errorText },
-                            ]}>
-                                {isEnabled ? 'Ativo' : 'Inativo'}
-                            </Text>
-                            <Switch
-                                trackColor={{ false: colors.border.default, true: colors.border.default }}
-                                thumbColor={isEnabled ? colors.status.success : colors.status.error}
-                                onValueChange={toggleSwitch}
-                                value={isEnabled} />
-                        </View>
-                    </View>
-                </View>
 
-                <View style={styles.infoGrid}>
-                    <View style={styles.Row}>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>DT. NASCIMENTO</Text>
-                            <Text style={styles.infoValue}>{formatarDataBR(detalhes?.dtNascimento)}</Text>
-                        </View>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>MATURIDADE</Text>
-                            <Text style={styles.infoValue}>{maturidadeTexto ?? '-'}</Text>
-                        </View>
-                    </View>       
-                    <View style={styles.Row}>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>SEXO</Text>
-                            <Text style={styles.infoValue}>{detalhes?.sexo === 'F' ? 'Fêmea' : 'Macho'}</Text>
-                        </View>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>ORIGEM</Text>
-                            <Text style={styles.infoValue}>{detalhes?.origem ?? '-'}</Text>
-                        </View>
-                    </View>
+  return (
+    <>
+      <View style={styles.card}>
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <View
+              style={styles.nameRow}
+            >
+              <Text
+                style={styles.name}
+              >
+                {detalhes?.nome ||
+                  "Sem Nome"}
+              </Text>
 
-                    <View style={styles.Row}>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>RAÇA</Text>
-                            <Text style={styles.infoValue}>{detalhes?.racaNome ?? '-'}</Text>
-                        </View>
-                    </View>
-                    <View style={styles.Row}>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>PAI</Text>
-                            <Text style={styles.infoValue}>{detalhes?.paiNome ?? '-'}</Text>
-                        </View>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>MÃE</Text>
-                            <Text style={styles.infoValue}>{detalhes?.maeNome ?? '-'}</Text>
-                        </View>
-                    </View>
-                    <View style={[styles.Row, { marginTop: 30 }]}>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>GRUPO</Text>
-                            <SelectBottomSheet
-                                items={grupoItems}
-                                value={novoGrupoSelecionado}
-                                onChange={handleMudarGrupo}
-                                title="Selecionar Grupo"
-                                placeholder={detalhes?.grupo?.nomeGrupo || "Sem grupo"}
-                            />
-                        </View>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>LOCALIZAÇÃO</Text>
-                            <Text style={styles.infoValue2}>{detalhes?.coords?.nome || '-'}</Text>
-                        </View>
-                    </View>
+              {detalhes?.categoria && (
+                <View
+                  style={
+                    styles.categoryBadge
+                  }
+                >
+                  <Text
+                    style={
+                      styles.categoryText
+                    }
+                  >
+                    {
+                      detalhes.categoria
+                    }
+                  </Text>
                 </View>
+              )}
             </View>
-          
-            <ConfirmModal
-                visible={modalMudarGrupoVisible}
-                title="Confirmar Mudança de Grupo"
-                message={`Deseja realmente mover o animal para o grupo "${nomeGrupoParaMudar}"?`}
-                onConfirm={confirmarMudancaGrupo}
-                onCancel={() => {
-                    setModalMudarGrupoVisible(false);
-                    setNovoGrupoSelecionado(grupoAtualId); 
-                }}
-                confirmText="Mover"/>
 
-            <ConfirmModal
-                visible={modalVisible}
-                title="Alterar status"
-                message={`Deseja mudar o status desse animal para ${novoStatus ? "ATIVO" : "INATIVO"}?`}
-                onConfirm={confirmarAlteracaoStatus}
-                onCancel={cancelarAlteracao}
-                confirmText={novoStatus ? "Ativar" : "Inativar"}
-                variant={novoStatus ? "success" : "danger"}/>
-        </>
-    );
+            <Text
+              style={
+                styles.brinco
+              }
+            >
+              Brinco Nº{" "}
+              {detalhes?.brinco ||
+                "-"}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={onEdit}
+            style={
+              styles.editButton
+            }
+          >
+            <Pen
+              width={18}
+              height={18}
+              fill={
+                colors.text.accent
+              }
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.statusCard}>
+          <View
+            style={
+              styles.statusLeft
+            }
+          >
+            <View
+              style={[
+                styles.statusDot,
+                {
+                  backgroundColor:
+                    isEnabled
+                      ? colors
+                          .status
+                          .success
+                      : colors
+                          .status
+                          .error,
+                },
+              ]}
+            />
+
+            <Text
+              style={
+                styles.statusText
+              }
+            >
+              {isEnabled
+                ? "Animal ativo"
+                : "Animal inativo"}
+            </Text>
+          </View>
+
+          <Switch
+            trackColor={{
+              false:
+                colors.border
+                  .default,
+              true:
+                colors.status
+                  .successBg,
+            }}
+            thumbColor={
+              isEnabled
+                ? colors
+                    .status
+                    .success
+                : colors
+                    .status
+                    .error
+            }
+            onValueChange={
+              toggleSwitch
+            }
+            value={isEnabled}
+          />
+        </View>
+
+        <View style={styles.grid}>
+          <View style={styles.row}>
+            <View
+              style={
+                styles.infoCard
+              }
+            >
+              <Text
+                style={
+                  styles.label
+                }
+              >
+                Nascimento
+              </Text>
+
+              <Text
+                style={
+                  styles.value
+                }
+              >
+                {formatarDataBR(
+                  detalhes?.dtNascimento
+                )}
+              </Text>
+            </View>
+
+            <View
+              style={
+                styles.infoCard
+              }
+            >
+              <Text
+                style={
+                  styles.label
+                }
+              >
+                Sexo
+              </Text>
+
+              <Text
+                style={
+                  styles.value
+                }
+              >
+                {detalhes?.sexo ===
+                "F"
+                  ? "Fêmea"
+                  : "Macho"}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <View
+              style={
+                styles.infoCard
+              }
+            >
+              <Text
+                style={
+                  styles.label
+                }
+              >
+                Raça
+              </Text>
+
+              <Text
+                style={
+                  styles.value
+                }
+              >
+                {detalhes?.racaNome ||
+                  "-"}
+              </Text>
+            </View>
+
+            <View
+              style={
+                styles.infoCard
+              }
+            >
+              <Text
+                style={
+                  styles.label
+                }
+              >
+                Maturidade
+              </Text>
+
+              <Text
+                style={
+                  styles.value
+                }
+              >
+                {maturidadeTexto ||
+                  "-"}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text
+              style={
+                styles.sectionTitle
+              }
+            >
+              Linhagem
+            </Text>
+
+            <View style={styles.row}>
+              <View
+                style={
+                  styles.infoCard
+                }
+              >
+                <Text
+                  style={
+                    styles.label
+                  }
+                >
+                  Pai
+                </Text>
+
+                <Text
+                  style={
+                    styles.value
+                  }
+                >
+                  {detalhes?.paiNome ||
+                    "-"}
+                </Text>
+              </View>
+
+              <View
+                style={
+                  styles.infoCard
+                }
+              >
+                <Text
+                  style={
+                    styles.label
+                  }
+                >
+                  Mãe
+                </Text>
+
+                <Text
+                  style={
+                    styles.value
+                  }
+                >
+                  {detalhes?.maeNome ||
+                    "-"}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text
+              style={
+                styles.sectionTitle
+              }
+            >
+              Grupo atual
+            </Text>
+
+            <View
+              style={
+                styles.groupContainer
+              }
+            >
+              <SelectBottomSheet
+                items={grupoItems}
+                value={
+                  novoGrupoSelecionado
+                }
+                onChange={
+                  handleMudarGrupo
+                }
+                title="Selecionar Grupo"
+                placeholder={
+                  detalhes?.grupo
+                    ?.nomeGrupo ||
+                  "Sem grupo"
+                }
+              />
+            </View>
+          </View>
+
+          <View
+            style={
+              styles.locationBadge
+            }
+          >
+            <Text
+              style={
+                styles.locationText
+              }
+            >
+              📍{" "}
+              {detalhes?.coords
+                ?.nome || "-"}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <ConfirmModal
+        visible={
+          modalMudarGrupoVisible
+        }
+        title="Confirmar Mudança de Grupo"
+        message={`Deseja mover o animal para "${nomeGrupoParaMudar}"?`}
+        onConfirm={
+          confirmarMudancaGrupo
+        }
+        onCancel={() => {
+          setModalMudarGrupoVisible(
+            false
+          );
+
+          setNovoGrupoSelecionado(
+            grupoAtualId
+          );
+        }}
+        confirmText="Mover"
+      />
+
+      <ConfirmModal
+        visible={modalVisible}
+        title="Alterar status"
+        message={`Deseja mudar o status para ${
+          novoStatus
+            ? "ATIVO"
+            : "INATIVO"
+        }?`}
+        onConfirm={
+          confirmarAlteracaoStatus
+        }
+        onCancel={() =>
+          setModalVisible(false)
+        }
+        confirmText={
+          novoStatus
+            ? "Ativar"
+            : "Inativar"
+        }
+        variant={
+          novoStatus
+            ? "success"
+            : "danger"
+        }
+      />
+    </>
+  );
 };
 
 const styles = StyleSheet.create({
-    infoCard: {
-        backgroundColor: colors.bg.card,
-        borderRadius: 16,
-        padding: 16,
-        shadowColor: colors.black,
+  card: {
+    backgroundColor:
+      colors.bg.card,
+
+    borderRadius: 18,
+
+    padding: 16,
+
+    borderWidth: 1,
+
+    borderColor:
+      colors.border.default,
+
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+
+        shadowOffset: {
+          width: 0,
+          height: 3,
+        },
+
         shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 12,
-        elevation: 2, 
-        zIndex: 1, // Valor baixo para não sobrepor o modal
-    },
-    infoHeader: { 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
-    },
-    nameRow: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 8 
-    },
-    nameText: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: colors.text.title
-    },
-    brincoText: {
-        fontSize: 14,
-        color: colors.text.muted,
-        marginTop: 2
-    },
-    categoryBadge: {
-        backgroundColor: colors.status.warningBg,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 12,
-    },
-    categoryText: { 
-        fontSize: 12, 
-        fontWeight: '600', 
-        color: '#92400E' 
-    },
-    statusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-    },
-    statusDot: { 
-        width: 8, 
-        height: 8, 
-        borderRadius: 4, 
-        marginRight: 4 
-    },
-    statusText: { 
-        fontSize: 12, 
-        fontWeight: '500' 
-    },
-    infoGrid: { 
-        marginTop: 12, 
-        gap: 4 
-    },
-    Row: { 
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    infoItem: { 
-        width: '48%', 
-    },
-    infoLabel: {
-        fontSize: 12,
-        color: colors.text.muted,
-        marginBottom: 4,
-        fontWeight: '500',
-    },
-    subtitle: {
-        fontSize: 14,
-        color: colors.text.muted,
-        marginBottom: 4,
-        fontWeight: '600',
-    },
-    infoValue: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: colors.text.accent,
-    },
-    infoValue2: {
-        fontSize: 16,
-        marginTop: 12,
-        marginLeft: 4,
-        fontWeight: '500',
-        color: colors.text.accent,
-    },
-    editButton: {
-        padding: 5,
-    },
+
+        shadowRadius: 8,
+      },
+
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+
+  header: {
+    flexDirection: "row",
+    justifyContent:
+      "space-between",
+    alignItems: "flex-start",
+  },
+
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+
+  name: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.text.title,
+  },
+
+  brinco: {
+    marginTop: 3,
+    fontSize: 13,
+    color: colors.text.muted,
+  },
+
+  categoryBadge: {
+    backgroundColor:
+      colors.status.warningBg,
+
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+
+    borderRadius: 999,
+  },
+
+  categoryText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#92400E",
+  },
+
+  editButton: {
+    width: 38,
+    height: 38,
+
+    borderRadius: 12,
+
+    backgroundColor:
+      colors.bg.section,
+
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  statusCard: {
+    marginTop: 16,
+
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+
+    borderRadius: 14,
+
+    backgroundColor:
+      colors.bg.section,
+
+    flexDirection: "row",
+    justifyContent:
+      "space-between",
+    alignItems: "center",
+  },
+
+  statusLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+  },
+
+  statusText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text.accent,
+  },
+
+  grid: {
+    marginTop: 16,
+    gap: 12,
+  },
+
+  row: {
+    flexDirection: "row",
+    gap: 12,
+  },
+
+  infoCard: {
+    flex: 1,
+
+    backgroundColor:
+      colors.bg.section,
+
+    padding: 12,
+
+    borderRadius: 14,
+  },
+
+  label: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.text.muted,
+    marginBottom: 4,
+  },
+
+  value: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text.accent,
+  },
+
+  section: {
+    marginTop: 6,
+  },
+
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.text.accent,
+    marginBottom: 10,
+  },
+
+  groupContainer: {
+    backgroundColor:
+      colors.bg.section,
+
+    borderRadius: 14,
+
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+
+  locationBadge: {
+    marginTop: 4,
+
+    alignSelf: "flex-start",
+
+    backgroundColor:
+      colors.bg.section,
+
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+
+    borderRadius: 999,
+  },
+
+  locationText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.text.secondary,
+  },
 });
