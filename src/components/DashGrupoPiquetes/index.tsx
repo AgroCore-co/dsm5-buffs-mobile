@@ -10,43 +10,36 @@ import { colors } from "../../styles/colors";
 
 import TextTitle from "../TextTitle";
 
-interface DashReproductionProps {
-  emProcesso: number;
-  confirmadas: number;
-  concluidas: number;
-  falhas: number;
-  ultimaData: string;
+interface DashGrupoPiqueteProps {
+  qtdPiquetes: number;
+  qtdGrupos: number;
 }
 
-export default function DashReproduction({
-  emProcesso,
-  confirmadas,
-  concluidas,
-  falhas,
-  ultimaData,
-}: DashReproductionProps) {
+export default function DashGrupoPiquetes({
+  qtdPiquetes,
+  qtdGrupos,
+}: DashGrupoPiqueteProps) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <View>
           <TextTitle>
-            Resumo Reprodutivo
+            Organização do Rebanho
           </TextTitle>
 
           <Text style={styles.subtitle}>
-            Acompanhamento das coberturas e inseminações
+            Distribuição em piquetes e grupos de manejo
           </Text>
         </View>
       </View>
-
       <View style={styles.statsGrid}>
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>
-              Em processo
+              Piquetes
             </Text>
             <Text style={styles.statValue}>
-              {emProcesso}
+              {qtdPiquetes}
             </Text>
           </View>
 
@@ -54,41 +47,13 @@ export default function DashReproduction({
 
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>
-              Confirmadas
+              Grupos
             </Text>
             <Text style={styles.statValue}>
-              {confirmadas}
+              {qtdGrupos}
             </Text>
           </View>
         </View>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>
-              Concluídas
-            </Text>
-            <Text style={styles.statValue}>
-              {concluidas}
-            </Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>
-              Falhas
-            </Text>
-            <Text style={styles.statValue}>
-              {falhas}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Atualizado em {ultimaData}
-        </Text>
       </View>
     </View>
   );
