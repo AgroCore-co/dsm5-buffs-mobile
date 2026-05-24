@@ -136,6 +136,16 @@ function shapeRetiradaCreate(p: any) {
   });
 }
 
+function shapeMovLoteCreate(p: any) {
+  return clean({
+    idPropriedade: p.idPropriedade,
+    idGrupo: p.idGrupo,
+    idLoteAtual: p.idLoteAtual,
+    idLoteAnterior: p.idLoteAnterior,
+    dtEntrada: p.dtEntrada,
+  });
+}
+
 function shapeProducaoDiariaCreate(p: any) {
   return clean({
     id: p.id,
@@ -220,6 +230,10 @@ const RESOLVERS: Record<string, Resolver> = {
   },
   producao_diaria: (op, p) => {
     if (op === 'CREATE') return { endpoint: '/producao-diaria', method: 'POST', body: shapeProducaoDiariaCreate(p) };
+    return null;
+  },
+  mov_lote: (op, p) => {
+    if (op === 'CREATE') return { endpoint: '/mov-lote', method: 'POST', body: shapeMovLoteCreate(p) };
     return null;
   },
 };

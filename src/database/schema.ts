@@ -228,6 +228,18 @@ export const CREATE_TABLES_SQL: string[] = [
     _raw          TEXT NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS idx_industrias_prop ON industrias(propriedadeId)`,
+  `CREATE TABLE IF NOT EXISTS mov_lote (
+    id            TEXT PRIMARY KEY,
+    propriedadeId TEXT,
+    idGrupo       TEXT,
+    idLoteAtual   TEXT,
+    dtEntrada     TEXT,
+    updatedAt     TEXT NOT NULL,
+    deletedAt     TEXT,
+    _synced       INTEGER NOT NULL DEFAULT 0,
+    _raw          TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_mov_lote_grupo ON mov_lote(idGrupo)`,
   `CREATE TABLE IF NOT EXISTS producao_diaria (
     id            TEXT PRIMARY KEY,
     propriedadeId TEXT NOT NULL,
