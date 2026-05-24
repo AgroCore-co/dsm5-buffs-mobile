@@ -18,6 +18,10 @@ import { piqueteService, Piquete } from "../services/piqueteService";
 import { getBufalosDoGrupo } from "../services/bufaloService";
 import { usePropriedade } from "../context/PropriedadeContext";
 import { RootStackParamList } from "../../App";
+import ArrowLeftIcon from "../icons/arrowLeft";
+import { FloatingAction } from "react-native-floating-action";
+import RotateLeftIcon from "../icons/arrow";
+import { MovimentacaoSheet } from "../components/MovimentacaoSheet";
 
 type RouteProps = RouteProp<RootStackParamList, "GrupoDetailScreen">;
 
@@ -161,6 +165,7 @@ export const GrupoDetailScreen = () => {
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [showMovSheet, setShowMovSheet] = useState(false);
 
   const LIMIT = 20;
 
@@ -262,18 +267,13 @@ export const GrupoDetailScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-
-        <View style={[styles.colorDot, { backgroundColor: color }]} />
-        <Text style={styles.headerTitle} numberOfLines={1}>{nomeGrupo}</Text>
+        <View style={{ alignItems: 'center', flexDirection: 'row', alignContent: 'center', marginTop: 10, gap: 40 }}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+            <ArrowLeftIcon width={24} height={24} />
+          </TouchableOpacity>
+          <Text style={styles.header1Text}>GRUPO: {nomeGrupo|| 'N/A'}</Text>
+        </View>
       </View>
-
       <FlatList
         data={bufalos}
         keyExtractor={(item) => String(item.idBufalo ?? item.id)}
@@ -296,7 +296,7 @@ export const GrupoDetailScreen = () => {
             sexo={item.sexo ?? "F"}
             maturidade={item.nivelMaturidade ?? ""}
             raca={item.racaNome}
-            categoria={maturidadeMap[item.nivelMaturidade] ?? item.nivelMaturidade}
+            categoria={maturidadeMap[item.categoria] ?? item.categoria}
           />
         )}
         ListEmptyComponent={
@@ -312,6 +312,38 @@ export const GrupoDetailScreen = () => {
           ) : null
         }
       />
+
+      {/* FAB — Mover Grupo */}
+      <FloatingAction
+        actions={[
+          {
+            text: "Mover Grupo",
+            icon: <RotateLeftIcon width={20} height={20} color={colors.text.accent} />,
+            name: "mover_grupo",
+            color: colors.brand.primary,
+          },
+        ]}
+        onPressItem={() => setShowMovSheet(true)}
+        buttonSize={60}
+        color={colors.brand.primary}
+        floatingIcon={<RotateLeftIcon width={22} height={22} color={colors.text.accent} />}
+        position="right"
+      />
+
+      {/* BottomSheet de Movimentação */}
+      {showMovSheet && propriedadeSelecionada && (
+        <MovimentacaoSheet
+          grupo={{ id: grupoId, nome: nomeGrupo, color }}
+          propriedadeId={propriedadeSelecionada.toString()}
+          loteAtualId={loteAtivo?.id}
+          grupoId={grupoId}
+          onClose={() => setShowMovSheet(false)}
+          onSuccess={() => {
+            setShowMovSheet(false);
+            onRefresh();
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -326,6 +358,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  headerButton: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerArrow: {
+    fontSize: 28,
+    fontWeight: '300',
+    color: colors.text.accent,
+  },
+
+  header1Text: {
+    fontSize: 25,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: colors.text.accent,
+    marginBottom: 5
   },
 
   // ── Header ──
@@ -413,7 +465,6 @@ const styles = StyleSheet.create({
 
   // ── Section ──
   section: {
-    marginHorizontal: 16,
     marginTop: 20,
   },
 
@@ -530,6 +581,7 @@ const styles = StyleSheet.create({
   // ── Lista ──
   listContent: {
     paddingBottom: 32,
+    marginHorizontal: 10,
   },
 
   emptyText: {
