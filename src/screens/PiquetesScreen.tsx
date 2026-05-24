@@ -15,9 +15,11 @@ import BuffaloLoader from "../components/BufaloLoader";
 import { grupoService, GrupoEnriquecido } from "../services/grupoService";
 import { usePropriedade } from "../context/PropriedadeContext";
 import { CardGrupo } from "../components/CardGrupos";
+import DashGrupoPiquetes from "../components/DashGrupoPiquetes";
 
 export const PiquetesScreen = () => {
   const [grupos, setGrupos] = useState<GrupoEnriquecido[]>([]);
+  const [resumo, setResumo] = useState({ qtdGrupos: 0, qtdPiquetes: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -27,11 +29,13 @@ export const PiquetesScreen = () => {
     try {
       if (!propriedadeSelecionada) return;
 
-      const data = await grupoService.getAllByPropriedade(
-        propriedadeSelecionada.toString()
-      );
+      const [data, resumoData] = await Promise.all([
+        grupoService.getAllByPropriedade(propriedadeSelecionada.toString()),
+        grupoService.getResumo(propriedadeSelecionada.toString()),
+      ]);
 
       setGrupos(data);
+      setResumo(resumoData);
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
     } finally {
@@ -75,6 +79,12 @@ export const PiquetesScreen = () => {
               onRefresh={onRefresh}
               colors={[colors.brand.primary]}
               tintColor={colors.brand.primary}
+            />
+          }
+          ListHeaderComponent={
+            <DashGrupoPiquetes
+              qtdPiquetes={resumo.qtdPiquetes}
+              qtdGrupos={resumo.qtdGrupos}
             />
           }
           renderItem={({ item }) => (

@@ -1,4 +1,4 @@
-import { queryAll, execute } from "../database/db";
+import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
 
@@ -81,6 +81,21 @@ export const grupoService = {
         ocupacao,
       };
     });
+  },
+
+  async getResumo(idPropriedade: string): Promise<{ qtdGrupos: number; qtdPiquetes: number }> {
+    const grupoCount = await queryFirst<{ total: number }>(
+      `SELECT COUNT(*) AS total FROM grupos WHERE propriedadeId = ? AND deletedAt IS NULL`,
+      [idPropriedade],
+    );
+    const loteCount = await queryFirst<{ total: number }>(
+      `SELECT COUNT(*) AS total FROM lotes WHERE propriedadeId = ? AND deletedAt IS NULL`,
+      [idPropriedade],
+    );
+    return {
+      qtdGrupos: grupoCount?.total ?? 0,
+      qtdPiquetes: loteCount?.total ?? 0,
+    };
   },
 
   async create(data: NovoGrupoDTO): Promise<Grupo> {
