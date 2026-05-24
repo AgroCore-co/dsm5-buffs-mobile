@@ -300,12 +300,28 @@ export const moverBufaloDeGrupo = async (
   idBufalo: string,
   idNovoGrupo: string,
 ) => {
-  const payload = {
+  const now = new Date().toISOString();
+
+  // Atualiza localmente no SQLite antes de enfileirar
+  const existing = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE id = ?`,
+    [idBufalo],
+  );
+  if (existing) {
+    const merged = { ...JSON.parse(existing._raw), idGrupo: idNovoGrupo, updatedAt: now };
+    await execute(
+      `UPDATE bufalos SET _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
+      [JSON.stringify(merged), now, idBufalo],
+    );
+  }
+
+  // Enfileira para sync com a API
+  await enqueue('bufalos', 'UPDATE', {
+    id: idBufalo,
     idsBufalos: [idBufalo],
     idNovoGrupo,
     motivo: 'Mudança manual de grupo via tela de animal',
-  };
-  await enqueue('bufalos', 'UPDATE', { id: idBufalo, ...payload });
+  });
 };
 
 export const getBufaloById = async (

@@ -30,19 +30,19 @@ export const grupoService = {
     );
 
     const loteRows = await queryAll<{ _raw: string }>(
-      `SELECT _raw FROM lotes WHERE propriedadeId = ? AND deletedAt IS NULL`,
+      `SELECT _raw FROM lotes WHERE propriedadeId = ? AND deletedAt IS NULL ORDER BY updatedAt DESC`,
       [idPropriedade],
     );
 
-    // mapa idGrupo → lote
+    // mapa idGrupo → lote mais recente (primeiro vence por ORDER BY updatedAt DESC)
     const loteByGrupo: Record<string, { nomeLote: string; qtdMax: number }> = {};
     loteRows.forEach((r) => {
       const l = JSON.parse(r._raw);
       const key = l.grupo?.idGrupo ?? l.idGrupo ?? null;
-      if (key) {
+      if (key && !loteByGrupo[key]) {
         loteByGrupo[key] = {
           nomeLote: l.nomeLote ?? "Sem piquete",
-          qtdMax: l.qtdMax ?? 0,  // API retorna camelCase
+          qtdMax: l.qtdMax ?? l.qtd_max ?? 0,
         };
       }
     });
