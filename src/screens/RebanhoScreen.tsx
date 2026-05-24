@@ -93,6 +93,7 @@ export const RebanhoScreen = () => {
         raca: b.raca?.nome ?? "Sem raça definida",
         sexo: b.sexo,
         maturidade: b.nivelMaturidade,
+        categoria: b.categoria
       }));
 
       setAnimais(animaisFormatados);
@@ -243,7 +244,8 @@ export const RebanhoScreen = () => {
                 status={item.status}
                 sexo={item.sexo}
                 maturidade={item.maturidade || "Desconhecida"}
-                categoria={item.raca}
+                raca={item.raca}
+                categoria={item.categoria}
                 onPress={() =>
                   navigation.navigate("AnimalDetail", { id: item.id })
                 }
