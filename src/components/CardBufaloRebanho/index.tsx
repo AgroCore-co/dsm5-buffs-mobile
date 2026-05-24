@@ -237,8 +237,7 @@ const styles = StyleSheet.create({
 
   categoryBadge: {
     alignSelf: "flex-start",
-    backgroundColor:
-      colors.brand.primaryLight,
+    backgroundColor: colors.brand.primaryLight,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,

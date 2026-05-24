@@ -49,7 +49,7 @@ export const CardGrupo = ({
             </Text>
 
             <Text style={styles.location}>
-              Localização: {piquete || "Sem piquete"}
+              Localização: {piquete || "Sem localização"}
             </Text>
           </View>
 
@@ -168,6 +168,9 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: 12,
     gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+    paddingTop: 10
   },
 
   progressHeader: {

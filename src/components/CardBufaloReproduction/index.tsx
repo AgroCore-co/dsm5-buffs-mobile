@@ -175,7 +175,7 @@ export const CardReproducao: React.FC<
             </Text>
           </View>
 
-          <View style={styles.detailItem}>
+          <View style={styles.detailItemFoolter}>
             <Text style={styles.detailLabel}>
               Resultado:
             </Text>
@@ -291,6 +291,16 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: "center",
   },
+
+  detailItemFoolter: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+    paddingTop: 10
+  },
+
 
   detailLabel: {
     fontSize: 12,
