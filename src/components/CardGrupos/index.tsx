@@ -5,13 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-
 import { colors } from "../../styles/colors";
+import IconBuffs from '../../icons/agroCore';
 
 interface CardGrupoProps {
   nome: string;
   piquete?: string;
-  status?: string;
   quantidade?: number;
   ocupacao?: number;
   color?: string;
@@ -21,7 +20,6 @@ interface CardGrupoProps {
 export const CardGrupo = ({
   nome,
   piquete,
-  status = "Ativo",
   quantidade = 0,
   ocupacao = 0,
   color = colors.brand.primary,
@@ -30,80 +28,60 @@ export const CardGrupo = ({
   return (
     <TouchableOpacity
       style={styles.container}
-      activeOpacity={0.92}
       onPress={onPress}
+      activeOpacity={0.9}
     >
-      {/* Barra lateral */}
-      <View
-        style={[
-          styles.colorBar,
-          { backgroundColor: color },
-        ]}
-      />
+    <View style={styles.statusBar}>
+      <View style={styles.iconWrapper}>
+        <IconBuffs
+          width={24}
+          height={24}
+          fill={color}
+        />
+      </View>
+    </View>
 
-      {/* Conteúdo */}
       <View style={styles.content}>
-        {/* Header */}
         <View style={styles.header}>
-          <View style={{ flex: 1 }}>
+          <View style={styles.info}>
             <Text style={styles.title}>
               {nome}
             </Text>
 
             <Text style={styles.location}>
-              📍 {piquete || "Sem piquete"}
+              Localização: {piquete || "Sem piquete"}
             </Text>
           </View>
 
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
-              {status}
+              {quantidade} Cabeças
             </Text>
           </View>
         </View>
 
-        {/* Footer */}
         <View style={styles.footer}>
-          {/* Quantidade */}
-          <View>
-            <Text style={styles.label}>
-              Efetivo
-            </Text>
-
-            <View style={styles.quantityRow}>
-              <Text style={styles.quantity}>
-                {quantidade}
-              </Text>
-
-              <Text style={styles.quantityLabel}>
-                cabeças
-              </Text>
-            </View>
-          </View>
-
-          {/* Ocupação */}
-          <View style={styles.occupationContainer}>
+          <View style={styles.progressHeader}>
             <Text style={styles.label}>
               Ocupação
             </Text>
 
-            <View style={styles.progressRow}>
-              <View style={styles.progressBackground}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width: `${ocupacao}%`,
-                      backgroundColor: color,
-                    },
-                  ]}
-                />
-              </View>
+            <Text style={styles.percent}>
+              {ocupacao}%
+            </Text>
+          </View>
 
-              <Text style={styles.percent}>
-                {ocupacao}%
-              </Text>
-            </View>
+          <View style={styles.progressBackground}>
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  width: `${ocupacao}%`,
+                  backgroundColor:
+                    colors.brand.primary,
+                },
+              ]}
+            />
           </View>
         </View>
       </View>
@@ -114,48 +92,63 @@ export const CardGrupo = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.bg.card,
     borderRadius: 18,
-    overflow: "hidden",
     marginBottom: 14,
-
     borderWidth: 1,
     borderColor: colors.border.default,
+    paddingVertical: 14,
+    paddingRight: 14,
 
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 3,
     },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
   },
 
-  colorBar: {
-    width: 8,
+  statusBar: {
+    width: 58,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  iconWrapper: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   content: {
     flex: 1,
-    padding: 16,
   },
 
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: 10,
+  },
+
+  info: {
+    flex: 1,
   },
 
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700",
     color: colors.text.accent,
   },
 
   location: {
-    marginTop: 4,
-    fontSize: 13,
+    marginTop: 3,
+    fontSize: 12,
     color: colors.text.secondary,
   },
 
@@ -167,67 +160,43 @@ const styles = StyleSheet.create({
   },
 
   badgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
-    color: colors.brand.primary,
-  },
-
-  footer: {
-    marginTop: 22,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-  },
-
-  label: {
-    fontSize: 12,
-    color: colors.text.secondary,
-    marginBottom: 4,
-  },
-
-  quantityRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 4,
-  },
-
-  quantity: {
-    fontSize: 26,
-    fontWeight: "800",
     color: colors.text.accent,
   },
 
-  quantityLabel: {
-    fontSize: 12,
+  footer: {
+    marginTop: 12,
+    gap: 6,
+  },
+
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  label: {
+    fontSize: 11,
     color: colors.text.secondary,
   },
 
-  occupationContainer: {
-    alignItems: "flex-end",
-  },
-
-  progressRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  percent: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.text.accent,
   },
 
   progressBackground: {
-    width: 80,
-    height: 8,
+    width: "100%",
+    height: 6,
     borderRadius: 999,
-    backgroundColor: colors.status.pendingBg,
+    backgroundColor: colors.brand.warningFade,
     overflow: "hidden",
   },
 
   progressFill: {
     height: "100%",
     borderRadius: 999,
-  },
-
-  percent: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.text.accent,
   },
 });

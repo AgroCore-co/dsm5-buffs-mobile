@@ -1,107 +1,241 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
+
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from "react-native";
+
 import { colors } from "../../styles/colors";
-import Sanit from "../../../assets/images/termometro.svg";
+
 import { formatarDataBR } from "../../utils/date";
-import Calendar from '../../../assets/images/calendar-clock.svg';
 
+import Calendar from "../../../assets/images/calendar-clock.svg";
 
-export const SanitarioCard = ({ item, onDelete, onPress }: any) => (
-  <TouchableOpacity style={styles.card} onPress={onPress}>
-    <View style={styles.iconContainer}>
-    </View>
+export const SanitarioCard = ({
+  item,
+  onDelete,
+  onPress,
+}: any) => (
+  <TouchableOpacity
+    style={styles.card}
+    onPress={onPress}
+    activeOpacity={0.9}
+  >
+    <View style={styles.leftAccent} />
 
-    {/* Bloco de Texto Principal */}
-    <View style={styles.textContainer}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6}}>
-        <Text style={styles.textData}>
-          {item.doenca ?? "Sem diagnóstico"} |
-        </Text>
+    <View style={styles.content}>
+      <View style={styles.header}>
+        <View style={styles.diseaseContainer}>
+          <Text style={styles.diseaseText}>
+            {item.doenca ??
+              "Sem diagnóstico"}
+          </Text>
+        </View>
 
-        <Calendar width={12} height={12} fill={colors.text.accent} />
+        <View style={styles.dateContainer}>
+          <Calendar
+            width={13}
+            height={13}
+            fill={colors.text.secondary}
+          />
 
-        <Text style={styles.textData}>
-          {formatarDataBR(item?.dtAplicacao)}
-        </Text>
+          <Text style={styles.textData}>
+            {formatarDataBR(
+              item?.dtAplicacao
+            )}
+          </Text>
+        </View>
       </View>
-      <Text style={styles.textInfoPrincipal} numberOfLines={1}>
-        MEDICAÇÃO: {item.nome_medicamento ?? "-"}
-      </Text>
 
-      <Text style={styles.textInfoSecundaria} numberOfLines={1}>
-        DOSAGEM:{" "}
-        {item.dosagem ? `${item.dosagem} ${item.unidadeMedida}` : "-"}
-      </Text>
+      <View style={styles.infoSection}>
+        <View style={styles.mainInfo}>
+          <Text style={styles.label}>
+            Medicação
+          </Text>
 
-      <Text style={styles.textInfoSecundaria} numberOfLines={1}>
-        RETORNO? - {item.necessitaRetorno ? "Sim" : "Não"}
-      </Text>
+          <Text
+            style={styles.value}
+            numberOfLines={1}
+          >
+            {item.nome_medicamento ??
+              "-"}
+          </Text>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.mainInfo}>
+          <Text style={styles.label}>
+            Dosagem
+          </Text>
+
+          <Text
+            style={styles.value}
+            numberOfLines={1}
+          >
+            {item.dosagem
+              ? `${item.dosagem} ${item.unidadeMedida}`
+              : "-"}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.metaRow}>
+        <View style={styles.metaBadge}>
+          <Text style={styles.metaText}>
+            Retorno:{" "}
+            {item.necessitaRetorno
+              ? "Sim"
+              : "Não"}
+          </Text>
+        </View>
+      </View>
     </View>
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.bg.card,
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 10,
     flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
+    backgroundColor: colors.bg.card,
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: colors.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 3,
+        elevation: 2,
       },
     }),
   },
-  iconContainer: {
-    width: 20,
-    height: 5,
-    borderRadius: 24,
+
+  leftAccent: {
+    width: 4,
     backgroundColor: colors.brand.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
   },
-  textContainer: {
+
+  content: {
     flex: 1,
-    flexDirection: "column",
-    gap: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
-  textData: {
+
+  header: {
+    flexDirection: "row",
+    justifyContent:
+      "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  diseaseContainer: {
+    flex: 1,
+  },
+
+  diseaseText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text.accent,
-    textTransform: 'uppercase',
-    includeFontPadding: false,
+    textTransform: "uppercase",
   },
-  textInfoPrincipal: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: colors.text.accent
+
+  dateContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
-  textInfoSecundaria: {
+
+  textData: {
     fontSize: 12,
-    fontWeight: '400',
-    color: colors.text.placeholder,
-    textTransform: 'uppercase',
-    includeFontPadding: false,
+    fontWeight: "600",
+    color: colors.text.secondary,
   },
+
+  infoSection: {
+    marginTop: 12,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent:
+      "space-between",
+  },
+
+  mainInfo: {
+    flex: 1,
+  },
+
+  label: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: colors.text.secondary,
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+
+  value: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text.accent,
+  },
+
+  divider: {
+    width: 1,
+    height: 30,
+    backgroundColor:
+      colors.border.default,
+
+    marginHorizontal: 12,
+  },
+
+  metaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+
+    marginTop: 12,
+    paddingTop: 10,
+
+    borderTopWidth: 1,
+    borderTopColor:
+      colors.border.default,
+  },
+
+  metaBadge: {
+    backgroundColor:
+      colors.bg.section,
+
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+
+    borderRadius: 8,
+  },
+
+  metaText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.text.secondary,
+  },
+
   deleteButton: {
-    flexShrink: 0,
     padding: 8,
-    marginLeft: 8,
   },
+
   deleteText: {
     color: colors.status.error,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

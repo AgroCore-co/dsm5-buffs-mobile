@@ -91,22 +91,6 @@ export const CardBufalo: React.FC<
             </Text>
           </View>
 
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor:
-                  statusColor.soft,
-              },
-            ]}
-          >
-            <Text style={styles.statusText}>
-              {isAtivo
-                ? "Ativo"
-                : "Inativo"}
-            </Text>
-          </View>
-
           {categoria ? (
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>
@@ -226,11 +210,14 @@ const styles = StyleSheet.create({
   },
 
   details: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
     marginTop: 12,
     gap: 8,
   },
 
   detailItem: {
+    marginTop: 10,
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",

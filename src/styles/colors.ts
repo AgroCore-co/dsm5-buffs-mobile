@@ -51,6 +51,7 @@ export const colors = {
     successText: "#065F46",
     successBg: "#D1FAE5",
 
+    warning: "#F2B84D",
     warningBg: "#FEF3C7",
     warningText: "#B45309",
     warningDark: "#78350F",

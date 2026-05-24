@@ -20,7 +20,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       style={[
         styles.container,
         {
-          paddingTop: hp(1),
+          paddingTop: hp(0.5),
           paddingHorizontal: wp(2),
           backgroundColor,
         },
@@ -34,6 +34,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,               // garante que o layout ocupe toda a tela
+    flex: 1, 
   },
 });

@@ -385,177 +385,90 @@ export const AnimalInfoCard = ({
         </View>
 
         <View style={styles.grid}>
+            <Text style={styles.sectionTitle}>
+              Dados Base
+            </Text>
+          <View style={styles.section}>
           <View style={styles.row}>
-            <View
-              style={
-                styles.infoCard
-              }
-            >
-              <Text
-                style={
-                  styles.label
-                }
-              >
+            <View style={styles.infoCard}>
+              <Text style={styles.label}>
                 Nascimento
               </Text>
 
-              <Text
-                style={
-                  styles.value
-                }
-              >
+              <Text style={styles.value}>
                 {formatarDataBR(
                   detalhes?.dtNascimento
                 )}
               </Text>
             </View>
 
-            <View
-              style={
-                styles.infoCard
-              }
-            >
-              <Text
-                style={
-                  styles.label
-                }
-              >
+            <View style={styles.infoCard}>
+              <Text style={styles.label}>
                 Sexo
               </Text>
 
-              <Text
-                style={
-                  styles.value
-                }
-              >
-                {detalhes?.sexo ===
-                "F"
-                  ? "Fêmea"
-                  : "Macho"}
+              <Text style={styles.value}>
+                {detalhes?.sexo === "F"? "Fêmea" : "Macho"}
               </Text>
             </View>
           </View>
 
           <View style={styles.row}>
-            <View
-              style={
-                styles.infoCard
-              }
-            >
-              <Text
-                style={
-                  styles.label
-                }
-              >
+            <View style={styles.infoCard}>
+              <Text style={styles.label}>
                 Raça
               </Text>
 
-              <Text
-                style={
-                  styles.value
-                }
-              >
-                {detalhes?.racaNome ||
-                  "-"}
+              <Text style={styles.value}>
+                {detalhes?.racaNome || "-"}
               </Text>
             </View>
 
-            <View
-              style={
-                styles.infoCard
-              }
-            >
-              <Text
-                style={
-                  styles.label
-                }
-              >
+            <View style={styles.infoCard}>
+              <Text style={styles.label}>
                 Maturidade
               </Text>
 
-              <Text
-                style={
-                  styles.value
-                }
-              >
+              <Text style={styles.value}>
                 {maturidadeTexto ||
                   "-"}
               </Text>
             </View>
           </View>
-
-          <View style={styles.section}>
-            <Text
-              style={
-                styles.sectionTitle
-              }
-            >
+        </View>
+            <Text style={styles.sectionTitle}>
               Linhagem
             </Text>
+          <View style={styles.section}>
 
             <View style={styles.row}>
-              <View
-                style={
-                  styles.infoCard
-                }
-              >
-                <Text
-                  style={
-                    styles.label
-                  }
-                >
+              <View style={styles.infoCard}>
+                <Text style={styles.label}>
                   Pai
                 </Text>
 
-                <Text
-                  style={
-                    styles.value
-                  }
-                >
-                  {detalhes?.paiNome ||
-                    "-"}
+                <Text style={styles.value}>
+                  {detalhes?.paiNome || "-"}
                 </Text>
               </View>
 
-              <View
-                style={
-                  styles.infoCard
-                }
-              >
-                <Text
-                  style={
-                    styles.label
-                  }
-                >
+              <View style={ styles.infoCard}>
+                <Text style={styles.label}>
                   Mãe
                 </Text>
 
-                <Text
-                  style={
-                    styles.value
-                  }
-                >
-                  {detalhes?.maeNome ||
-                    "-"}
+                <Text style={styles.value}>
+                  {detalhes?.maeNome || "-"}
                 </Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text
-              style={
-                styles.sectionTitle
-              }
-            >
+            <Text style={styles.sectionTitle}>
               Grupo atual
             </Text>
-
-            <View
-              style={
-                styles.groupContainer
-              }
-            >
+          <View style={styles.section}>
+            <View style={styles.groupContainer}>
               <SelectBottomSheet
                 items={grupoItems}
                 value={
@@ -572,22 +485,11 @@ export const AnimalInfoCard = ({
                 }
               />
             </View>
-          </View>
-
-          <View
-            style={
-              styles.locationBadge
-            }
-          >
-            <Text
-              style={
-                styles.locationText
-              }
-            >
-              📍{" "}
-              {detalhes?.coords
-                ?.nome || "-"}
+          <View style={styles.locationBadge}>
+            <Text style={styles.locationText}>
+              Localização: {" "} {detalhes?.coords?.nome || "-"}
             </Text>
+          </View>
           </View>
         </View>
       </View>
@@ -644,32 +546,21 @@ export const AnimalInfoCard = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor:
-      colors.bg.card,
-
+    backgroundColor: colors.bg.card,
     borderRadius: 18,
-
     padding: 16,
-
     borderWidth: 1,
-
-    borderColor:
-      colors.border.default,
-
+    borderColor: colors.border.default,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-
         shadowOffset: {
           width: 0,
           height: 3,
         },
-
         shadowOpacity: 0.05,
-
         shadowRadius: 8,
       },
-
       android: {
         elevation: 2,
       },
@@ -678,8 +569,7 @@ const styles = StyleSheet.create({
 
   header: {
     flexDirection: "row",
-    justifyContent:
-      "space-between",
+    justifyContent: "space-between",
     alignItems: "flex-start",
   },
 
@@ -703,12 +593,9 @@ const styles = StyleSheet.create({
   },
 
   categoryBadge: {
-    backgroundColor:
-      colors.status.warningBg,
-
+    backgroundColor: colors.status.warningBg,
     paddingHorizontal: 8,
     paddingVertical: 4,
-
     borderRadius: 999,
   },
 
@@ -721,30 +608,20 @@ const styles = StyleSheet.create({
   editButton: {
     width: 38,
     height: 38,
-
     borderRadius: 12,
-
-    backgroundColor:
-      colors.bg.section,
-
+    backgroundColor: colors.bg.section,
     justifyContent: "center",
     alignItems: "center",
   },
 
   statusCard: {
     marginTop: 16,
-
     paddingVertical: 12,
     paddingHorizontal: 14,
-
     borderRadius: 14,
-
-    backgroundColor:
-      colors.bg.section,
-
+    backgroundColor: colors.bg.section,
     flexDirection: "row",
-    justifyContent:
-      "space-between",
+    justifyContent: "space-between",
     alignItems: "center",
   },
 
@@ -778,13 +655,7 @@ const styles = StyleSheet.create({
 
   infoCard: {
     flex: 1,
-
-    backgroundColor:
-      colors.bg.section,
-
     padding: 12,
-
-    borderRadius: 14,
   },
 
   label: {
@@ -801,43 +672,31 @@ const styles = StyleSheet.create({
   },
 
   section: {
-    marginTop: 6,
+    backgroundColor: colors.bg.section,
+    borderRadius: 14,
   },
 
   sectionTitle: {
     fontSize: 13,
     fontWeight: "700",
     color: colors.text.accent,
-    marginBottom: 10,
   },
 
   groupContainer: {
-    backgroundColor:
-      colors.bg.section,
-
     borderRadius: 14,
-
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 10,
   },
 
   locationBadge: {
-    marginTop: 4,
-
-    alignSelf: "flex-start",
-
-    backgroundColor:
-      colors.bg.section,
-
+    alignSelf: "center",
     paddingHorizontal: 12,
-    paddingVertical: 8,
-
-    borderRadius: 999,
+    marginBottom: 10
   },
 
   locationText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.text.secondary,
+    fontSize: 14,
+    fontWeight: "900",
+    color: colors.text.accent,
   },
 });

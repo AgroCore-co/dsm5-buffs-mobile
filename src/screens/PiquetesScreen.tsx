@@ -61,7 +61,7 @@ export const PiquetesScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.header1Text}>GRUPOS/PIQUETES</Text>
+        <Text style={styles.header1Text}>GRUPOS | PIQUETES</Text>
       </View>
 
       <MainLayout>
