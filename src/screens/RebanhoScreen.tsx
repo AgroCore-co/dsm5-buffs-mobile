@@ -16,7 +16,7 @@ import { CardBufalo } from '../components/CardBufaloRebanho';
 import FiltroRebanho from '../components/SearchBar';
 import { CadastrarBufaloForm } from '../components/CriaBufaloBottomSheet';
 import BuffaloLoader from '../components/BufaloLoader';
-import IconFiltro from '../../assets/images/agrocore.svg';
+import IconFiltro from '../icons/filter';
 type Animal = {
   id: string;
   nome: string;
@@ -231,7 +231,7 @@ export const RebanhoScreen = () => {
                   style={styles.filterButton} 
                   onPress={() => setShowFiltro(true)}
                 >
-                  <IconFiltro width={24} height={24} fill={colors.text.accent} />
+                  <IconFiltro width={20} height={20} fill={colors.text.accent} />
                 </TouchableOpacity>
               </View>
             </View>
