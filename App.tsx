@@ -5,7 +5,7 @@ import { PortalProvider } from '@gorhom/portal';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 // App.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { runMigrations } from './src/database/migrations';
 import { createNotificationChannels } from './src/services/notificationService';
 import { SyncProvider } from './src/context/SyncContext';
@@ -40,8 +40,6 @@ import GlobeIcon from './src/icons/sex';
 import Fance from './src/icons/fance';
 import { NfcScannerScreen } from './src/screens/NfcScannerScreen';
 import BuffaloLoader from './src/components/BufaloLoader';
-import { InitialSyncScreen } from './src/screens/InitialSyncScreen';
-import { isFirstSync } from './src/database/db';
 
 
 export type RootStackParamList = {
@@ -165,18 +163,8 @@ function MainTab() {
 
 function AppContent() {
   const { userToken, loading } = useAuth();
-  const { propriedadeSelecionada } = usePropriedade();
-  const [needsInitialSync, setNeedsInitialSync] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (userToken && propriedadeSelecionada) {
-      isFirstSync(propriedadeSelecionada).then(setNeedsInitialSync);
-    } else {
-      setNeedsInitialSync(false);
-    }
-  }, [userToken, propriedadeSelecionada]);
-
-  if (loading || needsInitialSync === null) {
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <BuffaloLoader />
@@ -184,25 +172,16 @@ function AppContent() {
     );
   }
 
-  if (userToken && propriedadeSelecionada && needsInitialSync) {
-    return (
-      <InitialSyncScreen
-        propriedadeId={propriedadeSelecionada}
-        onSyncComplete={() => setNeedsInitialSync(false)}
-      />
-    );
-  }
-
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!userToken ? (
-          <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
       ) : (
         <>
-        <Stack.Screen name="MainTab" component={MainTab} />
-        <Stack.Screen name="AnimalDetail" component={AnimalDetailScreen} />
-        <Stack.Screen name="NfcScannerScreen" component={NfcScannerScreen} options={{ title: 'Scanner NFC' }} />
-        <Stack.Screen name="Notificacoes" component={NotificacoesScreen} options={{ title: 'Notificações' }} />
+          <Stack.Screen name="MainTab" component={MainTab} />
+          <Stack.Screen name="AnimalDetail" component={AnimalDetailScreen} />
+          <Stack.Screen name="NfcScannerScreen" component={NfcScannerScreen} options={{ title: 'Scanner NFC' }} />
+          <Stack.Screen name="Notificacoes" component={NotificacoesScreen} options={{ title: 'Notificações' }} />
         </>
       )}
     </Stack.Navigator>

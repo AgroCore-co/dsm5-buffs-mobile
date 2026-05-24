@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useDimensions } from '../../utils/useDimensions';
-import { SyncStatusBanner } from '../../components/SyncStatusBanner';
 import { colors } from '../../styles/colors';
 
 interface MainLayoutProps {
@@ -26,7 +25,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         },
       ]}
     >
-      <SyncStatusBanner />
       {children}
     </View>
   );
@@ -34,6 +32,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
+    flex: 1,
   },
 });
