@@ -62,14 +62,18 @@ interface LoteMapSectionProps {
   lotes: Piquete[];
   grupoId: string;
   grupoColor: string;
-  lotePrincipal: Piquete | null;
 }
 
-const LoteMapSection = ({ lotes, grupoId, grupoColor, lotePrincipal }: LoteMapSectionProps) => {
-  // Exibe apenas o lote associado a este grupo — sem poluir o mapa com outros piquetes
+const LoteMapSection = ({ lotes, grupoId, grupoColor }: LoteMapSectionProps) => {
+  // Exibe apenas os lotes deste grupo:
+  //   ativo  → cor vibrante do grupo
+  //   descanso → cinza apagado
   const lotesDoGrupo = lotes
     .filter((l) => l.idGrupo === grupoId)
-    .map((l) => ({ ...l, color: grupoColor }));
+    .map((l) => ({
+      ...l,
+      color: l.status === "descanso" ? "#C8C8C8" : grupoColor,
+    }));
 
   const algumTemGeometria = lotesDoGrupo.some((l) => l.coords && l.coords.length > 0);
 
@@ -89,34 +93,41 @@ const LoteMapSection = ({ lotes, grupoId, grupoColor, lotePrincipal }: LoteMapSe
         </View>
       )}
 
-      {lotePrincipal ? (
-        <View style={styles.loteInfoCard}>
-          <View style={[styles.loteColorBar, { backgroundColor: grupoColor }]} />
-          <View style={styles.loteInfoContent}>
-            <Text style={styles.loteNome}>{lotePrincipal.nome}</Text>
-            <View style={styles.loteChips}>
-              {typeof lotePrincipal.areaM2 === "number" && lotePrincipal.areaM2 > 0 && (
-                <View style={styles.chip}>
-                  <Text style={styles.chipText}>
-                    {(lotePrincipal.areaM2 / 10000).toFixed(1)} ha
-                  </Text>
+      {lotesDoGrupo.length > 0 ? (
+        lotesDoGrupo.map((lote) => {
+          const emDescanso = lote.status === "descanso";
+          const barColor = emDescanso ? "#C8C8C8" : grupoColor;
+          const statusBg = emDescanso ? colors.status.warningBg : colors.status.successBg;
+          const statusText = emDescanso ? colors.status.warningText : colors.status.successText;
+          const statusLabel = emDescanso ? "Descanso" : "Em uso";
+          return (
+            <View key={lote.id} style={[styles.loteInfoCard, emDescanso && styles.loteInfoCardDisabled]}>
+              <View style={[styles.loteColorBar, { backgroundColor: barColor }]} />
+              <View style={styles.loteInfoContent}>
+                <Text style={[styles.loteNome, emDescanso && styles.loteNomeDisabled]}>
+                  {lote.nome}
+                </Text>
+                <View style={styles.loteChips}>
+                  <View style={[styles.chip, { backgroundColor: statusBg }]}>
+                    <Text style={[styles.chipText, { color: statusText }]}>{statusLabel}</Text>
+                  </View>
+                  {typeof lote.areaM2 === "number" && lote.areaM2 > 0 && (
+                    <View style={styles.chip}>
+                      <Text style={styles.chipText}>
+                        {(lote.areaM2 / 10000).toFixed(1)} ha
+                      </Text>
+                    </View>
+                  )}
+                  {lote.tipoLote ? (
+                    <View style={styles.chip}>
+                      <Text style={styles.chipText}>{lote.tipoLote}</Text>
+                    </View>
+                  ) : null}
                 </View>
-              )}
-              {lotePrincipal.tipoLote ? (
-                <View style={styles.chip}>
-                  <Text style={styles.chipText}>{lotePrincipal.tipoLote}</Text>
-                </View>
-              ) : null}
-              {lotePrincipal.status ? (
-                <View style={[styles.chip, { backgroundColor: colors.status.successBg }]}>
-                  <Text style={[styles.chipText, { color: colors.status.successText }]}>
-                    {lotePrincipal.status}
-                  </Text>
-                </View>
-              ) : null}
+              </View>
             </View>
-          </View>
-        </View>
+          );
+        })
       ) : (
         <View style={styles.loteInfoCard}>
           <Text style={styles.emptyText}>Grupo sem piquete associado</Text>
@@ -194,11 +205,12 @@ export const GrupoDetailScreen = () => {
     });
   };
 
-  // Lote associado a este grupo
-  const lotePrincipal = lotes.find((l) => l.idGrupo === grupoId) ?? null;
+  // Lote ativo do grupo (não em descanso), para cálculo de qtdMax e stats
+  const lotesDoGrupo = lotes.filter((l) => l.idGrupo === grupoId);
+  const loteAtivo = lotesDoGrupo.find((l) => l.status !== "descanso") ?? lotesDoGrupo[0] ?? null;
 
-  // Ocupação calculada com base nos bufalos carregados vs qtdMax do lote
-  const qtdMax = (lotePrincipal as any)?.qtdMax ?? 0;
+  // Ocupação calculada com base nos bufalos carregados vs qtdMax do lote ativo
+  const qtdMax = (loteAtivo as any)?.qtdMax ?? 0;
   const ocupacao = qtdMax > 0 ? Math.min(100, Math.round((totalBufalos / qtdMax) * 100)) : 0;
 
   if (loading) {
@@ -223,7 +235,7 @@ export const GrupoDetailScreen = () => {
         total={totalBufalos}
         qtdMax={qtdMax}
         ocupacao={ocupacao}
-        nomeLote={lotePrincipal?.nome ?? ""}
+        nomeLote={loteAtivo?.nome ?? ""}
       />
 
       {/* Mapa + info lote */}
@@ -231,7 +243,6 @@ export const GrupoDetailScreen = () => {
         lotes={lotes}
         grupoId={grupoId}
         grupoColor={color}
-        lotePrincipal={lotePrincipal}
       />
 
       {/* Título da lista de animais */}
@@ -451,7 +462,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.border.default,
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+
+  loteInfoCardDisabled: {
+    opacity: 0.55,
   },
 
   loteColorBar: {
@@ -469,6 +484,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.text.title,
     marginBottom: 6,
+  },
+
+  loteNomeDisabled: {
+    color: colors.text.muted,
   },
 
   loteChips: {
