@@ -68,4 +68,35 @@ export const colors = {
   // === PRIMITIVOS ===
   white: "#FFFFFF",
   black: "#000000",
+
+  // === ALIASES RETROCOMPATÍVEIS (não usar em código novo) ===
+  yellow: {
+    base: "#FFCF78",
+    button: "#FFCF78",
+    dark: "#F2B84D",
+    static: "#F59E0B",
+    warning: "#fae39dff",
+    fundo: "#fae39d4b",
+  },
+  red: {
+    base: "#df2a2aff",
+    inactive: "#ffe3e3",
+    extra: "#EF4444",
+    text: "#B91C1C",
+  },
+  gray: {
+    base: "#6B7280",
+    claro: "#F3F4F6",
+    text: "#9CA3AF",
+    disabled: "#E5E7EB",
+    inactive: "#E5E7EB",
+  },
+  green: {
+    active: "#9DFFBE",
+    text: "#065F46",
+    extra: "#10B981",
+  },
+  brown: {
+    base: "#43310B",
+  },
 };
