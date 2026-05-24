@@ -42,7 +42,7 @@ export const grupoService = {
       if (key) {
         loteByGrupo[key] = {
           nomeLote: l.nomeLote ?? "Sem piquete",
-          qtdMax: l.qtd_max ?? 0,
+          qtdMax: l.qtdMax ?? 0,  // API retorna camelCase
         };
       }
     });
@@ -55,7 +55,6 @@ export const grupoService = {
       [idPropriedade],
     );
 
-    // mapa idGrupo → contagem
     const bufalosByGrupo: Record<string, number> = {};
     bufaloRows.forEach((r) => {
       if (r.idGrupo) bufalosByGrupo[r.idGrupo] = r.total;

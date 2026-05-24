@@ -21,7 +21,7 @@ describe('grupoService.getAllByPropriedade — enriquecido', () => {
     idLote: 'l1',
     nomeLote: 'Piquete 04',
     idGrupo: 'g1',
-    qtd_max: 50,
+    qtdMax: 50,  // API retorna camelCase
     idPropriedade: 'prop-1',
   });
 
