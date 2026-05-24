@@ -66,6 +66,7 @@ export const SyncProvider: React.FC<SyncProviderProps> = ({
 
   const isSyncingRef     = useRef(false);
   const isDownloadingRef = useRef(false);
+  const isFirstSyncNeededRef = useRef(false);
 
   const refreshCounts = useCallback(async () => {
     const pending   = await getPendingCount();
@@ -75,6 +76,9 @@ export const SyncProvider: React.FC<SyncProviderProps> = ({
     setHasFailed(failed > 0);
     setFailedOperations(failedOps);
   }, []);
+
+  // Mantém o ref em sincronia com o state (lido dentro de sync())
+  useEffect(() => { isFirstSyncNeededRef.current = isFirstSyncNeeded; }, [isFirstSyncNeeded]);
 
   // Verifica se a propriedade selecionada precisa de download inicial
   useEffect(() => {
@@ -131,6 +135,8 @@ export const SyncProvider: React.FC<SyncProviderProps> = ({
    */
   const sync = useCallback(async () => {
     if (!propriedadeId || isSyncingRef.current || isDownloadingRef.current) return;
+    // Não sincroniza automaticamente antes do download inicial manual
+    if (isFirstSyncNeededRef.current) return;
     isSyncingRef.current = true;
     setIsSyncing(true);
 

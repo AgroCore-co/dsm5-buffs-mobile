@@ -12,10 +12,12 @@ import { usePropriedade } from "../context/PropriedadeContext";
 import propriedadeService from "../services/propriedadeService";
 import { NotificacoesButton } from "../components/NotificacoesButton";
 import { getProducaoDiariaHistorico, ProducaoDiariaPoint } from "../services/lactacaoService";
+import { useSyncStatus } from "../context/SyncContext";
 
 
 export const HomeScreen = () => {
   const { propriedadeSelecionada } = usePropriedade();
+  const { lastSyncedAt } = useSyncStatus();
   const [propriedades, setPropriedades] = useState<any[]>([]); 
   const [dashboard, setDashboard] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,7 +74,11 @@ export const HomeScreen = () => {
     loadInitialData();
   }, [propriedadeSelecionada]);
 
-  
+  // Re-busca o dashboard quando um download/sync termina (lastSyncedAt muda)
+  useEffect(() => {
+    if (lastSyncedAt) fetchDashboard();
+  }, [lastSyncedAt]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>

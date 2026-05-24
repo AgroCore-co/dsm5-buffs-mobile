@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Easing,
   StyleSheet,
@@ -26,8 +27,7 @@ interface DownloadButtonProps {
 export function DownloadButton({ propertyName }: DownloadButtonProps) {
   const { isFirstSyncNeeded, isDownloading, isSyncing, triggerDownload } = useSyncStatus();
 
-  const pulseAnim  = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   // Pulsa quando precisa de download inicial e está ocioso
   useEffect(() => {
@@ -51,28 +51,8 @@ export function DownloadButton({ propertyName }: DownloadButtonProps) {
     return () => loop.stop();
   }, [isFirstSyncNeeded, isDownloading, isSyncing]);
 
-  // Rotaciona quando está ativo
-  useEffect(() => {
-    if (!isDownloading && !isSyncing) {
-      rotateAnim.setValue(0);
-      return;
-    }
-    const loop = Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1, duration: 900,
-        useNativeDriver: true, easing: Easing.linear,
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [isDownloading, isSyncing]);
-
   const isActive = isDownloading || isSyncing;
-  const rotate   = rotateAnim.interpolate({
-    inputRange: [0, 1], outputRange: ['0deg', '360deg'],
-  });
-
-  const icon = isActive ? '↻' : isFirstSyncNeeded ? '⬇' : '✓';
+  const icon = isFirstSyncNeeded ? '⬇' : '✓';
   const bg   = isFirstSyncNeeded && !isActive ? colors.brand.primary : colors.bg.section;
 
   return (
@@ -85,6 +65,7 @@ export function DownloadButton({ propertyName }: DownloadButtonProps) {
         style={[styles.button, { backgroundColor: bg }]}
         onPress={() => !isActive && triggerDownload(propertyName)}
         activeOpacity={0.8}
+        disabled={isActive}
         accessibilityLabel={
           isActive
             ? 'Sincronizando...'
@@ -93,9 +74,11 @@ export function DownloadButton({ propertyName }: DownloadButtonProps) {
               : 'Sincronizar dados'
         }
       >
-        <Animated.Text style={[styles.icon, isActive && { transform: [{ rotate }] }]}>
-          {icon}
-        </Animated.Text>
+        {isActive ? (
+          <ActivityIndicator size="small" color={colors.brand.primary} />
+        ) : (
+          <Text style={styles.icon}>{icon}</Text>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
@@ -244,7 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    marginBottom: 12,
+    marginTop: 12,
     borderWidth: 1,
     borderColor: colors.border.default,
     gap: 6,
