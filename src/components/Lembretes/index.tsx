@@ -342,16 +342,17 @@ export default function AlertasPendentes({
                   {formatarData(item.dataAlerta)}
                 </Text>
               </View>
+              {item.visto && (
+                <View style={styles.vistoBadge}>
+                  <Text style={styles.vistoText}>✓ Visto</Text>
+                </View>
+              )}
             </View>
             
           </View>
 
-          <View style={styles.footer}>
-            {item.visto ? (
-              <View style={styles.vistoBadge}>
-                <Text style={styles.vistoText}>✓ Visto</Text>
-              </View>
-            ) : (
+          {!item.visto && (
+            <View style={styles.footer}>
               <TouchableOpacity
                 style={styles.resolve}
                 onPress={() => {
@@ -363,8 +364,8 @@ export default function AlertasPendentes({
                   Marcar visto
                 </Text>
               </TouchableOpacity>
-            )}
-          </View>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -581,15 +582,14 @@ const styles = StyleSheet.create({
   },
 
   vistoBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
     backgroundColor: colors.status.successBg,
-    alignSelf: "flex-start",
   },
 
   vistoText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "700",
     color: colors.status.successText,
   },
