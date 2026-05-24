@@ -51,7 +51,6 @@ export default function DashPropriedade({
 
   return (
     <View style={styles.container}>
-      {/* Cabeçalho resumo */}
       <View style={styles.header}>
         <TextTitle>Resumo do Rebanho</TextTitle>
         <Text style={styles.subtitle}>{total} búfalos ativos</Text>
@@ -79,11 +78,8 @@ export default function DashPropriedade({
         <BarChart
           data={maturidadeData}
           width={CHART_W - 20}
-          barWidth={36}
+          barWidth={40}
           spacing={20}
-          roundedTop
-          roundedBottom
-          hideRules
           xAxisThickness={0}
           yAxisThickness={0}
           yAxisTextStyle={{ color: colors.text.muted, fontSize: 11 }}
@@ -92,7 +88,8 @@ export default function DashPropriedade({
           maxValue={Math.max(bezerros, novilhas, vacas, touros, 1) + 2}
           isAnimated
           animationDuration={500}
-          barBorderRadius={6}
+          roundedTop
+          barBorderRadius={2}
         />
       </View>
 
@@ -203,7 +200,8 @@ const styles = StyleSheet.create({
     color: colors.text.accent,
   },
   sexLabel: {
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: "700",
     color: colors.text.muted,
     marginTop: 2,
   },
@@ -211,7 +209,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
     color: colors.text.accent,
   },
