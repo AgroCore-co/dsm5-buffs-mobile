@@ -95,21 +95,22 @@ interface SyncProgressBarProps {
 }
 
 export function SyncProgressBar({ onRetry }: SyncProgressBarProps) {
-  const { isDownloading, isSyncing, downloadProgress, downloadFailed } = useSyncStatus();
+  // Aparece apenas no download MANUAL. O sync automático em background
+  // é indicado só pelo spinner do botão e pela notificação Android.
+  const { isDownloading, downloadProgress, downloadFailed } = useSyncStatus();
 
-  const widthAnim   = useRef(new Animated.Value(0)).current;
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const widthAnim = useRef(new Animated.Value(0)).current;
   const [visible, setVisible] = useState(false);
   const [isDone, setIsDone]   = useState(false);
   const wasDownloading        = useRef(false);
 
-  // Mostra quando qualquer operação inicia
+  // Mostra quando o download inicia
   useEffect(() => {
-    if (isDownloading || isSyncing) {
+    if (isDownloading) {
       setVisible(true);
       setIsDone(false);
     }
-  }, [isDownloading, isSyncing]);
+  }, [isDownloading]);
 
   // Detecta conclusão do download (transição true → false sem erro)
   useEffect(() => {
@@ -124,7 +125,7 @@ export function SyncProgressBar({ onRetry }: SyncProgressBarProps) {
     wasDownloading.current = isDownloading;
   }, [isDownloading, downloadFailed]);
 
-  // Anima barra de progresso determinística (download)
+  // Anima barra de progresso determinística
   useEffect(() => {
     if (!isDownloading) return;
     Animated.timing(widthAnim, {
@@ -134,26 +135,10 @@ export function SyncProgressBar({ onRetry }: SyncProgressBarProps) {
     }).start();
   }, [downloadProgress, isDownloading]);
 
-  // Shimmer para sync indeterminado
-  useEffect(() => {
-    if (!isSyncing) { shimmerAnim.setValue(0); return; }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmerAnim, { toValue: 1, duration: 1200, useNativeDriver: false }),
-        Animated.timing(shimmerAnim, { toValue: 0, duration: 0,    useNativeDriver: false }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [isSyncing]);
-
   if (!visible) return null;
 
   const progressWidth = widthAnim.interpolate({
     inputRange: [0, 1], outputRange: ['0%', '100%'],
-  });
-  const shimmerLeft = shimmerAnim.interpolate({
-    inputRange: [0, 1], outputRange: ['-35%', '110%'],
   });
 
   const isError = downloadFailed;
@@ -162,9 +147,7 @@ export function SyncProgressBar({ onRetry }: SyncProgressBarProps) {
     ? '✓ Concluído'
     : isError
       ? '⚠ Falha — Toque para tentar novamente'
-      : isDownloading
-        ? `Baixando dados... ${Math.round(downloadProgress * 100)}%`
-        : 'Sincronizando...';
+      : `Baixando dados... ${Math.round(downloadProgress * 100)}%`;
 
   const containerBg = isDone
     ? colors.status.successBg
@@ -191,17 +174,9 @@ export function SyncProgressBar({ onRetry }: SyncProgressBarProps) {
 
       {!isDone && !isError && (
         <View style={styles.track}>
-          {isDownloading ? (
-            // Barra determinística (download)
-            <Animated.View
-              style={[styles.fill, { width: progressWidth, backgroundColor: fillColor }]}
-            />
-          ) : (
-            // Shimmer indeterminado (sync)
-            <Animated.View
-              style={[styles.fill, styles.shimmer, { left: shimmerLeft, backgroundColor: fillColor }]}
-            />
-          )}
+          <Animated.View
+            style={[styles.fill, { width: progressWidth, backgroundColor: fillColor }]}
+          />
         </View>
       )}
     </TouchableOpacity>
@@ -249,8 +224,5 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     borderRadius: 3,
-  },
-  shimmer: {
-    width: '35%',
   },
 });
