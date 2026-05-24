@@ -117,14 +117,14 @@ const LoteMapSection = ({ lotes, grupoId, grupoColor }: LoteMapSectionProps) => 
                   <Text style={styles.chipText}>{loteAtual.tipoLote}</Text>
                 </View>
               ) : null}
-              {typeof loteAtual.areaM2 === "number" && loteAtual.areaM2 > 0 && (
+              {Number(loteAtual.areaM2) > 0 && (
                 <View style={styles.chip}>
                   <Text style={styles.chipText}>
-                    {(loteAtual.areaM2 / 10000).toFixed(1)} ha
+                    {Number(loteAtual.areaM2).toLocaleString('pt-BR')} m²
                   </Text>
                 </View>
               )}
-              {typeof loteAtual.qtdMax === "number" && loteAtual.qtdMax > 0 && (
+              {Number(loteAtual.qtdMax) > 0 && (
                 <View style={styles.chip}>
                   <Text style={styles.chipText}>Cap. {loteAtual.qtdMax} animais</Text>
                 </View>
@@ -211,7 +211,7 @@ export const GrupoDetailScreen = () => {
 
   // Lote ativo = primeiro do grupo (updatedAt DESC do getAll)
   const loteAtivo = lotes.find((l) => l.idGrupo === grupoId) ?? null;
-  const qtdMax = loteAtivo?.qtdMax ?? 0;
+  const qtdMax = Number(loteAtivo?.qtdMax ?? 0);
   const ocupacao = qtdMax > 0 ? Math.min(100, Math.round((totalBufalos / qtdMax) * 100)) : 0;
 
   if (loading) {

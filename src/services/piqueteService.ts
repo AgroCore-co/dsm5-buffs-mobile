@@ -48,9 +48,11 @@ function mapRawToPiquete(item: any): Piquete {
     grupoNome: item.grupo?.nomeGrupo ?? "",
     grupoCor: item.grupo?.color ?? "#000000",
     color: item.grupo?.color ?? "#000000",
-    areaM2: item.area_m2,
+    areaM2: item.area_m2 ?? item.areaM2,
+    qtdMax: item.qtdMax ?? item.qtd_max,
     tipoLote: item.tipoLote,
     status: item.status,
+    descricao: item.descricao ?? null,
   } as Piquete;
 }
 
