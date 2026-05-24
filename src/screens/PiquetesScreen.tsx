@@ -12,12 +12,12 @@ import { MainLayout } from "../layouts/MainLayout";
 import { colors } from "../styles/colors";
 import BuffaloLoader from "../components/BufaloLoader";
 
-import { grupoService, Grupo } from "../services/grupoService";
+import { grupoService, GrupoEnriquecido } from "../services/grupoService";
 import { usePropriedade } from "../context/PropriedadeContext";
 import { CardGrupo } from "../components/CardGrupos";
 
 export const PiquetesScreen = () => {
-  const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [grupos, setGrupos] = useState<GrupoEnriquecido[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -77,15 +77,13 @@ export const PiquetesScreen = () => {
               tintColor={colors.brand.primary}
             />
           }
-          contentContainerStyle={{ padding: 16 }}
           renderItem={({ item }) => (
             <CardGrupo
               nome={item.nome}
               color={item.color}
-              quantidade={142}
-              ocupacao={82}
-              piquete="Piquete 04"
-              status="Ativo"
+              quantidade={item.quantidade}
+              ocupacao={item.ocupacao}
+              piquete={item.piquete}
               onPress={() => {
                 console.log(item.id);
               }}

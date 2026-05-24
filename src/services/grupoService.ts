@@ -9,6 +9,13 @@ export interface Grupo {
   idPropriedade?: string;
 }
 
+export interface GrupoEnriquecido extends Grupo {
+  piquete: string;    // nomeLote do lote associado, ou "Sem piquete"
+  quantidade: number; // total de búfalos no grupo
+  qtdMax: number;     // capacidade máxima do lote (qtd_max)
+  ocupacao: number;   // 0–100, arredondado
+}
+
 export interface NovoGrupoDTO {
   nomeGrupo: string;
   idPropriedade: string;
@@ -16,18 +23,63 @@ export interface NovoGrupoDTO {
 }
 
 export const grupoService = {
-  async getAllByPropriedade(idPropriedade: string): Promise<Grupo[]> {
-    const rows = await queryAll<{ _raw: string }>(
-      `SELECT _raw FROM grupos WHERE propriedadeId = ?`,
+  async getAllByPropriedade(idPropriedade: string): Promise<GrupoEnriquecido[]> {
+    const grupoRows = await queryAll<{ _raw: string }>(
+      `SELECT _raw FROM grupos WHERE propriedadeId = ? AND deletedAt IS NULL`,
       [idPropriedade],
     );
-    return rows.map((r) => {
+
+    const loteRows = await queryAll<{ _raw: string }>(
+      `SELECT _raw FROM lotes WHERE propriedadeId = ? AND deletedAt IS NULL`,
+      [idPropriedade],
+    );
+
+    // mapa idGrupo → lote
+    const loteByGrupo: Record<string, { nomeLote: string; qtdMax: number }> = {};
+    loteRows.forEach((r) => {
+      const l = JSON.parse(r._raw);
+      const key = l.grupo?.idGrupo ?? l.idGrupo ?? null;
+      if (key) {
+        loteByGrupo[key] = {
+          nomeLote: l.nomeLote ?? "Sem piquete",
+          qtdMax: l.qtd_max ?? 0,
+        };
+      }
+    });
+
+    const bufaloRows = await queryAll<{ idGrupo: string; total: number }>(
+      `SELECT json_extract(_raw, '$.idGrupo') AS idGrupo, COUNT(*) AS total
+       FROM bufalos
+       WHERE propriedadeId = ? AND deletedAt IS NULL
+       GROUP BY json_extract(_raw, '$.idGrupo')`,
+      [idPropriedade],
+    );
+
+    // mapa idGrupo → contagem
+    const bufalosByGrupo: Record<string, number> = {};
+    bufaloRows.forEach((r) => {
+      if (r.idGrupo) bufalosByGrupo[r.idGrupo] = r.total;
+    });
+
+    return grupoRows.map((r) => {
       const item = JSON.parse(r._raw);
+      const id = item.idGrupo ?? item.id;
+
+      const lote = loteByGrupo[id];
+      const quantidade = bufalosByGrupo[id] ?? 0;
+      const qtdMax = lote?.qtdMax ?? 0;
+      const ocupacaoRaw = qtdMax > 0 ? (quantidade / qtdMax) * 100 : 0;
+      const ocupacao = Math.min(100, Math.round(ocupacaoRaw));
+
       return {
-        id: item.idGrupo ?? item.id,
+        id,
         nome: item.nomeGrupo ?? item.nome ?? "",
         color: item.color || "#000000",
         idPropriedade: item.idPropriedade,
+        piquete: lote?.nomeLote ?? "Sem piquete",
+        quantidade,
+        qtdMax,
+        ocupacao,
       };
     });
   },
