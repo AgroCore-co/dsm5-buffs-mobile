@@ -138,7 +138,7 @@ export const RebanhoScreen = () => {
 
   const handlePageChange = async (novaPagina: number) => {
     if (novaPagina < 1 || novaPagina > totalPaginas) return;
-    await fetchBufalosFiltrados(novaPagina);
+    await fetchBufalosFiltrados(filtros, novaPagina);
   };
 
 
