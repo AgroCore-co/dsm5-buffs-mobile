@@ -11,8 +11,10 @@ export interface Piquete {
   grupoCor: string;
   color: string;
   areaM2?: number;
+  qtdMax?: number;
   tipoLote?: string;
   status?: string;
+  descricao?: string;
   updatedAt?: string;
 }
 
@@ -84,9 +86,11 @@ export const piqueteService = {
         grupoNome: item.grupo?.nomeGrupo ?? fallback?.nomeGrupo ?? '',
         grupoCor: item.grupo?.color ?? fallback?.color ?? '#000000',
         color: item.grupo?.color ?? fallback?.color ?? '#000000',
-        areaM2: item.area_m2,
+        areaM2: item.area_m2 ?? item.areaM2,
+        qtdMax: item.qtdMax ?? item.qtd_max,
         tipoLote: item.tipoLote,
         status: item.status,
+        descricao: item.descricao ?? null,
         updatedAt: row.updatedAt,
       } as Piquete;
     });
