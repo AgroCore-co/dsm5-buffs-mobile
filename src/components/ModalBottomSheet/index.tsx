@@ -16,7 +16,7 @@ interface AppModalProps {
 }
 
 export const AppModal = forwardRef<BottomSheetModal, AppModalProps>(
-  ({ title, snapPoints = ["50%", "90%"], children, isScrollable = true }, ref) => {
+  ({ title, snapPoints = ["50%", "70%"], children, isScrollable = true }, ref) => {
     
     const renderBackdrop = useCallback(
       (props: any) => (
@@ -38,6 +38,7 @@ export const AppModal = forwardRef<BottomSheetModal, AppModalProps>(
         ref={ref}
         index={0}
         snapPoints={snapPoints}
+        enableDynamicSizing={false}
         backdropComponent={renderBackdrop}
         stackBehavior="push" // PERMITE SOBREPOR O OUTRO MODAL
         backgroundStyle={styles.modalBackground}
@@ -46,7 +47,7 @@ export const AppModal = forwardRef<BottomSheetModal, AppModalProps>(
         <View style={styles.header}>
           {title && <Text style={styles.headerTitle}>{title}</Text>}
         </View>
-        <Container style={styles.content}>
+        <Container style={styles.content} keyboardShouldPersistTaps="handled">
           {children}
         </Container>
       </BottomSheetModal>

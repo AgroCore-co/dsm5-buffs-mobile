@@ -27,7 +27,7 @@ type MapMessage =
 
 export const VisualizarPiqueteSheet: React.FC<DemarcacaoPiqueteSheetProps> = ({ onClose, propriedadeId }) => {
     const sheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ["70%", "95%"], []);
+    const snapPoints = useMemo(() => ["50%", "70%"], []);
 
     const [piquetes, setPiquetes] = useState<Piquete[]>([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -73,6 +73,7 @@ export const VisualizarPiqueteSheet: React.FC<DemarcacaoPiqueteSheetProps> = ({ 
             ref={sheetRef}
             index={0}
             snapPoints={snapPoints}
+            enableDynamicSizing={false}
             onChange={handleSheetChange}
             backgroundStyle={{ backgroundColor: colors.bg.sheet, borderRadius: 24 }}
             handleIndicatorStyle={{ backgroundColor: colors.border.light, height: 4, width: 36 }}
@@ -86,7 +87,7 @@ export const VisualizarPiqueteSheet: React.FC<DemarcacaoPiqueteSheetProps> = ({ 
                     <Text style={styles.title}>Demarcação de Nova Área/Piquete</Text>
                 </View>
 
-                <BottomSheetScrollView contentContainerStyle={styles.scrollContent} >
+                <BottomSheetScrollView contentContainerStyle={styles.scrollContent}  keyboardShouldPersistTaps="handled">
                     <View style={styles.formContainer}>
 
                         <View style={styles.mapContainer}>

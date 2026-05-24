@@ -23,7 +23,7 @@ export const FormGrupo: React.FC<FormGrupoProps> = ({
   onSuccess,
 }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["60%", "85%"], []);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
   const [nome, setNome] = useState(grupo?.nome ?? "");
   const [cor, setCor] = useState(grupo?.color ?? SWATCHES[0]);
   const [submitting, setSubmitting] = useState(false);
@@ -70,6 +70,7 @@ export const FormGrupo: React.FC<FormGrupoProps> = ({
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onClose={onClose}
       enablePanDownToClose
       backdropComponent={(props) => (
@@ -82,7 +83,7 @@ export const FormGrupo: React.FC<FormGrupoProps> = ({
         <Text style={styles.title}>{isEdit ? "Editar Grupo" : "Novo Grupo"}</Text>
       </View>
 
-      <BottomSheetScrollView contentContainerStyle={styles.content}>
+      <BottomSheetScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>Nome do Grupo</Text>
         <TextInput
           style={styles.input}

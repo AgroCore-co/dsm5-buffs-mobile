@@ -42,7 +42,7 @@ export const LactacaoAddBottomSheet: React.FC<
   LactacaoAddBottomSheetProps
 > = ({ animais, onSuccess, onClose, propriedadeId }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["60%", "85%"], []);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
 
   const [qtOrdenha, setQtOrdenha] = useState("");
   const [periodo, setPeriodo] = useState<string | null>(null);
@@ -122,6 +122,7 @@ export const LactacaoAddBottomSheet: React.FC<
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onChange={handleSheetChange}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handleIndicator}

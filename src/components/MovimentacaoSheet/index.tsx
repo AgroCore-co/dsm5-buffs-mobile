@@ -30,7 +30,7 @@ export const MovimentacaoSheet: React.FC<MovimentacaoSheetProps> = ({
   onSuccess,
 }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["55%", "80%"], []);
+  const snapPoints = useMemo(() => ["60%"], []);
   const [lotes, setLotes] = useState<{ label: string; value: string }[]>([]);
   const [loteDestinoId, setLoteDestinoId] = useState<string | null>(null);
   const [loteDestinoNome, setLoteDestinoNome] = useState<string>("");
@@ -97,6 +97,7 @@ export const MovimentacaoSheet: React.FC<MovimentacaoSheetProps> = ({
         snapPoints={snapPoints}
         onClose={onClose}
         enablePanDownToClose
+        enableDynamicSizing={false}
         backdropComponent={(props) => (
           <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} pressBehavior="close" />
         )}
@@ -108,7 +109,10 @@ export const MovimentacaoSheet: React.FC<MovimentacaoSheetProps> = ({
           <Text style={styles.subtitle}>{grupo.nome}</Text>
         </View>
 
-        <BottomSheetScrollView contentContainerStyle={styles.content}>
+        <BottomSheetScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
           {lotes.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyText}>

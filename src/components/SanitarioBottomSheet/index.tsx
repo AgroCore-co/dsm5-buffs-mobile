@@ -32,7 +32,7 @@ interface SanitarioBottomSheetProps {
 
 export const SanitarioBottomSheet: React.FC<SanitarioBottomSheetProps> = ({ item, onEditSave, onClose, onDelete, propriedadeId}) => {
     const sheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ["70%", "90%"], []);
+    const snapPoints = useMemo(() => ["50%", "70%"], []);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<SanitarioItem>({ ...item });
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -135,6 +135,7 @@ return (
     ref={sheetRef}
     index={0}
     snapPoints={snapPoints}
+    enableDynamicSizing={false}
     onChange={handleSheetChange}
     backgroundStyle={{ backgroundColor: colors.bg.sheet, borderRadius: 24 }}
     handleIndicatorStyle={{ backgroundColor: colors.border.light, height: 4, width: 36 }}
@@ -148,7 +149,7 @@ return (
         />
     )}
   >
-    <BottomSheetScrollView contentContainerStyle={styles.container} scrollEnabled={!openMedicacao}>
+    <BottomSheetScrollView contentContainerStyle={styles.container} scrollEnabled={!openMedicacao} keyboardShouldPersistTaps="handled">
 
                 {/* Header */}
                 <View style={styles.header}>

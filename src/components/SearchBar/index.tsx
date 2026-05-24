@@ -22,7 +22,7 @@ interface Props {
 
 export default function FiltroRebanhoBottomSheet({ filtros, onFiltrar, onClose }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["60%", "90%"], []);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
 
   const [racas, setRacas] = useState<any[]>([]);
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>("Sexo");
@@ -81,12 +81,13 @@ export default function FiltroRebanhoBottomSheet({ filtros, onFiltrar, onClose }
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       enablePanDownToClose
       onClose={onClose}
       backdropComponent={(props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />}
       backgroundStyle={{ backgroundColor: colors.bg.sheet }}
     >
-      <BottomSheetScrollView contentContainerStyle={styles.container}>
+      <BottomSheetScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Text style={styles.title}>Filtros Avançados</Text>
           <TouchableOpacity onPress={() => { setSexo(null); setRaca(null); setMaturidade(null); setStatus(null); }}>

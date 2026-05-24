@@ -34,7 +34,7 @@ export const ReproducaoAddBottomSheet: React.FC<
   const { propriedadeSelecionada } = usePropriedade();
   const { getBufaloByBrincoAndSexo, getBufaloById } = bufaloService; // Assumindo o bufaloService.ts
   // SnapPoints ajustados para acomodar mais campos
-  const snapPoints = useMemo(() => ["70%", "90%"], []); 
+  const snapPoints = useMemo(() => ["50%", "70%"], []); 
 
   // Estado do Formulário
   const [tagBufalo, setTagBufalo] = useState("");
@@ -169,6 +169,7 @@ export const ReproducaoAddBottomSheet: React.FC<
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onChange={handleSheetChange}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handleIndicator}
@@ -182,7 +183,7 @@ export const ReproducaoAddBottomSheet: React.FC<
         />
       )}
     >
-      <BottomSheetScrollView contentContainerStyle={styles.container}>
+      <BottomSheetScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
             <Text style={styles.headerTitle}>Nova Reprodução</Text>
         </View>
@@ -215,7 +216,7 @@ export const ReproducaoAddBottomSheet: React.FC<
           {/* Macho só aparece para Monta Natural */}
           {tipoInseminacao === "Monta Natural" && (
             <>
-              <Text style={styles.label}>Tag do Búfalo Macho <Text style={{ color: mergedColors.red.base }}>*</Text></Text>
+              <Text style={styles.label}>Tag do Búfalo Macho <Text style={{ color: colors.status.error }}>*</Text></Text>
               <TextInput
                 style={styles.inputBase}
                 value={tagBufalo}
@@ -227,7 +228,7 @@ export const ReproducaoAddBottomSheet: React.FC<
 
           <Text style={styles.label}>
             Tag da Búfala {tipoInseminacao === "Monta Natural" ? "(Fêmea Receptora)" : "(Receptora/Gestora)"}
-            {" "}<Text style={{ color: mergedColors.red.base }}>*</Text>
+            {" "}<Text style={{ color: colors.status.error }}>*</Text>
           </Text>
           <TextInput
             style={styles.inputBase}
@@ -243,7 +244,7 @@ export const ReproducaoAddBottomSheet: React.FC<
             <Text style={styles.sectionTitle}>Material Genético</Text>
             <View style={styles.listContainer}>
               <Text style={styles.label}>
-                Sêmen <Text style={{ color: mergedColors.red.base }}>*</Text>
+                Sêmen <Text style={{ color: colors.status.error }}>*</Text>
               </Text>
               {matGeneticoSemen.length === 0 ? (
                 <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
@@ -268,7 +269,7 @@ export const ReproducaoAddBottomSheet: React.FC<
             <Text style={styles.sectionTitle}>Material Genético</Text>
             <View style={styles.listContainer}>
               <Text style={styles.label}>
-                Embrião <Text style={{ color: mergedColors.red.base }}>*</Text>
+                Embrião <Text style={{ color: colors.status.error }}>*</Text>
               </Text>
               {embrioesFiltrados.length === 0 ? (
                 <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
@@ -295,7 +296,7 @@ export const ReproducaoAddBottomSheet: React.FC<
                 />
               )}
               {nomeDoadora ? (
-                <Text style={[styles.label, { color: mergedColors.text.secondary, marginTop: 8 }]}>
+                <Text style={[styles.label, { color: colors.text.secondary, marginTop: 8 }]}>
                   Doadora: {nomeDoadora}
                 </Text>
               ) : null}

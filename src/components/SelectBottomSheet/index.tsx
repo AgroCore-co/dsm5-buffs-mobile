@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useCallback } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from "react-native";
-import { 
-  BottomSheetModal, 
-  BottomSheetView,
-  BottomSheetBackdrop 
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  BottomSheetModal,
+  BottomSheetFlatList,
+  BottomSheetBackdrop
 } from "@gorhom/bottom-sheet";
 import { colors } from "../../styles/colors";
 import ArrowBackIcon from "../../../assets/images/arrow-back.svg";
@@ -29,7 +29,7 @@ export default function SelectBottomSheet({
   placeholder = "Selecionar",
 }: Props) {
     const bottomSheetRef = useRef<BottomSheetModal>(null);
-    const snapPoints = useMemo(() => ["30%", "50%"], []);
+    const snapPoints = useMemo(() => ["45%"], []);
     const safeItems = items ?? [];
     const open = useCallback(() => {
       bottomSheetRef.current?.present();
@@ -76,39 +76,34 @@ return (
             snapPoints={snapPoints}
             backdropComponent={renderBackdrop}
             enablePanDownToClose={true}
+            enableDynamicSizing={false}
             backgroundStyle={{ backgroundColor: colors.bg.card }}>
-            <BottomSheetView style={styles.sheetContainer}>
-                <Text style={styles.title}>{title}</Text>
-                <FlatList
-                  data={safeItems}
-                  keyExtractor={(item) => item.value}
-                  ListEmptyComponent={
-                    <Text style={{ textAlign: "center", marginTop: 20 }}>
-                      Nenhuma opção disponível
-                    </Text>
-                  }
-                    renderItem={({ item }) => {
-                      const isSelected = item.value === value;
-
-                      return (
-                        <TouchableOpacity
-                          style={[styles.item, isSelected && styles.itemSelected]}
-                          onPress={() => {
-                            onChange(item.value);
-                            close();
-                          }}
-                        >
-                          <Text style={[
-                            styles.itemText,
-                            isSelected && styles.itemTextSelected
-                          ]}>
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
+            <Text style={styles.title}>{title}</Text>
+            <BottomSheetFlatList
+              data={safeItems}
+              keyExtractor={(item) => item.value}
+              contentContainerStyle={styles.listContent}
+              keyboardShouldPersistTaps="handled"
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>Nenhuma opção disponível</Text>
+              }
+              renderItem={({ item }) => {
+                const isSelected = item.value === value;
+                return (
+                  <TouchableOpacity
+                    style={[styles.item, isSelected && styles.itemSelected]}
+                    onPress={() => {
+                      onChange(item.value);
+                      close();
                     }}
-                />
-            </BottomSheetView>
+                  >
+                    <Text style={[styles.itemText, isSelected && styles.itemTextSelected]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
         </BottomSheetModal>
     </View>
 );
@@ -132,14 +127,16 @@ const styles = StyleSheet.create({
   inputText: {
     fontSize: 16,
   },
-  sheetContainer: {
-    flex: 1,
-    padding: 2,
-  },
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    margin: 12,
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    color: colors.text.accent,
+  },
+  listContent: {
+    paddingBottom: 24,
   },
   item: {
     padding: 16,
@@ -148,6 +145,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 16,
+    color: colors.text.primary,
   },
   itemSelected: {
     backgroundColor: colors.status.pendingBg,
@@ -155,5 +153,11 @@ const styles = StyleSheet.create({
   itemTextSelected: {
     fontWeight: "bold",
     color: colors.text.accent,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: colors.text.placeholder,
+    fontSize: 14,
   },
 });

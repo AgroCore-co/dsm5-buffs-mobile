@@ -19,12 +19,13 @@ interface GenericOptionsSheetProps {
 
 
 const GenericOptionsSheet: React.FC<GenericOptionsSheetProps> = ({ sheetRef, title, options, onSelect, onClose}) => {
-    const snapPoints = useMemo(() => ["40%", "60%"], []);
+    const snapPoints = useMemo(() => ["50%", "70%"], []);
 
     return (
         <BottomSheetModal
             ref={sheetRef}
             snapPoints={snapPoints}
+            enableDynamicSizing={false}
             enablePanDownToClose={true}
             stackBehavior="push"
             onDismiss={onClose} // 
@@ -35,7 +36,7 @@ const GenericOptionsSheet: React.FC<GenericOptionsSheetProps> = ({ sheetRef, tit
         >
             <View style={{ padding: 16, flex: 1 }}>
                 <Text style={styles.title}>{title}</Text>
-                <BottomSheetScrollView>
+                <BottomSheetScrollView keyboardShouldPersistTaps="handled">
                     {options.map((opt) => (
                         <TouchableOpacity
                             key={String(opt.value)}

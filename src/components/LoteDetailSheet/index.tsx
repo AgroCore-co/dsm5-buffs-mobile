@@ -17,7 +17,7 @@ export const LoteDetailSheet: React.FC<LoteDetailSheetProps> = ({
   onMoverGrupo,
 }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["55%", "92%"], []);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
 
   const temGeometria = lote.coords && lote.coords.length > 0;
 
@@ -26,6 +26,7 @@ export const LoteDetailSheet: React.FC<LoteDetailSheetProps> = ({
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onClose={onClose}
       enablePanDownToClose
       enableContentPanningGesture={false}
@@ -40,7 +41,7 @@ export const LoteDetailSheet: React.FC<LoteDetailSheetProps> = ({
         <View style={[styles.statusDot, { backgroundColor: lote.idGrupo ? (lote.grupoCor || colors.brand.dark) : colors.border.muted }]} />
       </View>
 
-      <BottomSheetScrollView contentContainerStyle={styles.content}>
+      <BottomSheetScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Grupo</Text>

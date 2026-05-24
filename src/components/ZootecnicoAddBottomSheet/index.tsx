@@ -52,7 +52,7 @@ const initialFormData: ZootecnicoPayload = {
 
 export const ZootecnicoAddBottomSheet: React.FC<ZootecnicoAddBottomSheetProps> = ({ id_bufalo, onClose, onAddSave}) => {
     const sheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ["80%", "90%"], []);
+    const snapPoints = useMemo(() => ["50%", "70%"], []);
     
     const [formData, setFormData] = useState<ZootecnicoPayload>({ ...initialFormData });
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -117,6 +117,7 @@ return (
     ref={sheetRef}
     index={0}
     snapPoints={snapPoints}
+    enableDynamicSizing={false}
     onChange={handleSheetChange}
     backgroundStyle={styles.sheetBackground} 
     handleIndicatorStyle={styles.handleIndicator} 

@@ -40,7 +40,7 @@ export const EstoqueAddBottomSheet: React.FC<
   EstoqueAddBottomSheetProps
 > = ({ onSuccess, onClose, propriedadeId }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["50%", "75%"], []);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
   const { user } = useAuth();
   console.log("Objeto completo do Usuário:", user);
   const userId = user?.id_usuario || null;
@@ -117,6 +117,7 @@ export const EstoqueAddBottomSheet: React.FC<
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onChange={handleSheetChange}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handleIndicator}

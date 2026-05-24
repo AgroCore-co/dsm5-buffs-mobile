@@ -56,7 +56,7 @@ const initialFormData: Omit<SanitarioPayload, 'id_bufalo'> = {
 
 export const SanitarioAddBottomSheet: React.FC<SanitarioAddBottomSheetProps> = ({ id_bufalo, onAddSave, onClose, propriedadeId}) => {
     const sheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ["70%", "90%"], []);
+    const snapPoints = useMemo(() => ["50%", "70%"], []);
     
     const [formData, setFormData] = useState<Omit<SanitarioPayload, 'id_bufalo'>>({ ...initialFormData });
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -180,6 +180,7 @@ return (
     ref={sheetRef}
     index={0}
     snapPoints={snapPoints}
+    enableDynamicSizing={false}
     onChange={handleSheetChange}
     backgroundStyle={styles.sheetBackground}
     handleIndicatorStyle={styles.handleIndicator}

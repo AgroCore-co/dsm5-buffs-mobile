@@ -43,7 +43,7 @@ export const ColetaAddBottomSheet: React.FC<
   ColetaAddBottomSheetProps
 > = ({ industrias, onSuccess, onClose, propriedadeId }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["65%", "90%"], []);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
 
   // ESTADOS (Baseados no seu FormColeta)
   const [idIndustria, setIdIndustria] = useState<string | null>(null);
@@ -120,6 +120,7 @@ export const ColetaAddBottomSheet: React.FC<
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onChange={handleSheetChange}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handleIndicator}

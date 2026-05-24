@@ -66,7 +66,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
     const { propriedadeSelecionada } = usePropriedade();
     
     const sheetRef = useRef<BottomSheetModal>(null);
-    const snapPoints = useMemo(() => ["80%", "95%"], []);
+    const snapPoints = useMemo(() => ["50%", "70%"], []);
     useEffect(() => {
         sheetRef.current?.present();
     }, []);
@@ -198,6 +198,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                 ref={sheetRef}
                 index={0}
                 snapPoints={snapPoints}
+                enableDynamicSizing={false}
                 onChange={handleSheetChange}
                 backgroundStyle={styles.sheetBackground}
                 handleIndicatorStyle={styles.handleIndicator}
@@ -218,6 +219,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
             index={0}
             name="EditAnimalModal"
             snapPoints={snapPoints}
+            enableDynamicSizing={false}
             onChange={handleSheetChange}
             backgroundStyle={styles.sheetBackground}
             handleIndicatorStyle={styles.handleIndicator}
@@ -232,7 +234,7 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                 />
             )}
         >
-            <BottomSheetScrollView contentContainerStyle={styles.scrollContainer} nestedScrollEnabled={true}>
+            <BottomSheetScrollView contentContainerStyle={styles.scrollContainer} nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
                 
                 {/* --- HEADER --- */}
                 <View style={styles.header}>

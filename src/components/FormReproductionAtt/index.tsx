@@ -32,7 +32,7 @@ export const ReproducaoAttBottomSheet: React.FC<
   ReproducaoAttBottomSheetProps
 > = ({ initialData, onClose, onSuccess }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["45%", "60%"], []); 
+  const snapPoints = useMemo(() => ["50%", "70%"], []); 
   const { propriedadeSelecionada } = usePropriedade();
   const [form, setForm] = useState({
     status: initialData?.status || "",
@@ -138,6 +138,7 @@ export const ReproducaoAttBottomSheet: React.FC<
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onChange={handleSheetChange}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handleIndicator}
