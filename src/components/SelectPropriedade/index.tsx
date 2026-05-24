@@ -4,6 +4,8 @@ import { colors } from "../../styles/colors";
 import TextTitle from "../TextTitle";
 import { usePropriedade } from "../../context/PropriedadeContext";
 import SelectBottomSheet from "../SelectBottomSheet";
+import { DownloadButton, SyncProgressBar } from "../DownloadButton";
+import { useSyncStatus } from "../../context/SyncContext";
 
 interface PropriedadesProps {
   prop?: any[];
@@ -11,7 +13,9 @@ interface PropriedadesProps {
 
 export default function Propriedades({ prop }: PropriedadesProps) {
   const { propriedadeSelecionada, setPropriedadeSelecionada } = usePropriedade();
+  const { triggerDownload } = useSyncStatus();
   const [items, setItems] = useState<{ label: string; value: string }[]>([]);
+  const [propNome, setPropNome] = useState('');
 
   useEffect(() => {
     if (prop && prop.length > 0) {
@@ -28,19 +32,33 @@ export default function Propriedades({ prop }: PropriedadesProps) {
     }
   }, [prop]);
 
+  // Mantém o nome da propriedade selecionada para notificação Android
+  useEffect(() => {
+    if (!prop) return;
+    const found = prop.find((p: any) => p.id === propriedadeSelecionada);
+    if (found) setPropNome(found.nome ?? '');
+  }, [prop, propriedadeSelecionada]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TextTitle>Propriedades</TextTitle>
       </View>
 
-      <SelectBottomSheet
-        items={items}
-        value={propriedadeSelecionada}
-        onChange={(value) => setPropriedadeSelecionada(value)}
-        title="Selecionar propriedade"
-        placeholder="Selecione uma propriedade"
-      />
+      <View style={styles.selectorRow}>
+        <View style={{ flex: 1 }}>
+          <SelectBottomSheet
+            items={items}
+            value={propriedadeSelecionada}
+            onChange={(value) => setPropriedadeSelecionada(value)}
+            title="Selecionar propriedade"
+            placeholder="Selecione uma propriedade"
+          />
+        </View>
+        <DownloadButton propertyName={propNome} />
+      </View>
+
+      <SyncProgressBar onRetry={() => triggerDownload(propNome)} />
     </View>
   );
 }
@@ -64,5 +82,10 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+  },
+  selectorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
 });

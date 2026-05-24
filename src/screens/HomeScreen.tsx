@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { View, FlatList, StyleSheet, RefreshControl, Text, ActivityIndicator } from "react-native";
-import { DownloadButton, SyncProgressBar } from "../components/DownloadButton";
-import { useSyncStatus } from "../context/SyncContext";
 import Propriedades from "../components/SelectPropriedade";
 import DashPropriedade from "../components/DashPropriedade";
 import { colors } from "../styles/colors";
@@ -26,15 +24,6 @@ export const HomeScreen = () => {
   const [countsMat, setCountsMat] = useState({ bezerros: 0, novilhas: 0, vacas: 0, touros: 0 });
   const [count, setCount] = useState({ bufalosAtivos: 0 });
   const [historicoLeite, setHistoricoLeite] = useState<ProducaoDiariaPoint[]>([]);
-  const [propNome, setPropNome] = useState('');
-
-  const { triggerDownload } = useSyncStatus();
-
-  // Mantém o nome da propriedade atualizado para exibir na notificação Android
-  useEffect(() => {
-    const found = propriedades.find((p: any) => p.id === propriedadeSelecionada);
-    if (found) setPropNome(found.nome ?? '');
-  }, [propriedades, propriedadeSelecionada]);
 
   const fetchPropriedades = async () => {
     try {
@@ -106,14 +95,7 @@ export const HomeScreen = () => {
           }
           ListHeaderComponent={
             <>
-              <View style={styles.selectorRow}>
-                <View style={{ flex: 1 }}>
-                  <Propriedades prop={propriedades} />
-                </View>
-                <DownloadButton propertyName={propNome} />
-              </View>
-
-              <SyncProgressBar onRetry={() => triggerDownload(propNome)} />
+              <Propriedades prop={propriedades} />
 
               {loading || !dashboard ? (
                 <View style={styles.loading}>
@@ -175,10 +157,5 @@ const styles = StyleSheet.create({
     marginTop: 40,
     alignItems: "center",
     justifyContent: "center",
-  },
-  selectorRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
   },
 });
