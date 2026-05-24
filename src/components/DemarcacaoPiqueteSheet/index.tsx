@@ -76,7 +76,7 @@ export const DemarcacaoPiqueteSheet: React.FC<DemarcacaoPiqueteSheetProps> = ({ 
         const fetchGrupos = async () => {
             if (!propriedadeId) return;
             const data = await grupoService.getAllByPropriedade(propriedadeId);
-            setGrupos(data.map(g => ({ label: g.nome_grupo, value: g.id_grupo })));
+            setGrupos(data.map(g => ({ label: g.nome, value: g.id })));
         };
         fetchGrupos();
     }, [propriedadeId]);

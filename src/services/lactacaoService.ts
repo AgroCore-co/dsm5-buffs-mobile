@@ -287,3 +287,39 @@ export const getProducaoDiariaAtual = async (propriedadeId: string) => {
   const dataRef = row?.dtRegistro?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
   return { quantidade: row?.quantidade ?? 0, dataAtualizacao: formatarDataBR(dataRef) };
 };
+
+/* =========================
+   GET — HISTÓRICO PRODUÇÃO DIÁRIA (últimos N registros, para gráfico)
+========================= */
+
+export type ProducaoDiariaPoint = {
+  quantidade: number;
+  dtRegistro: string; // "YYYY-MM-DD"
+  label: string;      // "DD/MM"
+};
+
+export const getProducaoDiariaHistorico = async (
+  propriedadeId: string,
+  limit = 14,
+): Promise<ProducaoDiariaPoint[]> => {
+  if (!propriedadeId) return [];
+
+  const rows = await queryAll<{ quantidade: number; dtRegistro: string }>(
+    `SELECT quantidade, dtRegistro
+     FROM producao_diaria
+     WHERE propriedadeId = ?
+     ORDER BY dtRegistro ASC
+     LIMIT ?`,
+    [propriedadeId, limit],
+  );
+
+  return rows.map((r) => {
+    const day = r.dtRegistro?.slice(0, 10) ?? "";
+    const [, mes, dia] = day.split("-");
+    return {
+      quantidade: r.quantidade ?? 0,
+      dtRegistro: day,
+      label: dia && mes ? `${dia}/${mes}` : "",
+    };
+  });
+};

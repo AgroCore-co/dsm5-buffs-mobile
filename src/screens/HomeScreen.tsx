@@ -11,6 +11,7 @@ import BuffaloLoader from "../components/BufaloLoader";
 import { usePropriedade } from "../context/PropriedadeContext";
 import propriedadeService from "../services/propriedadeService";
 import { NotificacoesButton } from "../components/NotificacoesButton";
+import { getProducaoDiariaHistorico, ProducaoDiariaPoint } from "../services/lactacaoService";
 
 
 export const HomeScreen = () => {
@@ -22,6 +23,7 @@ export const HomeScreen = () => {
   const [countsSex, setCountsSex] = useState({ machos: 0, femeas: 0 });
   const [countsMat, setCountsMat] = useState({ bezerros: 0, novilhas: 0, vacas: 0, touros: 0 });
   const [count, setCount] = useState({ bufalosAtivos: 0 });
+  const [historicoLeite, setHistoricoLeite] = useState<ProducaoDiariaPoint[]>([]);
 
   const fetchPropriedades = async () => {
     try {
@@ -45,10 +47,13 @@ export const HomeScreen = () => {
         touros: dashboard?.touros,
       });
       setCount({ bufalosAtivos: dashboard?.bufalosAtivos });
+
+      const historico = await getProducaoDiariaHistorico(propriedadeSelecionada, 14);
+      setHistoricoLeite(historico);
     } catch (err) {
       console.error("Erro ao buscar búfalos:", err);
     }
-  }; 
+  };
   
   const onRefresh = async () => {
     setRefreshing(true);
@@ -104,6 +109,7 @@ export const HomeScreen = () => {
                   novilhas={countsMat.novilhas}
                   vacas={countsMat.vacas}
                   touros={countsMat.touros}
+                  historicoLeite={historicoLeite}
                 />
               )}
             </>

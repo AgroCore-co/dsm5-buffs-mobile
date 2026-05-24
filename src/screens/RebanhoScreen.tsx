@@ -25,6 +25,7 @@ type Animal = {
   sexo: "F" | "M";
   maturidade?: string;
   raca?: string;
+  categoria?: string;
 };
 
 type Filtros = {
