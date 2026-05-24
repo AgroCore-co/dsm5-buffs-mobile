@@ -7,6 +7,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 // App.tsx
 import React, { useEffect, useState } from 'react';
 import { runMigrations } from './src/database/migrations';
+import { createNotificationChannels } from './src/services/notificationService';
 import { SyncProvider } from './src/context/SyncContext';
 import { Platform, StatusBar, useColorScheme, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -228,7 +229,9 @@ export default function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
   useEffect(() => {
-    runMigrations().catch(console.error);
+    runMigrations()
+      .then(() => createNotificationChannels())
+      .catch(console.error);
   }, []);
 
   return (
