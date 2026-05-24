@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -100,11 +101,13 @@ export const ReproducaoScreen = () => {
     setIsAttBottomSheetVisible(true);
   };
 
-  useEffect(() => {
-    if (propriedadeSelecionada) {
-      fetchReproducoes(1, true);
-    }
-  }, [propriedadeSelecionada]);
+  useFocusEffect(
+    useCallback(() => {
+      if (propriedadeSelecionada) {
+        fetchReproducoes(1, true);
+      }
+    }, [propriedadeSelecionada]),
+  );
 
   if (loading) {
     return (

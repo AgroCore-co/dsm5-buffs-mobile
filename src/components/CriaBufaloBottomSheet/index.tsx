@@ -24,12 +24,13 @@ import SelectBottomSheet from "../SelectBottomSheet";
 
 interface CadastrarBufaloFormProps {
     onClose: () => void;
+    onSuccess?: () => void;
 }
 
-export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClose }) => {
+export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClose, onSuccess }) => {
     const sheetRef = useRef<BottomSheet>(null);
     // Aumentado o snapPoints para acomodar mais campos
-    const snapPoints = useMemo(() => ["80%", "95%"], []); 
+    const snapPoints = useMemo(() => ["50%", "70%"], []); 
     const { propriedadeSelecionada } = usePropriedade();
 
     const [nome, setNome] = useState("");
@@ -159,6 +160,7 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
 
             await bufaloService.createBufalo(cleanedPayload);
             showToast("Búfalo cadastrado com sucesso!");
+            onSuccess?.();
             onClose();
         } catch (err) { 
             console.error("Erro ao salvar búfalo:", err);
@@ -173,6 +175,7 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
             ref={sheetRef}
             index={0}
             snapPoints={snapPoints}
+            enableDynamicSizing={false}
             onChange={handleSheetChange}
             backgroundStyle={styles.sheetBackground}
             handleIndicatorStyle={styles.handleIndicator}

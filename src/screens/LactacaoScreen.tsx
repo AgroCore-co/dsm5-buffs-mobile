@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -148,14 +149,16 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
     }
   };
 
-  useEffect(() => {
-    if (propriedadeSelecionada) {
-      fetchCiclos(1, true);
-      fetchEstatisticas();
-      fetchProducaoAtual();
-      fetchIndustrias();
-    }
-  }, [propriedadeSelecionada]);
+  useFocusEffect(
+    useCallback(() => {
+      if (propriedadeSelecionada) {
+        fetchCiclos(1, true);
+        fetchEstatisticas();
+        fetchProducaoAtual();
+        fetchIndustrias();
+      }
+    }, [propriedadeSelecionada]),
+  );
 
 
   const onRefresh = async () => {
@@ -296,6 +299,10 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
           industrias={industrias}
           propriedadeId={propriedadeSelecionada!}
           onClose={() => setIsAddingColeta(false)}
+          onSuccess={() => {
+            setIsAddingColeta(false);
+            fetchProducaoAtual();
+          }}
         />
       )}
 
@@ -310,6 +317,10 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
           ]}
           propriedadeId={propriedadeSelecionada!}
           onClose={() => setSelectedBufala(null)}
+          onSuccess={() => {
+            setSelectedBufala(null);
+            fetchCiclos(1);
+          }}
         />
       )}
     </View>

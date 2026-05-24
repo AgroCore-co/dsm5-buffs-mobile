@@ -252,12 +252,8 @@ export const AnimalInfoCard = ({
           }
         );
 
-        setIsEnabled(
-          novoStatus
-        );
-
-        detalhes.status =
-          novoStatus;
+        setIsEnabled(novoStatus);
+        onRefresh();
       } catch (error) {
         console.error(error);
       } finally {

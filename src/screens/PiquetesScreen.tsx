@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { MainLayout } from "../layouts/MainLayout";
@@ -48,9 +48,11 @@ export const PiquetesScreen = () => {
     }
   };
 
-  useEffect(() => {
-    fetchGrupos();
-  }, [propriedadeSelecionada]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchGrupos();
+    }, [propriedadeSelecionada]),
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

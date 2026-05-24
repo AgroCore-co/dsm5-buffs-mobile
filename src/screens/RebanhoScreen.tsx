@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, FlatList, ActivityIndicator, TextInput} from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FloatingAction } from 'react-native-floating-action';
 
@@ -117,11 +117,13 @@ export const RebanhoScreen = () => {
     setRefreshing(false);
   };
 
-  useEffect(() => {
-    if (propriedadeSelecionada) {
-      fetchBufalosFiltrados({}, 1, true);
-    }
-  }, [propriedadeSelecionada]);
+  useFocusEffect(
+    useCallback(() => {
+      if (propriedadeSelecionada) {
+        fetchBufalosFiltrados({}, 1, true);
+      }
+    }, [propriedadeSelecionada]),
+  );
 
   useEffect(() => {
     if (!propriedadeSelecionada || initialLoading) return;
@@ -305,9 +307,10 @@ export const RebanhoScreen = () => {
       />
 
         {!!selectedZootec && (
-          <CadastrarBufaloForm 
+          <CadastrarBufaloForm
             key={selectedZootec.id_zootec}
-            onClose={() => setSelectedZootec(null)} 
+            onClose={() => setSelectedZootec(null)}
+            onSuccess={() => fetchBufalosFiltrados(filtros, 1)}
           />
         )}
 

@@ -97,7 +97,8 @@ export const AnimalDetailScreen = () => {
 
       let loteDoAnimal: any = null;
       try {
-        const lotes = await piqueteService.getAll(base.idPropriedade);
+        const propId = base.idPropriedade ?? base.propriedadeId ?? String(propriedadeSelecionada ?? '');
+        const lotes = await piqueteService.getAll(propId);
         loteDoAnimal = lotes.find((lote) => lote.idGrupo === base.idGrupo) ?? null;
       } catch {
         // sem rede — dados do lote ficam vazios, animal ainda carrega
