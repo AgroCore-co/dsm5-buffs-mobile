@@ -79,8 +79,6 @@ export function DownloadButton({ propertyName }: DownloadButtonProps) {
     <Animated.View
       style={{
         transform: [{ scale: isFirstSyncNeeded && !isActive ? pulseAnim : 1 }],
-        alignSelf: 'flex-start',
-        marginTop: 34, // alinha verticalmente com o SelectBottomSheet dentro do card
       }}
     >
       <TouchableOpacity
