@@ -11,6 +11,8 @@ interface Piquete {
   id: string;
   coords: { latitude: number; longitude: number }[];
   color: string;
+  fillOpacity?: number;
+  weight?: number;
 }
 
 interface MapLeafletProps {
@@ -25,7 +27,9 @@ export const MapLeaflet = React.forwardRef<WebView, MapLeafletProps>(({ piquetes
       p => `{
         coords: [${p.coords.map(c => `[${c.latitude}, ${c.longitude}]`).join(',')}],
         color: '${p.color}',
-        nome: '${p.nome || ''}'
+        nome: '${p.nome || ''}',
+        fillOpacity: ${p.fillOpacity ?? 0.15},
+        weight: ${p.weight ?? 2}
       }`
     ).join(',');
 
@@ -81,7 +85,12 @@ export const MapLeaflet = React.forwardRef<WebView, MapLeafletProps>(({ piquetes
             }
 
             piquetes.forEach((p, index) => {
-              const polygon = L.polygon(p.coords, { color: p.color }).addTo(map);
+              const polygon = L.polygon(p.coords, {
+                color: p.color,
+                fillColor: p.color,
+                fillOpacity: p.fillOpacity ?? 0.15,
+                weight: p.weight ?? 2,
+              }).addTo(map);
 
               const match = (p.nome || '').match(/\d+/);
               const shortName = p.nome

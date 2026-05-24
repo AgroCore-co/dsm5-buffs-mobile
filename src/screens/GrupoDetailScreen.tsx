@@ -74,7 +74,9 @@ const LoteMapSection = ({ lotes, grupoId, grupoColor }: LoteMapSectionProps) => 
 
   const lotesMapeados = lotesDoGrupo.map((l, i) => ({
     ...l,
-    color: i === 0 ? grupoColor : "#C8C8C8",
+    color:       i === 0 ? grupoColor : "#AAAAAA",
+    fillOpacity: i === 0 ? 0.12 : 0.06,
+    weight:      i === 0 ? 3    : 1.5,
   }));
 
   return (
