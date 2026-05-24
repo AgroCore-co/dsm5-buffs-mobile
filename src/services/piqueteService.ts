@@ -13,6 +13,7 @@ export interface Piquete {
   areaM2?: number;
   tipoLote?: string;
   status?: string;
+  updatedAt?: string;
 }
 
 export interface NovoPiqueteDTO {
@@ -53,8 +54,8 @@ function mapRawToPiquete(item: any): Piquete {
 
 export const piqueteService = {
   async getAll(id: string): Promise<Piquete[]> {
-    const rows = await queryAll<{ _raw: string }>(
-      `SELECT _raw FROM lotes WHERE propriedadeId = ?`,
+    const rows = await queryAll<{ _raw: string; updatedAt: string }>(
+      `SELECT _raw, updatedAt FROM lotes WHERE propriedadeId = ? ORDER BY updatedAt DESC`,
       [id],
     );
 
@@ -86,6 +87,7 @@ export const piqueteService = {
         areaM2: item.area_m2,
         tipoLote: item.tipoLote,
         status: item.status,
+        updatedAt: row.updatedAt,
       } as Piquete;
     });
   },
