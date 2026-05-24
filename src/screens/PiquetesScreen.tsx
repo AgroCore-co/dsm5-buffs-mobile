@@ -7,6 +7,8 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { MainLayout } from "../layouts/MainLayout";
 import { colors } from "../styles/colors";
@@ -16,6 +18,7 @@ import { grupoService, GrupoEnriquecido } from "../services/grupoService";
 import { usePropriedade } from "../context/PropriedadeContext";
 import { CardGrupo } from "../components/CardGrupos";
 import DashGrupoPiquetes from "../components/DashGrupoPiquetes";
+import { RootStackParamList } from "../../App";
 
 export const PiquetesScreen = () => {
   const [grupos, setGrupos] = useState<GrupoEnriquecido[]>([]);
@@ -24,6 +27,7 @@ export const PiquetesScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const { propriedadeSelecionada } = usePropriedade();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const fetchGrupos = async () => {
     try {
@@ -95,7 +99,11 @@ export const PiquetesScreen = () => {
               ocupacao={item.ocupacao}
               piquete={item.piquete}
               onPress={() => {
-                console.log(item.id);
+                navigation.navigate('GrupoDetailScreen', {
+                  grupoId: item.id,
+                  nomeGrupo: item.nome,
+                  color: item.color,
+                });
               }}
             />
           )}

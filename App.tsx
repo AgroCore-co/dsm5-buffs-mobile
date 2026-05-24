@@ -40,6 +40,7 @@ import GlobeIcon from './src/icons/sex';
 import Fance from './src/icons/fance';
 import { NfcScannerScreen } from './src/screens/NfcScannerScreen';
 import BuffaloLoader from './src/components/BufaloLoader';
+import { GrupoDetailScreen } from './src/screens/GrupoDetailScreen';
 
 
 export type RootStackParamList = {
@@ -50,6 +51,7 @@ export type RootStackParamList = {
   CompleteProfile: undefined;
   NfcScannerScreen: undefined;
   Notificacoes: undefined;
+  GrupoDetailScreen: { grupoId: string; nomeGrupo: string; color: string };
 };
 
 const Tab = createBottomTabNavigator();
@@ -182,6 +184,7 @@ function AppContent() {
           <Stack.Screen name="AnimalDetail" component={AnimalDetailScreen} />
           <Stack.Screen name="NfcScannerScreen" component={NfcScannerScreen} options={{ title: 'Scanner NFC' }} />
           <Stack.Screen name="Notificacoes" component={NotificacoesScreen} options={{ title: 'Notificações' }} />
+          <Stack.Screen name="GrupoDetailScreen" component={GrupoDetailScreen} />
         </>
       )}
     </Stack.Navigator>
