@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: "row",
     alignItems: "center",
+    borderRadius: 20,
     backgroundColor: colors.bg.section,
-    borderRadius: 12,
     paddingHorizontal: 6,
   },
 
