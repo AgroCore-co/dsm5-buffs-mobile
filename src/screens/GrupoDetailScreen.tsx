@@ -66,12 +66,12 @@ interface LoteMapSectionProps {
 }
 
 const LoteMapSection = ({ lotes, grupoId, grupoColor, lotePrincipal }: LoteMapSectionProps) => {
-  const algumTemGeometria = lotes.some((l) => l.coords && l.coords.length > 0);
+  // Exibe apenas o lote associado a este grupo — sem poluir o mapa com outros piquetes
+  const lotesDoGrupo = lotes
+    .filter((l) => l.idGrupo === grupoId)
+    .map((l) => ({ ...l, color: grupoColor }));
 
-  const lotesMapeados = lotes.map((l) => ({
-    ...l,
-    color: l.idGrupo === grupoId ? grupoColor : "#C8C8C8",
-  }));
+  const algumTemGeometria = lotesDoGrupo.some((l) => l.coords && l.coords.length > 0);
 
   return (
     <View style={styles.section}>
@@ -79,7 +79,7 @@ const LoteMapSection = ({ lotes, grupoId, grupoColor, lotePrincipal }: LoteMapSe
 
       {algumTemGeometria ? (
         <View style={styles.mapContainer}>
-          <MapLeaflet piquetes={lotesMapeados} currentLocation={null} />
+          <MapLeaflet piquetes={lotesDoGrupo} currentLocation={null} />
         </View>
       ) : (
         <View style={styles.mapPlaceholder}>
