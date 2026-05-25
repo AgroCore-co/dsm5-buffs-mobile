@@ -270,9 +270,10 @@ export const getBufalosDoGrupo = async (
 };
 
 export const getBufaloPorMicrochip = async (microchip: string) => {
+  // Usa a coluna indexada em vez de LIKE on _raw (mais seguro e eficiente)
   const row = await queryFirst<{ _raw: string }>(
-    `SELECT _raw FROM bufalos WHERE _raw LIKE ?`,
-    [`%"microchip":"${microchip}"%`],
+    `SELECT _raw FROM bufalos WHERE microchip = ? AND deletedAt IS NULL LIMIT 1`,
+    [microchip],
   );
   if (!row) throw new Error(`Búfalo com microchip ${microchip} não encontrado`);
   return JSON.parse(row._raw);
