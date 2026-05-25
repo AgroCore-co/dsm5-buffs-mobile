@@ -1,4 +1,4 @@
-import { queryAll, execute } from "../database/db";
+import { queryAll, queryFirst, execute } from "../database/db";
 import { enqueue } from "./pendingOperationsService";
 import uuid from "react-native-uuid";
 
@@ -25,9 +25,9 @@ export interface NovoPiqueteDTO {
   tipoLote: string;
   status: string;
   descricao?: string;
-  qtd_max: number;
-  area_m2: number;
-  geo_mapa: {
+  qtdMax: number;
+  areaM2: number;
+  geoMapa: {
     type: "Polygon";
     coordinates: number[][][];
   };
