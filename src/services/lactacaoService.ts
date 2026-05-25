@@ -120,22 +120,40 @@ export const getCiclosLactacao = async (
     };
   });
 
+  // A API pode retornar datas com espaço ("2026-01-15 03:00:00") em vez de "T",
+  // formato não reconhecido pelo Hermes → Invalid Date → NaN. Normalizamos aqui.
+  const normalizeDateStr = (s: string | null | undefined): string | undefined => {
+    if (!s) return undefined;
+    const trimmed = s.trim();
+    if (!trimmed) return undefined;
+    return trimmed.replace(' ', 'T');
+  };
+
   const ciclos = rows.map((r) => {
     const c = JSON.parse(r._raw);
 
-    // API pode devolver flat (cicloAtual) ou nested (ciclo_atual.numero_ciclo)
+    // API pode devolver flat (cicloAtual / numeroCiclo / numero_ciclo)
+    // ou nested (ciclo_atual.numero_ciclo)
     const cicloAtual: number | null =
-      c.cicloAtual ?? c.ciclo_atual?.numero_ciclo ?? c.numeroCiclo ?? null;
+      c.cicloAtual ?? c.numeroCiclo ?? c.numero_ciclo ?? c.ciclo_atual?.numero_ciclo ?? null;
 
     // Dias em lactação: flat > nested > calculado a partir do dtParto
-    const dtPartoStr: string | undefined =
-      c.dtParto ?? c.ciclo_atual?.dt_parto ?? c.cicloAtualDtParto;
-    const diasEmLactacao: number | null =
-      c.diasEmLactacao ??
-      c.ciclo_atual?.dias_em_lactacao ??
-      (dtPartoStr
-        ? Math.floor((Date.now() - new Date(dtPartoStr).getTime()) / 86400000)
-        : null);
+    const dtPartoStr =
+      normalizeDateStr(c.dtParto) ??
+      normalizeDateStr(c.ciclo_atual?.dt_parto) ??
+      normalizeDateStr(c.cicloAtualDtParto);
+
+    const diasEmLactacao: number | null = (() => {
+      if (c.diasEmLactacao != null && !isNaN(Number(c.diasEmLactacao))) {
+        return Number(c.diasEmLactacao);
+      }
+      if (c.ciclo_atual?.dias_em_lactacao != null && !isNaN(Number(c.ciclo_atual.dias_em_lactacao))) {
+        return Number(c.ciclo_atual.dias_em_lactacao);
+      }
+      if (!dtPartoStr) return null;
+      const ms = Date.now() - new Date(dtPartoStr).getTime();
+      return isNaN(ms) ? null : Math.floor(ms / 86400000);
+    })();
 
     const dtSecagem: string | undefined =
       c.dtSecagemPrevista ?? c.ciclo_atual?.dt_secagem_prevista;

@@ -17,7 +17,15 @@ import { encerrarLactacao } from "../../services/lactacaoService";
 import IconBuffs from "../../icons/agroCore";
 
 export type CardLactacaoProps = {
-  animal: any;
+  animal: {
+    nome?: string;
+    brinco?: string;
+    status: string;
+    raca?: string;
+    cicloAtual?: number | null;
+    diasEmLactacao?: number | null;
+    idCicloLactacao?: string;
+  };
   onPress?: () => void;
   onStatusChanged?: () => void;
 };
@@ -45,7 +53,7 @@ export const CardLactacao: React.FC<
   const confirmarSecagem = async () => {
     try {
       await encerrarLactacao(
-        animal.idCicloLactacao
+        animal.idCicloLactacao ?? ""
       );
 
       setIsEnabled(false);
@@ -145,7 +153,7 @@ export const CardLactacao: React.FC<
               <Text
                 style={styles.detailValue}
               >
-                {animal.cicloAtual
+                {animal.cicloAtual != null && !isNaN(animal.cicloAtual)
                   ? `${animal.cicloAtual}º`
                   : "—"}
               </Text>
@@ -159,8 +167,9 @@ export const CardLactacao: React.FC<
               <Text
                 style={styles.detailValue}
               >
-                {animal.diasEmLactacao ??
-                  "—"}
+                {animal.diasEmLactacao != null && !isNaN(animal.diasEmLactacao)
+                  ? animal.diasEmLactacao
+                  : "—"}
               </Text>
             </View>
 

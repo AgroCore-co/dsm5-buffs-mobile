@@ -31,9 +31,9 @@ export interface AnimalLac {
   idBufala?: string;
   brinco: string;
   nome: string;
-  diasEmLactacao: number;
+  diasEmLactacao: number | null;
   secagemPrevista?: string;
-  cicloAtual?: number;
+  cicloAtual?: number | null;
   producaoTotal?: number;
   status: string;
   raca?: string;
