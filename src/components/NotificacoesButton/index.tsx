@@ -25,7 +25,7 @@ export const NotificacoesButton = () => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: colors.yellow.button,
+    backgroundColor: colors.brand.primary,
     borderRadius: 50,
     marginTop: 35,
     position: "absolute",

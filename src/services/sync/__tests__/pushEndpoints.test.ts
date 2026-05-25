@@ -8,10 +8,10 @@ describe('pushEndpoints — bufalos', () => {
     });
   });
 
-  test('UPDATE normal → PATCH /bufalos/{id}', () => {
-    const p = { id: 'b1', brinco: 'A002' };
+  test('UPDATE normal → PATCH /bufalos/{id} (id vai na URL, fora do body)', () => {
+    const p = { id: 'b1', brinco: 'A002', createdAt: '2026-01-01', idBufalo: 'b1' };
     expect(resolvePushEndpoint('bufalos', 'UPDATE', p)).toEqual({
-      endpoint: '/bufalos/b1', method: 'PATCH', body: p,
+      endpoint: '/bufalos/b1', method: 'PATCH', body: { brinco: 'A002' },
     });
   });
 
@@ -42,10 +42,10 @@ describe('pushEndpoints — pesagens', () => {
     expect(result.body).toHaveProperty('id', 'z1');
   });
 
-  test('UPDATE → PATCH /dados-zootecnicos/{id}', () => {
-    const p = { id: 'z1', peso: 490 };
+  test('UPDATE → PATCH /dados-zootecnicos/{id} (id na URL, strip de campos proibidos)', () => {
+    const p = { id: 'z1', peso: 490, idBufalo: 'b9', createdAt: '2026-01-01' };
     expect(resolvePushEndpoint('pesagens', 'UPDATE', p)).toEqual({
-      endpoint: '/dados-zootecnicos/z1', method: 'PATCH', body: p,
+      endpoint: '/dados-zootecnicos/z1', method: 'PATCH', body: { peso: 490 },
     });
   });
 
@@ -65,10 +65,10 @@ describe('pushEndpoints — eventos_sanitarios', () => {
     expect(result.body).toHaveProperty('idBufalo', 'b9');
   });
 
-  test('UPDATE → PATCH /dados-sanitarios/{id}', () => {
-    const p = { id: 's1', doenca: 'Mastite' };
+  test('UPDATE → PATCH /dados-sanitarios/{id} (id na URL, strip de campos proibidos)', () => {
+    const p = { id: 's1', doenca: 'Mastite', idBufalo: 'b9', createdAt: '2026-01-01' };
     expect(resolvePushEndpoint('eventos_sanitarios', 'UPDATE', p)).toEqual({
-      endpoint: '/dados-sanitarios/s1', method: 'PATCH', body: p,
+      endpoint: '/dados-sanitarios/s1', method: 'PATCH', body: { doenca: 'Mastite' },
     });
   });
 
@@ -137,10 +137,10 @@ describe('pushEndpoints — ciclos_lactacao', () => {
     expect(result.body).toHaveProperty('dtParto', '2026-01-10');
   });
 
-  test('UPDATE → PATCH /lactacao/{id}', () => {
-    const p = { id: 'c1', status: 'seco' };
+  test('UPDATE (encerrar lactação) → PATCH /lactacao/{id} sem status (backend deriva de dtSecagemReal)', () => {
+    const p = { id: 'c1', dtSecagemReal: '2026-05-22', observacao: 'Seca', status: 'seco' };
     expect(resolvePushEndpoint('ciclos_lactacao', 'UPDATE', p)).toEqual({
-      endpoint: '/lactacao/c1', method: 'PATCH', body: p,
+      endpoint: '/lactacao/c1', method: 'PATCH', body: { dtSecagemReal: '2026-05-22', observacao: 'Seca' },
     });
   });
 
@@ -156,6 +156,16 @@ describe('pushEndpoints — lotes', () => {
     const p = { id: 'l1', nomeLote: 'Pasto 1', idPropriedade: 'p1' };
     expect(resolvePushEndpoint('lotes', 'CREATE', p)).toEqual({
       endpoint: '/lotes', method: 'POST', body: p,
+    });
+  });
+
+  test('UPDATE → PATCH /lotes/{id} converte camelCase→snake_case e geoMapa(objeto)→geo_mapa(string)', () => {
+    const geo = { type: 'Polygon', coordinates: [[[1, 2], [3, 4], [5, 6], [1, 2]]] };
+    const p = { id: 'l1', nomeLote: 'Pasto 2', qtdMax: 50, areaM2: 1000, geoMapa: geo, updatedAt: '2026-01-01' };
+    expect(resolvePushEndpoint('lotes', 'UPDATE', p)).toEqual({
+      endpoint: '/lotes/l1',
+      method: 'PATCH',
+      body: { nomeLote: 'Pasto 2', qtd_max: 50, area_m2: 1000, geo_mapa: JSON.stringify(geo) },
     });
   });
 });
@@ -402,5 +412,34 @@ describe('shapeReproducaoCreate — null filtering', () => {
       status: 'Em andamento', dtEvento: '2026-05-21',
     });
     expect(result.body.idBufalo).toBe('touro-uuid');
+  });
+
+  // Contrato pós-revisão backend: idBufalo proibido em IA e IATF mesmo com valor
+  it('remove idBufalo mesmo com valor quando tipo é IA', () => {
+    const result = resolvePushEndpoint('reproducoes', 'CREATE', {
+      id: 'r1', idPropriedade: 'prop1', idBufala: 'buf1', idSemen: 'sem1',
+      idBufalo: 'touro-uuid', tipoInseminacao: 'IA',
+      status: 'Em andamento', dtEvento: '2026-05-21',
+    });
+    expect(result.body).not.toHaveProperty('idBufalo');
+  });
+
+  it('remove idBufalo mesmo com valor quando tipo é IATF', () => {
+    const result = resolvePushEndpoint('reproducoes', 'CREATE', {
+      id: 'r1', idPropriedade: 'prop1', idBufala: 'buf1', idSemen: 'sem1',
+      idBufalo: 'touro-uuid', tipoInseminacao: 'IATF',
+      status: 'Em andamento', dtEvento: '2026-05-21',
+    });
+    expect(result.body).not.toHaveProperty('idBufalo');
+  });
+
+  // idDoadora foi removido do DTO do backend — nunca deve ser enviado
+  it('nunca inclui idDoadora no payload (campo removido do DTO)', () => {
+    const result = resolvePushEndpoint('reproducoes', 'CREATE', {
+      id: 'r1', idPropriedade: 'prop1', idBufala: 'buf1', idSemen: 'sem1',
+      idDoadora: 'doadora-uuid', tipoInseminacao: 'TE',
+      status: 'Em andamento', dtEvento: '2026-05-21',
+    });
+    expect(result.body).not.toHaveProperty('idDoadora');
   });
 });

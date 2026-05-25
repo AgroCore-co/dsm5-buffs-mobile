@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useDimensions } from '../../utils/useDimensions';
-import { SyncStatusBanner } from '../../components/SyncStatusBanner';
+import { colors } from '../../styles/colors';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ interface MainLayoutProps {
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
   children,
-  backgroundColor = '#f6f3f4',
+  backgroundColor = colors.bg.screen,
 }) => {
   const { wp, hp } = useDimensions();
 
@@ -19,13 +19,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       style={[
         styles.container,
         {
-          paddingTop: hp(1),
+          paddingTop: hp(0.5),
           paddingHorizontal: wp(2),
           backgroundColor,
         },
       ]}
     >
-      <SyncStatusBanner />
       {children}
     </View>
   );
@@ -33,6 +32,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,               // garante que o layout ocupe toda a tela
+    flex: 1,
   },
 });

@@ -39,7 +39,7 @@ export const sanitarioService = {
   getHistorico: async (id_bufalo: string, page = 1, limit = 10) => {
     const offset = (page - 1) * limit;
     const rows = await queryAll<{ _raw: string }>(
-      `SELECT _raw FROM eventos_sanitarios WHERE bufaloId = ? ORDER BY updatedAt DESC LIMIT ? OFFSET ?`,
+      `SELECT _raw FROM eventos_sanitarios WHERE bufaloId = ? ORDER BY json_extract(_raw, '$.dtAplicacao') DESC LIMIT ? OFFSET ?`,
       [id_bufalo, limit, offset],
     );
 

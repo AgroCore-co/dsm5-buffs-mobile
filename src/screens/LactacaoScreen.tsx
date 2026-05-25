@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -30,9 +31,9 @@ export interface AnimalLac {
   idBufala?: string;
   brinco: string;
   nome: string;
-  diasEmLactacao: number;
+  diasEmLactacao: number | null;
   secagemPrevista?: string;
-  cicloAtual?: number;
+  cicloAtual?: number | null;
   producaoTotal?: number;
   status: string;
   raca?: string;
@@ -112,7 +113,6 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
     try {
       const { quantidade, dataAtualizacao } =
         await getProducaoDiariaAtual(propriedadeSelecionada);
-
       setQuantidadeAtual(quantidade);
       setDataFormatada(dataAtualizacao);
     } catch (error) {
@@ -148,14 +148,16 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
     }
   };
 
-  useEffect(() => {
-    if (propriedadeSelecionada) {
-      fetchCiclos(1, true);
-      fetchEstatisticas();
-      fetchProducaoAtual();
-      fetchIndustrias();
-    }
-  }, [propriedadeSelecionada]);
+  useFocusEffect(
+    useCallback(() => {
+      if (propriedadeSelecionada) {
+        fetchCiclos(1, true);
+        fetchEstatisticas();
+        fetchProducaoAtual();
+        fetchIndustrias();
+      }
+    }, [propriedadeSelecionada]),
+  );
 
 
   const onRefresh = async () => {
@@ -170,10 +172,10 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
   };
 
 
-  const animaisPaginados = animais.slice(
-    (paginaAtual - 1) * itensPorPagina,
-    paginaAtual * itensPorPagina
-  );
+  const handlePageChange = async (novaPagina: number) => {
+    if (novaPagina < 1 || novaPagina > totalPaginas) return;
+    await fetchCiclos(novaPagina);
+  };
 
   const actions = [
     {
@@ -181,14 +183,14 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
       icon: <Bucket width={18} height={18} />,
       name: "estoque",
       position: 1,
-      color: colors.yellow.base,
+      color: colors.brand.primary,
     },
     {
       text: "Registrar Coleta",
       icon: <Truck width={15} height={15} />,
       name: "coleta",
       position: 2,
-      color: colors.yellow.base,
+      color: colors.brand.primary,
     },
   ];
 
@@ -225,7 +227,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.yellow.base]}
+              colors={[colors.brand.primary]}
             />
           }
           ListHeaderComponent={
@@ -238,30 +240,24 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
           ListEmptyComponent={
             listLoading ? (
               <View style={styles.inlineLoader}>
-                <ActivityIndicator size="large" color={colors.yellow.base} />
+                <ActivityIndicator size="large" color={colors.brand.primary} />
                 <Text style={{ marginTop: 8 }}>
                   Atualizando lactação...
                 </Text>
               </View>
             ) : (
               <Text style={{ textAlign: "center", marginTop: 20 }}>
-                Nenhum animal encontrado
+                Nenhum registro encontrado
               </Text>
             )
           }
 
           ListFooterComponent={
-            listLoading ? (
-              <View style={styles.footerLoader}>
-                
-              </View>
-            ) : (
+            totalPaginas > 1 && !listLoading ? (
               <View style={styles.pagination}>
                 <Button
                   title="Anterior"
-                  onPress={() => {
-                    if (paginaAtual > 1) fetchCiclos(paginaAtual - 1);
-                  }}
+                  onPress={() => handlePageChange(paginaAtual - 1)}
                   disabled={paginaAtual === 1}
                 />
 
@@ -271,14 +267,11 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
 
                 <Button
                   title="Próxima"
-                  onPress={() => {
-                    if (paginaAtual < totalPaginas)
-                      fetchCiclos(paginaAtual + 1);
-                  }}
+                  onPress={() => handlePageChange(paginaAtual + 1)}
                   disabled={paginaAtual === totalPaginas}
                 />
               </View>
-            )
+            ) : null
           }
 
         />
@@ -288,7 +281,7 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
         actions={actions}
         onPressItem={handleActionPress}
         buttonSize={60}
-        color={colors.yellow.base}
+        color={colors.brand.primary}
         floatingIcon={<Plus width={24} height={24} />}
       />
 
@@ -305,6 +298,10 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
           industrias={industrias}
           propriedadeId={propriedadeSelecionada!}
           onClose={() => setIsAddingColeta(false)}
+          onSuccess={() => {
+            setIsAddingColeta(false);
+            fetchProducaoAtual();
+          }}
         />
       )}
 
@@ -319,6 +316,10 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
           ]}
           propriedadeId={propriedadeSelecionada!}
           onClose={() => setSelectedBufala(null)}
+          onSuccess={() => {
+            setSelectedBufala(null);
+            fetchCiclos(1);
+          }}
         />
       )}
     </View>
@@ -329,15 +330,26 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     height: 60,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: "center",
-    alignItems: "center",
+    borderBottomColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    paddingLeft: 16,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,    
   },
   headerText: {
     marginTop: 10,
     fontSize: 25,
-    fontWeight: "900", 
-    color: colors.brown.base,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: colors.text.accent,
   },
   loadingContainer: {
     flex: 1,
@@ -367,9 +379,8 @@ const styles = StyleSheet.create({
   pageInfo: {
     marginHorizontal: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.text.body,
     textAlign: "center",
   },
-
 
 });

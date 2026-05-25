@@ -53,7 +53,7 @@ export interface Industria {
 
 export interface LactacaoRegistroPayload {
   id_bufala: string;
-  id_propriedade: number;
+  id_propriedade: string | number; // UUIDs são string; aceita number por retrocompatibilidade
   id_ciclo_lactacao: string;
   qt_ordenha: number;
   periodo: string;
@@ -120,22 +120,40 @@ export const getCiclosLactacao = async (
     };
   });
 
+  // A API pode retornar datas com espaço ("2026-01-15 03:00:00") em vez de "T",
+  // formato não reconhecido pelo Hermes → Invalid Date → NaN. Normalizamos aqui.
+  const normalizeDateStr = (s: string | null | undefined): string | undefined => {
+    if (!s) return undefined;
+    const trimmed = s.trim();
+    if (!trimmed) return undefined;
+    return trimmed.replace(' ', 'T');
+  };
+
   const ciclos = rows.map((r) => {
     const c = JSON.parse(r._raw);
 
-    // API pode devolver flat (cicloAtual) ou nested (ciclo_atual.numero_ciclo)
+    // API pode devolver flat (cicloAtual / numeroCiclo / numero_ciclo)
+    // ou nested (ciclo_atual.numero_ciclo)
     const cicloAtual: number | null =
-      c.cicloAtual ?? c.ciclo_atual?.numero_ciclo ?? c.numeroCiclo ?? null;
+      c.cicloAtual ?? c.numeroCiclo ?? c.numero_ciclo ?? c.ciclo_atual?.numero_ciclo ?? null;
 
     // Dias em lactação: flat > nested > calculado a partir do dtParto
-    const dtPartoStr: string | undefined =
-      c.dtParto ?? c.ciclo_atual?.dt_parto ?? c.cicloAtualDtParto;
-    const diasEmLactacao: number | null =
-      c.diasEmLactacao ??
-      c.ciclo_atual?.dias_em_lactacao ??
-      (dtPartoStr
-        ? Math.floor((Date.now() - new Date(dtPartoStr).getTime()) / 86400000)
-        : null);
+    const dtPartoStr =
+      normalizeDateStr(c.dtParto) ??
+      normalizeDateStr(c.ciclo_atual?.dt_parto) ??
+      normalizeDateStr(c.cicloAtualDtParto);
+
+    const diasEmLactacao: number | null = (() => {
+      if (c.diasEmLactacao != null && !isNaN(Number(c.diasEmLactacao))) {
+        return Number(c.diasEmLactacao);
+      }
+      if (c.ciclo_atual?.dias_em_lactacao != null && !isNaN(Number(c.ciclo_atual.dias_em_lactacao))) {
+        return Number(c.ciclo_atual.dias_em_lactacao);
+      }
+      if (!dtPartoStr) return null;
+      const ms = Date.now() - new Date(dtPartoStr).getTime();
+      return isNaN(ms) ? null : Math.floor(ms / 86400000);
+    })();
 
     const dtSecagem: string | undefined =
       c.dtSecagemPrevista ?? c.ciclo_atual?.dt_secagem_prevista;
@@ -286,4 +304,141 @@ export const getProducaoDiariaAtual = async (propriedadeId: string) => {
   );
   const dataRef = row?.dtRegistro?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
   return { quantidade: row?.quantidade ?? 0, dataAtualizacao: formatarDataBR(dataRef) };
+};
+
+/* =========================
+   GET — HISTÓRICO PRODUÇÃO DIÁRIA (últimos N registros, para gráfico)
+========================= */
+
+export type ProducaoDiariaPoint = {
+  quantidade: number;
+  dtRegistro: string; // "YYYY-MM-DD"
+  label: string;      // "DD/MM"
+};
+
+export const getProducaoDiariaHistorico = async (
+  propriedadeId: string,
+  limit = 14,
+): Promise<ProducaoDiariaPoint[]> => {
+  if (!propriedadeId) return [];
+
+  const rows = await queryAll<{ quantidade: number; dtRegistro: string }>(
+    `SELECT quantidade, dtRegistro
+     FROM producao_diaria
+     WHERE propriedadeId = ?
+     ORDER BY dtRegistro ASC
+     LIMIT ?`,
+    [propriedadeId, limit],
+  );
+
+  return rows.map((r) => {
+    const day = r.dtRegistro?.slice(0, 10) ?? "";
+    const [, mes, dia] = day.split("-");
+    return {
+      quantidade: r.quantidade ?? 0,
+      dtRegistro: day,
+      label: dia && mes ? `${dia}/${mes}` : "",
+    };
+  });
+};
+
+/* =========================
+   GET — PRODUÇÃO MENSAL (cache do servidor)
+   Retorna os últimos `limit` meses no mesmo shape ProducaoDiariaPoint
+   para compatibilidade com o gráfico do HomeScreen.
+========================= */
+
+export const getDashboardProducaoMensalHistorico = async (
+  propriedadeId: string,
+  limit = 12,
+): Promise<ProducaoDiariaPoint[]> => {
+  if (!propriedadeId) return [];
+
+  try {
+    const rows = await queryAll<{ mes: string; total_litros: number }>(
+      `SELECT mes, total_litros
+       FROM dashboard_producao_mensal
+       WHERE propriedadeId = ?
+       ORDER BY mes ASC
+       LIMIT ?`,
+      [propriedadeId, limit],
+    );
+
+    return rows.map((r) => {
+      // mes = "YYYY-MM" → label "MM/YY"
+      const [ano, mm] = (r.mes ?? "").split("-");
+      const label = mm && ano ? `${mm}/${ano.slice(2)}` : "";
+      return {
+        quantidade: r.total_litros ?? 0,
+        dtRegistro: r.mes ?? "",
+        label,
+      };
+    });
+  } catch {
+    // Tabela pode não existir na primeira execução após migração (race condition)
+    return [];
+  }
+};
+
+/* =========================
+   GET — RESUMO MÊS ATUAL (cache do servidor)
+========================= */
+
+export interface ProducaoMesAtualResumo {
+  mes_atual_litros: number;
+  mes_anterior_litros: number;
+  variacao_percentual: number;
+  bufalas_lactantes_atual: number;
+  syncedAt: string | null;
+}
+
+export const getProducaoMesAtual = async (
+  propriedadeId: string,
+): Promise<ProducaoMesAtualResumo> => {
+  const defaultResult: ProducaoMesAtualResumo = {
+    mes_atual_litros: 0,
+    mes_anterior_litros: 0,
+    variacao_percentual: 0,
+    bufalas_lactantes_atual: 0,
+    syncedAt: null,
+  };
+
+  if (!propriedadeId) return defaultResult;
+
+  const mesAtual = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  const [yearStr, monthStr] = mesAtual.split("-");
+  const prevMonth = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 2, 1);
+  const mesAnterior = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
+
+  let atual: { total_litros: number; qtd_bufalas: number; syncedAt: string } | null = null;
+  let anterior: { total_litros: number } | null = null;
+  try {
+    [atual, anterior] = await Promise.all([
+      queryFirst<{ total_litros: number; qtd_bufalas: number; syncedAt: string }>(
+        `SELECT total_litros, qtd_bufalas, syncedAt FROM dashboard_producao_mensal WHERE propriedadeId = ? AND mes = ?`,
+        [propriedadeId, mesAtual],
+      ),
+      queryFirst<{ total_litros: number }>(
+        `SELECT total_litros FROM dashboard_producao_mensal WHERE propriedadeId = ? AND mes = ?`,
+        [propriedadeId, mesAnterior],
+      ),
+    ]);
+  } catch {
+    // Tabela pode não existir na primeira execução após migração (race condition)
+    return defaultResult;
+  }
+
+  const mesAtualLitros = atual?.total_litros ?? 0;
+  const mesAnteriorLitros = anterior?.total_litros ?? 0;
+  const variacao = mesAnteriorLitros > 0
+    ? ((mesAtualLitros - mesAnteriorLitros) / mesAnteriorLitros) * 100
+    : 0;
+
+  return {
+    mes_atual_litros: mesAtualLitros,
+    mes_anterior_litros: mesAnteriorLitros,
+    variacao_percentual: Math.round(variacao * 10) / 10,
+    bufalas_lactantes_atual: atual?.qtd_bufalas ?? 0,
+    syncedAt: atual?.syncedAt ?? null,
+  };
 };

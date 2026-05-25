@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderRadius: 10,
     height: 50,
-    backgroundColor: colors.white.base,
+    backgroundColor: colors.bg.card,
   },
   tabButton: {
     flex: 1,
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 4,
-    borderColor: colors.yellow.base,
+    borderColor: colors.brand.primary,
   },
   tabText: {
     top: 5,
@@ -61,9 +61,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   activeText: {
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
   inactiveText: {
-    color: colors.gray.base,
+    color: colors.text.muted,
   },
 });

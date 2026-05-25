@@ -9,6 +9,7 @@ import RotateLeftIcon from "../icons/arrow";
 
 import { usePropriedade } from "../context/PropriedadeContext";
 import { useNavigation } from "@react-navigation/native";
+import ArrowLeftIcon from "../icons/arrowLeft";
 
 export const NotificacoesScreen = () => {
   const navigation = useNavigation<{ goBack: () => void }>();
@@ -34,16 +35,10 @@ export const NotificacoesScreen = () => {
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => navigation.goBack()}
-        >
-          <RotateLeftIcon width={24} height={24} />
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+          <ArrowLeftIcon width={24} height={24} />
         </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>Notificações</Text>
-
-        <View style={styles.headerButton} />
+        <Text style={styles.headerTitle}>ALERTAS</Text>
       </View>
 
       {/* CONTEÚDO */}
@@ -59,39 +54,47 @@ export const NotificacoesScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.brown.base,
   },
-
   header: {
-    height: 80,
-    backgroundColor: colors.yellow.base,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingTop: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.yellow.dark,
+    height: 60,
+    backgroundColor: colors.brand.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    borderBottomColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
 
   headerButton: {
     width: 48,
     height: 48,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12
   },
 
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: colors.brown.base,
+    flex: 1,
+    fontSize: 25,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: colors.text.accent,
+    marginRight: 48,
+    marginTop: 10
   },
 
   containerLoading: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: colors.bg.subtle,
   },
 });

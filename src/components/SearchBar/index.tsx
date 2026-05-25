@@ -22,7 +22,7 @@ interface Props {
 
 export default function FiltroRebanhoBottomSheet({ filtros, onFiltrar, onClose }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["60%", "90%"], []);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
 
   const [racas, setRacas] = useState<any[]>([]);
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>("Sexo");
@@ -81,16 +81,17 @@ export default function FiltroRebanhoBottomSheet({ filtros, onFiltrar, onClose }
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       enablePanDownToClose
       onClose={onClose}
       backdropComponent={(props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />}
-      backgroundStyle={{ backgroundColor: "#F8F7F5" }}
+      backgroundStyle={{ backgroundColor: colors.bg.sheet }}
     >
-      <BottomSheetScrollView contentContainerStyle={styles.container}>
+      <BottomSheetScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Text style={styles.title}>Filtros Avançados</Text>
           <TouchableOpacity onPress={() => { setSexo(null); setRaca(null); setMaturidade(null); setStatus(null); }}>
-            <Text style={{ color: colors.red.base }}>Limpar</Text>
+            <Text style={{ color: colors.status.error }}>Limpar</Text>
           </TouchableOpacity>
         </View>
 
@@ -137,14 +138,14 @@ const styles = StyleSheet.create({
   container: { padding: 20 },
   header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
   title: { fontSize: 20, fontWeight: 'bold' },
-  label: { fontSize: 12, color: '#666', marginBottom: 10, fontWeight: '600' },
-  chip: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#EEE', borderRadius: 12, marginRight: 8 },
-  chipAtivo: { backgroundColor: colors.yellow.base },
+  label: { fontSize: 12, color: colors.text.muted, marginBottom: 10, fontWeight: '600' },
+  chip: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.bg.subtle, borderRadius: 12, marginRight: 8 },
+  chipAtivo: { backgroundColor: colors.brand.primary },
   chipText: { fontWeight: '500' },
-  chipTextAtivo: { color: colors.brown.base },
+  chipTextAtivo: { color: colors.text.accent },
   optionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 30 },
-  opt: { width: '47%', padding: 12, backgroundColor: '#FFF', borderRadius: 12, borderWidth: 1, borderColor: '#EEE', alignItems: 'center' },
-  optAtivo: { borderColor: colors.yellow.base, backgroundColor: '#FFF9E7' },
-  optText: { color: '#444' },
-  optTextAtivo: { fontWeight: 'bold', color: colors.brown.base }
+  opt: { width: '47%', padding: 12, backgroundColor: colors.bg.card, borderRadius: 12, borderWidth: 1, borderColor: colors.bg.subtle, alignItems: 'center' },
+  optAtivo: { borderColor: colors.brand.primary, backgroundColor: colors.status.warningBg },
+  optText: { color: colors.text.body },
+  optTextAtivo: { fontWeight: 'bold', color: colors.text.accent }
 });

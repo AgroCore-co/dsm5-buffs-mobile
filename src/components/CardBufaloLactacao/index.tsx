@@ -1,203 +1,343 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Switch } from "react-native";
+
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Switch,
+} from "react-native";
+
 import { colors } from "../../styles/colors";
+
 import { ConfirmModal } from "../ModalStatus";
+
 import { encerrarLactacao } from "../../services/lactacaoService";
 
+import IconBuffs from "../../icons/agroCore";
 
 export type CardLactacaoProps = {
-  animal: any;
+  animal: {
+    nome?: string;
+    brinco?: string;
+    status: string;
+    raca?: string;
+    cicloAtual?: number | null;
+    diasEmLactacao?: number | null;
+    idCicloLactacao?: string;
+  };
   onPress?: () => void;
   onStatusChanged?: () => void;
 };
 
-export const CardLactacao: React.FC<CardLactacaoProps> = ({ animal, onPress, onStatusChanged }) => {
-  const isLactando = animal.status === "Em Lactação";
-  const [isEnabled, setIsEnabled] = useState(isLactando);
-  const [modalVisible, setModalVisible] = useState(false);
+export const CardLactacao: React.FC<
+  CardLactacaoProps
+> = ({
+  animal,
+  onPress,
+  onStatusChanged,
+}) => {
+  const isLactando =
+    animal.status === "Em Lactação";
+
+  const [isEnabled, setIsEnabled] =
+    useState(isLactando);
+
+  const [modalVisible, setModalVisible] =
+    useState(false);
+
   const toggleSwitch = () => {
     setModalVisible(true);
   };
 
   const confirmarSecagem = async () => {
     try {
-      await encerrarLactacao(animal.idCicloLactacao);
+      await encerrarLactacao(
+        animal.idCicloLactacao ?? ""
+      );
 
       setIsEnabled(false);
 
-      if (onStatusChanged) onStatusChanged();
-
+      if (onStatusChanged)
+        onStatusChanged();
     } catch (err) {
-      console.log("Erro ao encerrar lactação:", err);
+      console.log(
+        "Erro ao encerrar lactação:",
+        err
+      );
     } finally {
       setModalVisible(false);
     }
   };
-  
+
+  const statusColor = isEnabled
+    ? {
+        bg: colors.status.success,
+        soft: colors.status.successBg,
+      }
+    : {
+        bg: colors.status.error,
+        soft: colors.status.errorBg,
+      };
+
   return (
     <>
-    <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
-      <View
-        style={[
-          styles.statusBar,
-          { backgroundColor: isLactando ? colors.green.active : colors.red.inactive },
-        ]}
-      />
-      <View style={styles.content}>
-        {/* Cabeçalho */}
-        <View style={styles.header}>
-        <View>
-          <Text style={styles.nome}>{animal.nome || "Sem nome"}</Text>
-          <Text style={styles.brinco}>Brinco: Nº {animal.brinco}</Text>
-        </View>
-        <View style={[styles.statusBadge, !isEnabled && styles.statusBadgeSeca]}>
-          <View style={[ styles.statusDot, { backgroundColor: isEnabled ? colors.green.extra : colors.red.extra, }, ]} />
-          <Text style={[ styles.statusText, { color: isEnabled ? colors.green.text : colors.red.text, },]}>
-            {isEnabled ? "Em Lactação" : "Seca"}
-          </Text>
-          <Switch
-            value={isEnabled}
-            onValueChange={toggleSwitch}
-            trackColor={{ false: colors.gray.disabled, true: colors.gray.disabled }}
-            thumbColor={isEnabled ? colors.green.extra : colors.red.extra}
-          />
-        </View>
-        </View>
-
-
-        <View style={styles.chipRow}>
-          <View style={styles.chip}>
-            <Text style={styles.chipLabel}>Raça:</Text>
-            <Text style={styles.chipValue}>{animal.raca || "—"}</Text>
-          </View>
-          <View style={styles.chip}>
-            <Text style={styles.chipLabel}>Ciclo:</Text>
-            <Text style={styles.chipValue}>{animal.cicloAtual ? `${animal.cicloAtual}º` : "—"}</Text>
-          </View>
-          <View style={styles.chip}>
-            <Text style={styles.chipLabel}>Dias Lactação:</Text>
-            <Text style={styles.chipValue}>{animal.diasEmLactacao ?? "—"}</Text>
+      <TouchableOpacity
+        style={styles.container}
+        onPress={onPress}
+        activeOpacity={0.9}
+      >
+        <View style={styles.iconContainer}>
+          <View style={styles.iconWrapper}>
+            <IconBuffs
+              width={24}
+              height={24}
+              fill={statusColor.bg}
+            />
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
 
-    <ConfirmModal
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.info}>
+              <Text style={styles.title}>
+                {animal.nome ||
+                  "Sem nome"}
+              </Text>
+
+              <Text
+                style={styles.subtitle}
+              >
+                Brinco Nº{" "}
+                {animal.brinco}
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor:
+                    statusColor.soft,
+                },
+              ]}
+            >
+              <Text style={styles.statusText} >
+                {isEnabled
+                  ? "Em Lactação"
+                  : "Seca"}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.details}>
+            <View style={styles.detailItem}>
+              <Text
+                style={styles.detailLabel}
+              >
+                Raça:
+              </Text>
+
+              <Text
+                style={styles.detailValue}
+              >
+                {animal.raca || "—"}
+              </Text>
+
+              <Text
+                style={styles.detailLabel}
+              >
+                Ciclo:
+              </Text>
+
+              <Text
+                style={styles.detailValue}
+              >
+                {animal.cicloAtual != null && !isNaN(animal.cicloAtual)
+                  ? `${animal.cicloAtual}º`
+                  : "—"}
+              </Text>
+
+              <Text
+                style={styles.detailLabel}
+              >
+                Dias Lactação:
+              </Text>
+
+              <Text
+                style={styles.detailValue}
+              >
+                {animal.diasEmLactacao != null && !isNaN(animal.diasEmLactacao)
+                  ? animal.diasEmLactacao
+                  : "—"}
+              </Text>
+            </View>
+
+            <View style={styles.switchRow}>
+              <Text
+                style={styles.switchLabel}
+              >
+                Encerrar lactação
+              </Text>
+
+              <Switch
+                value={isEnabled}
+                onValueChange={toggleSwitch}
+
+                style={{
+                  transform: [
+                    { scaleX: 1.15 },
+                    { scaleY: 1.15 },
+                  ],
+                }}
+
+                trackColor={{
+                  false: colors.border.default,
+                  true: colors.status.successBg,
+                }}
+
+                thumbColor={
+                  isEnabled
+                    ? colors.status.success
+                    : colors.text.secondary
+                }
+
+                ios_backgroundColor={
+                  colors.border.default
+                }
+              />
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      <ConfirmModal
         visible={modalVisible}
         title="Confirmar Secagem"
-        message={`Deseja marcar a vaca ${animal.nome} como seca?`}
+        message={`Deseja marcar ${animal.nome} como seca?`}
         confirmText="Sim, Secar"
         cancelText="Cancelar"
-        onCancel={() => setModalVisible(false)}
+        onCancel={() =>
+          setModalVisible(false)
+        }
         onConfirm={confirmarSecagem}
-    />
+      />
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
+  container: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: colors.bg.card,
+    borderRadius: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    paddingVertical: 14,
+    paddingRight: 14,
+
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 2,
-    position: "relative",
-    marginBottom: 10,
-  },
-  statusBar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 5,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
-  },
-  content: {
-    flex: 1,
-    paddingLeft: 10,
-  },
-  header: {
-    marginBottom: 8,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  nome: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#1A1A1A",
-  },
-  brinco: {
-    fontSize: 13,
-    color: "#6B7280",
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 6,
-    marginBottom: 6,
-    gap: 5,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F7F8FA",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  chipLabel: {
-    fontSize: 13,
-    fontWeight: '700', 
-    color: "#374151",
-    marginRight: 4,
-  },
-  chipValue: {
-    fontSize: 13,
-    fontWeight: '500', 
-    color: "#374151",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  footerText: {
-    fontSize: 13,
-    color: "#6B7280",
-  },
-  footerHighlight: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.yellow.base,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    minHeight: 40,
-    gap: 4,
-    alignSelf: "flex-start", // 👈 evita esticar
+    elevation: 3,
   },
 
-  statusBadgeSeca: {
-    paddingHorizontal: 0, // 👈 MAIS ESPAÇO quando Seca
+  iconContainer: {
+    width: 58,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  statusDot: { 
-    width: 8, 
-    height: 8, 
-    borderRadius: 4, 
-    marginRight: 4 
+
+  iconWrapper: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  statusText: { 
-    fontSize: 12, 
-    fontWeight: '500' 
+
+  content: {
+    flex: 1,
+  },
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+
+  info: {
+    flex: 1,
+  },
+
+  title: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.text.accent,
+  },
+
+  subtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    color: colors.text.secondary,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.text.accent,
+  },
+
+  details: {
+    marginTop: 12,
+    gap: 8,
+  },
+
+  detailItem: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+
+  detailLabel: {
+    fontSize: 12,
+    color: colors.text.secondary,
+  },
+
+  detailValue: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.text.accent,
+  },
+
+  switchRow: {
+    marginTop: 6,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  switchLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.text.accent,
   },
 });

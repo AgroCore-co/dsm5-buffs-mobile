@@ -37,7 +37,10 @@ export const getAlertasPorPropriedade = async (
   const vistoFilter = filtro === "PENDENTES" ? `AND json_extract(_raw, '$.visto') = 0` : "";
 
   const rows = await queryAll<{ _raw: string }>(
-    `SELECT _raw FROM alertas WHERE propriedadeId = ? ${vistoFilter} ORDER BY updatedAt DESC LIMIT ? OFFSET ?`,
+    `SELECT _raw FROM alertas
+     WHERE propriedadeId = ? ${vistoFilter}
+     ORDER BY json_extract(_raw, '$.dataAlerta') DESC
+     LIMIT ? OFFSET ?`,
     [propriedadeId, limit, offset],
   );
 
@@ -46,6 +49,8 @@ export const getAlertasPorPropriedade = async (
     [propriedadeId],
   );
   const total = countRow?.total ?? 0;
+
+  const PRIORIDADE_PESO: Record<string, number> = { ALTA: 3, MEDIA: 2, BAIXA: 1 };
 
   const alertas: Alerta[] = rows
     .map((r) => {
@@ -57,7 +62,13 @@ export const getAlertasPorPropriedade = async (
         brinco_animal: a.bufalo?.brinco ?? null,
       };
     })
-    .sort((a, b) => Number(a.visto) - Number(b.visto));
+    .sort((a, b) => {
+      // 1º: data mais recente primeiro
+      const dataDiff = (b.dataAlerta ?? "").localeCompare(a.dataAlerta ?? "");
+      if (dataDiff !== 0) return dataDiff;
+      // 2º: prioridade ALTA > MEDIA > BAIXA
+      return (PRIORIDADE_PESO[b.prioridade] ?? 0) - (PRIORIDADE_PESO[a.prioridade] ?? 0);
+    });
 
   return {
     alertas,

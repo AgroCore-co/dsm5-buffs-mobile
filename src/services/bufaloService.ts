@@ -228,10 +228,52 @@ export const filtrarBufalos = async (
   };
 };
 
+export const getBufalosDoGrupo = async (
+  idPropriedade: string,
+  idGrupo: string,
+  page = 1,
+  limit = 20,
+): Promise<{ bufalos: any[]; meta: { total: number; totalPages: number } }> => {
+  const offset = (page - 1) * limit;
+  const rows = await queryAll<any>(
+    `SELECT _raw FROM bufalos
+     WHERE propriedadeId = ?
+       AND json_extract(_raw, '$.idGrupo') = ?
+       AND (_raw NOT LIKE '%"deletedAt":%' OR _raw LIKE '%"deletedAt":null%')
+     ORDER BY brinco ASC
+     LIMIT ? OFFSET ?`,
+    [idPropriedade, idGrupo, limit, offset],
+  );
+  const countRow = await queryFirst<{ total: number }>(
+    `SELECT COUNT(*) as total FROM bufalos
+     WHERE propriedadeId = ?
+       AND json_extract(_raw, '$.idGrupo') = ?
+       AND (_raw NOT LIKE '%"deletedAt":%' OR _raw LIKE '%"deletedAt":null%')`,
+    [idPropriedade, idGrupo],
+  );
+  const total = countRow?.total ?? 0;
+  const bufalos = rows.map((r) => {
+    const b = JSON.parse(r._raw);
+    return {
+      ...b,
+      idBufalo: b.idBufalo ?? b.id,
+      racaNome: b.raca?.nome || b.nomeRaca || 'Desconhecida',
+    };
+  });
+  return {
+    bufalos,
+    meta: {
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
+  };
+};
+
 export const getBufaloPorMicrochip = async (microchip: string) => {
+  // Usa a coluna indexada em vez de LIKE on _raw (mais seguro e eficiente)
   const row = await queryFirst<{ _raw: string }>(
-    `SELECT _raw FROM bufalos WHERE _raw LIKE ?`,
-    [`%"microchip":"${microchip}"%`],
+    `SELECT _raw FROM bufalos WHERE microchip = ? AND deletedAt IS NULL LIMIT 1`,
+    [microchip],
   );
   if (!row) throw new Error(`Búfalo com microchip ${microchip} não encontrado`);
   return JSON.parse(row._raw);
@@ -259,12 +301,28 @@ export const moverBufaloDeGrupo = async (
   idBufalo: string,
   idNovoGrupo: string,
 ) => {
-  const payload = {
+  const now = new Date().toISOString();
+
+  // Atualiza localmente no SQLite antes de enfileirar
+  const existing = await queryFirst<{ _raw: string }>(
+    `SELECT _raw FROM bufalos WHERE id = ?`,
+    [idBufalo],
+  );
+  if (existing) {
+    const merged = { ...JSON.parse(existing._raw), idGrupo: idNovoGrupo, updatedAt: now };
+    await execute(
+      `UPDATE bufalos SET _raw = ?, _synced = 0, updatedAt = ? WHERE id = ?`,
+      [JSON.stringify(merged), now, idBufalo],
+    );
+  }
+
+  // Enfileira para sync com a API
+  await enqueue('bufalos', 'UPDATE', {
+    id: idBufalo,
     idsBufalos: [idBufalo],
     idNovoGrupo,
     motivo: 'Mudança manual de grupo via tela de animal',
-  };
-  await enqueue('bufalos', 'UPDATE', { id: idBufalo, ...payload });
+  });
 };
 
 export const getBufaloById = async (
@@ -285,6 +343,7 @@ export default {
   moverBufaloDeGrupo,
   getBufalos,
   getBufaloDetalhes,
+  getBufalosDoGrupo,
   createBufalo,
   updateBufalo,
   deleteBufalo,

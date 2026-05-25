@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
+import { colors } from "../../styles/colors";
 import BuffsLogo from "../../../assets/images/logoBuffs.svg";
 
 const AnimatedBuffsLogo = Animated.createAnimatedComponent(BuffsLogo);
@@ -38,7 +39,7 @@ export default function BuffaloLoader() {
           <LinearGradient
             colors={[
               "transparent",
-              "rgba(255,255,255,0.35)",
+              colors.overlay.whiteGlass,
               "transparent",
             ]}
             start={{ x: 0, y: 0 }}

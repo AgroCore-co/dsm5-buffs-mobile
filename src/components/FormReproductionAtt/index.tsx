@@ -21,16 +21,6 @@ import { updateReproducao, ReproducaoUpdatePayload, createCicloLactacao, registr
 import YellowButton from "../Button";
 import SelectBottomSheet from "../SelectBottomSheet";
 
-// Configuração de cores (Inalterado)
-const defaultColors = {
-    primary: { base: "#FAC638" }, 
-    gray: { base: "#6B7280", claro: "#F8F7F5", disabled: "#E5E7EB" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" },
-    red: { base: "#EF4444" }
-};
-const mergedColors = { ...defaultColors, ...colors };
 
 interface ReproducaoAttBottomSheetProps {
   initialData: any;
@@ -42,7 +32,7 @@ export const ReproducaoAttBottomSheet: React.FC<
   ReproducaoAttBottomSheetProps
 > = ({ initialData, onClose, onSuccess }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["45%", "60%"], []); 
+  const snapPoints = useMemo(() => ["50%", "70%"], []); 
   const { propriedadeSelecionada } = usePropriedade();
   const [form, setForm] = useState({
     status: initialData?.status || "",
@@ -148,6 +138,7 @@ export const ReproducaoAttBottomSheet: React.FC<
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onChange={handleSheetChange}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handleIndicator}
@@ -222,13 +213,13 @@ export const ReproducaoAttBottomSheet: React.FC<
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
-    sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
-    handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
+    sheetBackground: { backgroundColor: colors.bg.sheet, borderRadius: 24 },
+    handleIndicator: { backgroundColor: colors.border.light, height: 4, width: 36 },
 
     // Container principal
     container: {
         paddingBottom: 32,
-        backgroundColor: mergedColors.gray.claro,
+        backgroundColor: colors.bg.sheet,
     },
     header: {
         flexDirection: "row",
@@ -241,23 +232,23 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 20,
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
     sectionTitle: {
         fontWeight: "600",
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
         paddingBottom: 4,
     },
 
     // --- Estilos da Lista e Itens ---
     listContainer: {
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 16,
         padding: 16,
@@ -268,17 +259,17 @@ const styles = StyleSheet.create({
     // --- Estilos do Dropdown (Padrão) ---
     dropdownLabel: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         marginBottom: 4,
     },
     dropdownStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
         height: 50,
     },
     dropdownContainerStyle: { 
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
     },
     
     // --- Footer ---
@@ -289,7 +280,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderTopWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         marginTop: 16,
     },
     cancelButton: { 
@@ -298,13 +289,13 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     cancelText: { 
-        color: mergedColors.red.base, 
+        color: colors.status.error, 
         fontWeight: "bold",
         fontSize: 16,
     },
     label: {
       fontSize: 14,
-      color: mergedColors.text.secondary,
+      color: colors.text.secondary,
       fontWeight: "600",
       marginBottom: 4,
     },
@@ -313,15 +304,15 @@ const styles = StyleSheet.create({
       borderWidth: 1,
       borderRadius: 12,
       justifyContent: "center",
-      borderColor: mergedColors.border,
+      borderColor: colors.border.default,
       paddingHorizontal: 12,
       fontSize: 16,
-      color: mergedColors.text.primary,
-      backgroundColor: mergedColors.white.base,
+      color: colors.text.heading,
+      backgroundColor: colors.bg.card,
       marginBottom: 12
     },
     inputDisabled: {
-        backgroundColor: "#f5f5f5",
-        color: "#777",
+        backgroundColor: colors.bg.subtle,
+        color: colors.text.muted,
     },  
 });

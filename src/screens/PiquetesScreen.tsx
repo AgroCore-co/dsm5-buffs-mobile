@@ -1,63 +1,63 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, FlatList } from 'react-native';
-import { MainLayout } from '../layouts/MainLayout';
-import { useDimensions } from '../utils/useDimensions';
-import { colors } from '../styles/colors';
-import Plus from '../../assets/images/plus.svg';
-import { MapLeaflet } from '../components/Mapa';
-import { piqueteService, Piquete } from "../services/piqueteService";
-import { usePropriedade } from "../context/PropriedadeContext";
-import AgroCore from '../icons/agroCore';
-import { DemarcacaoPiqueteSheet } from '../components/DemarcacaoPiqueteSheet'; 
-import { useGpsLocation } from '../hooks/useLocation';
-import BuffaloLoader from '../components/BufaloLoader';
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
+import { MainLayout } from "../layouts/MainLayout";
+import { colors } from "../styles/colors";
+import BuffaloLoader from "../components/BufaloLoader";
+
+import { grupoService, GrupoEnriquecido } from "../services/grupoService";
+import { usePropriedade } from "../context/PropriedadeContext";
+import { CardGrupo } from "../components/CardGrupos";
+import DashGrupoPiquetes from "../components/DashGrupoPiquetes";
+import { RootStackParamList } from "../../App";
 
 export const PiquetesScreen = () => {
-  const { wp, hp } = useDimensions();
-  const [piquetes, setPiquetes] = useState<Piquete[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [grupos, setGrupos] = useState<GrupoEnriquecido[]>([]);
+  const [resumo, setResumo] = useState({ qtdGrupos: 0, qtdPiquetes: 0 });
   const [loading, setLoading] = useState(true);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const { location: currentLocation, loading: gpsLoading, error: gpsError } = useGpsLocation();
+  const [refreshing, setRefreshing] = useState(false);
+
   const { propriedadeSelecionada } = usePropriedade();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  useEffect(() => {
-    const fetchPiquetes = async () => {
-      try {
-        if (!propriedadeSelecionada) return; 
-        const data = await piqueteService.getAll(propriedadeSelecionada.toString());
-        setPiquetes(data);
-      } catch (error) {
-        console.error("Erro ao buscar piquetes:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchGrupos = async () => {
+    try {
+      if (!propriedadeSelecionada) return;
 
-    fetchPiquetes();
-  }, []);
+      const [data, resumoData] = await Promise.all([
+        grupoService.getAllByPropriedade(propriedadeSelecionada.toString()),
+        grupoService.getResumo(propriedadeSelecionada.toString()),
+      ]);
 
-  
-  
+      setGrupos(data);
+      setResumo(resumoData);
+    } catch (error) {
+      console.error("Erro ao buscar grupos:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchGrupos();
+    }, [propriedadeSelecionada]),
+  );
+
   const onRefresh = async () => {
     setRefreshing(true);
-    if (propriedadeSelecionada) {
-      const data = await piqueteService.getAll(propriedadeSelecionada.toString());
-      setPiquetes(data);
-    }
-    setRefreshing(false);
+    await fetchGrupos();
   };
-
-  const handleOpenSheet = () => {
-    setIsSheetOpen(true);
-  };
-
-  const handleCloseSheet = () => {
-      setIsSheetOpen(false);
-      onRefresh(); 
-    };
-
 
   if (loading) {
     return (
@@ -66,127 +66,110 @@ export const PiquetesScreen = () => {
       </View>
     );
   }
-  
 
-return (
-  <View style={styles.container}>
+  return (
+    <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.header1Text}>PIQUETES</Text>
+        <Text style={styles.header1Text}>GRUPOS | PIQUETES</Text>
       </View>
+
       <MainLayout>
         <FlatList
-          data={[{ key: 'map' }]} // fake data
-          keyExtractor={(item) => item.key}
-          renderItem={() => (
-            <MapLeaflet
-              piquetes={piquetes.map(p => ({
-                ...p,
-                color: p.grupoCor,
-              }))}
-              currentLocation={currentLocation}
-            />
-          )}
+          data={grupos}
+          keyExtractor={(item) => String(item.id)}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
+              colors={[colors.brand.primary]}
+              tintColor={colors.brand.primary}
             />
           }
-        />
-
-        {/* z */}
-        {!isSheetOpen && (
-          <TouchableOpacity 
-            onPress={handleOpenSheet}
-            style={styles.fab}
-          >
-            <Text style={styles.buttonText}>
-              ADICIONAR NOVO PIQUETE
+          ListHeaderComponent={
+            <DashGrupoPiquetes
+              qtdPiquetes={resumo.qtdPiquetes}
+              qtdGrupos={resumo.qtdGrupos}
+            />
+          }
+          renderItem={({ item }) => (
+            <CardGrupo
+              nome={item.nome}
+              color={item.color}
+              quantidade={item.quantidade}
+              ocupacao={item.ocupacao}
+              piquete={item.piquete}
+              onPress={() => {
+                navigation.navigate('GrupoDetailScreen', {
+                  grupoId: item.id,
+                  nomeGrupo: item.nome,
+                  color: item.color,
+                });
+              }}
+            />
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              Nenhum grupo encontrado
             </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* SHEET */}
-        {isSheetOpen && propriedadeSelecionada && (
-          <DemarcacaoPiqueteSheet 
-            onClose={handleCloseSheet} 
-            propriedadeId={propriedadeSelecionada} 
-          />
-        )}
+          }
+        />
       </MainLayout>
-  </View>
-);
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-  header: {
-    height: 60,
-    backgroundColor: colors.yellow.base,
-    justifyContent: 'center',
-  },
-  header1Text: {
-    marginTop: 10,
-    fontSize: 25,
-    fontWeight: '900',
-    textAlign: 'center',
-    color: colors.brown.base,
-  },
-  buttonText: {
-    fontSize: 12,
-    fontWeight: '900',
-    textAlign: 'center',
-    color: colors.brown.base,
-  },
-  button: {
-    backgroundColor: colors.yellow.dark,
-    borderRadius: 50,
-  },
-  headerButtons: {
-    marginTop: 25,
-    flexDirection: 'row',
-    position: 'absolute',
-    right: 20,
-    gap: 20,
-  },
   container: {
     flex: 1,
   },
-  content: {
+
+  loadingContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  header: {
+    height: 60,
+    backgroundColor: colors.brand.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    borderBottomColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+  },
+
+  header1Text: {
+    marginTop: 10,
+    fontSize: 25,
+    fontWeight: "900",
+    color: colors.text.accent,
+  },
+
+  card: {
+    backgroundColor: colors.bg.card,
+    padding: 16,
     borderRadius: 12,
-    paddingTop: 16,
-    paddingBottom: 16,
-    paddingHorizontal: 10,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
   },
-  loadingContainer: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+
+  groupTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: colors.text.accent,
   },
-  headerOverlay: {
-    position: 'absolute',
-    top: 0,
-    width: '100%',
-    height: 80,
-    backgroundColor: colors.yellow.base,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
+
+  groupDescription: {
+    marginTop: 8,
+    color: colors.text.secondary,
   },
-  fab: {
-    position: 'absolute',
-    bottom: 20,
-    alignSelf: 'center',
-    backgroundColor: colors.yellow.base,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    height: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    elevation: 5,
-    zIndex: 10,
+
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: colors.text.secondary,
   },
 });

@@ -2,7 +2,6 @@ import React, { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   Platform as RNPlatform,
@@ -20,17 +19,8 @@ import { createReproducao, getMaterialGenetico } from "../../services/reproducao
 import { colors } from "../../styles/colors";
 import YellowButton from "../Button";
 import SelectBottomSheet from "../SelectBottomSheet";
+import { NfcTextInput } from "../NfcTextInput";
 
-// Configuração de cores (Copiada do seu exemplo)
-const defaultColors = {
-    primary: { base: "#FAC638" }, 
-    gray: { base: "#6B7280", claro: "#F8F7F5", disabled: "#E5E7EB" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" },
-    red: { base: "#EF4444" }
-};
-const mergedColors = { ...defaultColors, ...colors };
 
 interface ReproducaoAddBottomSheetProps {
   onSuccess?: () => void; 
@@ -44,7 +34,7 @@ export const ReproducaoAddBottomSheet: React.FC<
   const { propriedadeSelecionada } = usePropriedade();
   const { getBufaloByBrincoAndSexo, getBufaloById } = bufaloService; // Assumindo o bufaloService.ts
   // SnapPoints ajustados para acomodar mais campos
-  const snapPoints = useMemo(() => ["70%", "90%"], []); 
+  const snapPoints = useMemo(() => ["50%", "70%"], []); 
 
   // Estado do Formulário
   const [tagBufalo, setTagBufalo] = useState("");
@@ -179,6 +169,7 @@ export const ReproducaoAddBottomSheet: React.FC<
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onChange={handleSheetChange}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handleIndicator}
@@ -192,7 +183,7 @@ export const ReproducaoAddBottomSheet: React.FC<
         />
       )}
     >
-      <BottomSheetScrollView contentContainerStyle={styles.container}>
+      <BottomSheetScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
             <Text style={styles.headerTitle}>Nova Reprodução</Text>
         </View>
@@ -225,25 +216,31 @@ export const ReproducaoAddBottomSheet: React.FC<
           {/* Macho só aparece para Monta Natural */}
           {tipoInseminacao === "Monta Natural" && (
             <>
-              <Text style={styles.label}>Tag do Búfalo Macho <Text style={{ color: mergedColors.red.base }}>*</Text></Text>
-              <TextInput
-                style={styles.inputBase}
+              <Text style={styles.label}>Tag do Búfalo Macho <Text style={{ color: colors.status.error }}>*</Text></Text>
+              <NfcTextInput
+                mode="brinco"
+                sexo="M"
+                onResult={setTagBufalo}
+                propriedadeId={propriedadeSelecionada ?? undefined}
                 value={tagBufalo}
                 onChangeText={setTagBufalo}
-                placeholder="Digite a tag do búfalo macho"
+                placeholder="Digite ou leia via RFID"
               />
             </>
           )}
 
           <Text style={styles.label}>
             Tag da Búfala {tipoInseminacao === "Monta Natural" ? "(Fêmea Receptora)" : "(Receptora/Gestora)"}
-            {" "}<Text style={{ color: mergedColors.red.base }}>*</Text>
+            {" "}<Text style={{ color: colors.status.error }}>*</Text>
           </Text>
-          <TextInput
-            style={styles.inputBase}
+          <NfcTextInput
+            mode="brinco"
+            sexo="F"
+            onResult={setTagBufala}
+            propriedadeId={propriedadeSelecionada ?? undefined}
             value={tagBufala}
             onChangeText={setTagBufala}
-            placeholder="Digite a tag da búfala"
+            placeholder="Digite ou leia via RFID"
           />
         </View>
 
@@ -253,7 +250,7 @@ export const ReproducaoAddBottomSheet: React.FC<
             <Text style={styles.sectionTitle}>Material Genético</Text>
             <View style={styles.listContainer}>
               <Text style={styles.label}>
-                Sêmen <Text style={{ color: mergedColors.red.base }}>*</Text>
+                Sêmen <Text style={{ color: colors.status.error }}>*</Text>
               </Text>
               {matGeneticoSemen.length === 0 ? (
                 <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
@@ -278,7 +275,7 @@ export const ReproducaoAddBottomSheet: React.FC<
             <Text style={styles.sectionTitle}>Material Genético</Text>
             <View style={styles.listContainer}>
               <Text style={styles.label}>
-                Embrião <Text style={{ color: mergedColors.red.base }}>*</Text>
+                Embrião <Text style={{ color: colors.status.error }}>*</Text>
               </Text>
               {embrioesFiltrados.length === 0 ? (
                 <Text style={{ color: '#999', marginBottom: 12, fontSize: 13 }}>
@@ -305,7 +302,7 @@ export const ReproducaoAddBottomSheet: React.FC<
                 />
               )}
               {nomeDoadora ? (
-                <Text style={[styles.label, { color: mergedColors.text.secondary, marginTop: 8 }]}>
+                <Text style={[styles.label, { color: colors.text.secondary, marginTop: 8 }]}>
                   Doadora: {nomeDoadora}
                 </Text>
               ) : null}
@@ -332,13 +329,13 @@ export const ReproducaoAddBottomSheet: React.FC<
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
-    sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
-    handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
+    sheetBackground: { backgroundColor: colors.bg.sheet, borderRadius: 24 },
+    handleIndicator: { backgroundColor: colors.border.light, height: 4, width: 36 },
 
     // Container principal
     container: {
         paddingBottom: 32,
-        backgroundColor: mergedColors.gray.claro,
+        backgroundColor: colors.bg.sheet,
     },
     header: {
         flexDirection: "row",
@@ -351,23 +348,23 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 20,
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
     sectionTitle: {
         fontWeight: "600",
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
         paddingBottom: 4,
     },
 
     // --- Estilos da Lista e Itens ---
     listContainer: {
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 16,
         padding: 16,
@@ -376,6 +373,23 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     
+    // --- Estilos do Dropdown (Padrão) ---
+    dropdownLabel: {
+        fontSize: 14,
+        color: colors.text.secondary,
+        fontWeight: "500",
+        marginBottom: 4,
+    },
+    dropdownStyle: {
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
+        height: 50,
+    },
+    dropdownContainerStyle: {
+        borderColor: colors.border.default,
+        height: 50,
+    },
+
     // --- Footer ---
     footer: {
         flexDirection: "row",
@@ -384,7 +398,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderTopWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         marginTop: 16,
     },
     cancelButton: { 
@@ -393,30 +407,14 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     cancelText: { 
-        color: mergedColors.red.base, 
+        color: colors.status.error, 
         fontWeight: "bold",
         fontSize: 16,
     },
     label: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },
-    inputBase: {
-        height: 50,
-        borderWidth: 1,
-        borderRadius: 12,
-        justifyContent: "center",
-        borderColor: mergedColors.border,
-        paddingHorizontal: 12,
-        fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
-        marginBottom: 12
-    },
-    inputDisabled: {
-        backgroundColor: "#f5f5f5",
-        color: "#777",
-    },  
 });

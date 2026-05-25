@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -100,11 +101,13 @@ export const ReproducaoScreen = () => {
     setIsAttBottomSheetVisible(true);
   };
 
-  useEffect(() => {
-    if (propriedadeSelecionada) {
-      fetchReproducoes(1, true);
-    }
-  }, [propriedadeSelecionada]);
+  useFocusEffect(
+    useCallback(() => {
+      if (propriedadeSelecionada) {
+        fetchReproducoes(1, true);
+      }
+    }, [propriedadeSelecionada]),
+  );
 
   if (loading) {
     return (
@@ -131,8 +134,8 @@ export const ReproducaoScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.yellow.base]}
-              tintColor={colors.yellow.base}
+              colors={[colors.brand.primary]}
+              tintColor={colors.brand.primary}
             />
           }
 
@@ -170,7 +173,7 @@ export const ReproducaoScreen = () => {
               <View style={styles.inlineLoader}>
                 <ActivityIndicator
                   size="large"
-                  color={colors.yellow.base}
+                  color={colors.brand.primary}
                 />
                 <Text style={{ marginTop: 8 }}>
                   Atualizando reproduções...
@@ -214,7 +217,7 @@ export const ReproducaoScreen = () => {
           }}
           style={styles.fabButtonContainer}
         >
-          <Plus width={24} height={24} color="#FFF" />
+          <Plus width={24} height={24} color={colors.text.onDark} />
         </TouchableOpacity>
       )}
 
@@ -250,8 +253,19 @@ const styles = StyleSheet.create({
 
   header: {
     height: 60,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: 'center',
+    paddingLeft: 16,
+    borderBottomColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
 
   header1Text: {
@@ -259,7 +273,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: '900',
     textAlign: 'center',
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
 
   pagination: {
@@ -267,13 +281,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
+    marginBottom: 40,
     gap: 8,
   },
 
   pageInfo: {
     marginHorizontal: 12,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.text.body,
   },
 
   fabButtonContainer: {
@@ -283,7 +298,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
