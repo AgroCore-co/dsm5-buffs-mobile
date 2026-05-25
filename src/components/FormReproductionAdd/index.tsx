@@ -2,7 +2,6 @@ import React, { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   Platform as RNPlatform,
@@ -20,6 +19,7 @@ import { createReproducao, getMaterialGenetico } from "../../services/reproducao
 import { colors } from "../../styles/colors";
 import YellowButton from "../Button";
 import SelectBottomSheet from "../SelectBottomSheet";
+import { NfcTextInput } from "../NfcTextInput";
 
 
 interface ReproducaoAddBottomSheetProps {
@@ -217,11 +217,14 @@ export const ReproducaoAddBottomSheet: React.FC<
           {tipoInseminacao === "Monta Natural" && (
             <>
               <Text style={styles.label}>Tag do Búfalo Macho <Text style={{ color: colors.status.error }}>*</Text></Text>
-              <TextInput
-                style={styles.inputBase}
+              <NfcTextInput
+                mode="brinco"
+                sexo="M"
+                onResult={setTagBufalo}
+                propriedadeId={propriedadeSelecionada ?? undefined}
                 value={tagBufalo}
                 onChangeText={setTagBufalo}
-                placeholder="Digite a tag do búfalo macho"
+                placeholder="Digite ou leia via RFID"
               />
             </>
           )}
@@ -230,11 +233,14 @@ export const ReproducaoAddBottomSheet: React.FC<
             Tag da Búfala {tipoInseminacao === "Monta Natural" ? "(Fêmea Receptora)" : "(Receptora/Gestora)"}
             {" "}<Text style={{ color: colors.status.error }}>*</Text>
           </Text>
-          <TextInput
-            style={styles.inputBase}
+          <NfcTextInput
+            mode="brinco"
+            sexo="F"
+            onResult={setTagBufala}
+            propriedadeId={propriedadeSelecionada ?? undefined}
             value={tagBufala}
             onChangeText={setTagBufala}
-            placeholder="Digite a tag da búfala"
+            placeholder="Digite ou leia via RFID"
           />
         </View>
 
@@ -411,20 +417,4 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         marginBottom: 4,
     },
-    inputBase: {
-        height: 50,
-        borderWidth: 1,
-        borderRadius: 12,
-        justifyContent: "center",
-        borderColor: colors.border.default,
-        paddingHorizontal: 12,
-        fontSize: 16,
-        color: colors.text.heading,
-        backgroundColor: colors.bg.card,
-        marginBottom: 12
-    },
-    inputDisabled: {
-        backgroundColor: colors.bg.subtle,
-        color: colors.text.muted,
-    },  
 });

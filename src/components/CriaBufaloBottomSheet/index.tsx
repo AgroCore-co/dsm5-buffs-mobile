@@ -19,6 +19,7 @@ import { DatePickerModal } from "../DatePickerModal";
 import dayjs from "dayjs";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import SelectBottomSheet from "../SelectBottomSheet";
+import { NfcTextInput } from "../NfcTextInput";
 
 
 
@@ -219,11 +220,13 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                     </View>
                     <View>
                         <Text style={styles.label}>Microchip (Opcional)</Text>
-                        <TextInput
-                            style={styles.inputBase}
+                        <NfcTextInput
+                            mode="microchip"
+                            onResult={setMicrochip}
                             value={microchip}
                             onChangeText={setMicrochip}
-                            placeholder="Digite o microchip do animal"/>
+                            placeholder="Digite ou leia via RFID"
+                        />
                     </View>
                 </View>
 
@@ -302,20 +305,28 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                     <View style={styles.row}>
                         <View style={styles.halfInput}>
                             <Text style={styles.label}>Brinco do Pai</Text>
-                            <TextInput
-                                style={styles.inputBase}
+                            <NfcTextInput
+                                mode="brinco"
+                                sexo="M"
+                                onResult={setBrincoPai}
+                                propriedadeId={propriedadeSelecionada ?? undefined}
                                 value={brincoPai}
                                 onChangeText={setBrincoPai}
-                                placeholder="Digite o brinco do Pai"/>
+                                placeholder="Brinco Pai"
+                            />
                         </View>
 
                         <View style={styles.halfInput}>
                             <Text style={styles.label}>Brinco da Mãe</Text>
-                            <TextInput
-                                style={styles.inputBase}
+                            <NfcTextInput
+                                mode="brinco"
+                                sexo="F"
+                                onResult={setBrincoMae}
+                                propriedadeId={propriedadeSelecionada ?? undefined}
                                 value={brincoMae}
                                 onChangeText={setBrincoMae}
-                                 placeholder="Digite o brinco da Mãe"/>
+                                placeholder="Brinco Mae"
+                            />
                         </View>
                     </View>
 
@@ -409,7 +420,14 @@ const styles = StyleSheet.create({
     halfInput: {
         flex: 1,
     },
-    
+
+    /** TextInput + NfcBrincoButton lado a lado */
+    inputRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+
     // --- Dropdown ---
     dropdownLabel: {
         fontSize: 14,

@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { formatarDataBR } from "../../utils/date";
 import SelectBottomSheet from "../SelectBottomSheet";
+import { NfcTextInput } from "../NfcTextInput";
 
 
 
@@ -257,11 +258,13 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                         onChangeText={setBrinco}
                         placeholder="Digite o brinco do animal"/>
                     <Text style={styles.label}>Microchip</Text>
-                    <TextInput
-                        style={styles.inputBase}
+                    <NfcTextInput
+                        mode="microchip"
+                        onResult={setMicrochip}
                         value={microchip}
                         onChangeText={setMicrochip}
-                        placeholder="Digite o microchip do animal"/>
+                        placeholder="Digite ou leia via RFID"
+                    />
                 </View>
                 
                 {/* --- Características --- */}
@@ -319,24 +322,34 @@ export const AnimalEditBottomSheet: React.FC<AnimalEditBottomSheetProps> = ({ it
                 <Text style={styles.sectionTitle}>Parentesco (Brinco)</Text>
                 <View style={styles.listContainer}>
                     <View style={styles.row}>
-                    <View style={styles.halfInput}>
-                        <Text style={styles.label}>Brinco do Pai</Text>
-                        <TextInput
-                            style={styles.inputBase}
-                            value={brincoPai}
-                            onChangeText={setBrincoPai}
-                            placeholder="Digite o brinco do Pai"/>
+                        <View style={styles.halfInput}>
+                            <Text style={styles.label}>Brinco do Pai</Text>
+                            <NfcTextInput
+                                mode="brinco"
+                                sexo="M"
+                                onResult={setBrincoPai}
+                                propriedadeId={propriedadeSelecionada ?? undefined}
+                                value={brincoPai}
+                                onChangeText={setBrincoPai}
+                                placeholder="Brinco ou RFID"
+                                containerStyle={{ marginBottom: 0 }}
+                            />
+                        </View>
+
+                        <View style={styles.halfInput}>
+                            <Text style={styles.label}>Brinco da Mãe</Text>
+                            <NfcTextInput
+                                mode="brinco"
+                                sexo="F"
+                                onResult={setBrincoMae}
+                                propriedadeId={propriedadeSelecionada ?? undefined}
+                                value={brincoMae}
+                                onChangeText={setBrincoMae}
+                                placeholder="Brinco ou RFID"
+                                containerStyle={{ marginBottom: 0 }}
+                            />
+                        </View>
                     </View>
-                    
-                    <View style={styles.halfInput}>
-                        <Text style={styles.label}>Brinco da Mãe</Text>
-                        <TextInput
-                            style={styles.inputBase}
-                            value={brincoMae}
-                            onChangeText={setBrincoMae}
-                            placeholder="Digite o brinco da Mãe"/>
-                    </View>
-                </View>
                 </View>
 
                 {/* Footer (Botão de ação) */}

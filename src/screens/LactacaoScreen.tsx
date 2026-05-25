@@ -113,7 +113,6 @@ const fetchCiclos = async (page = 1, isInitial = false) => {
     try {
       const { quantidade, dataAtualizacao } =
         await getProducaoDiariaAtual(propriedadeSelecionada);
-
       setQuantidadeAtual(quantidade);
       setDataFormatada(dataAtualizacao);
     } catch (error) {

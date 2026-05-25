@@ -267,4 +267,35 @@ export const CREATE_TABLES_SQL: string[] = [
     errorMessage TEXT,
     createdAt    TEXT NOT NULL
   )`,
+  // ── Tiles offline (mapa satélite pré-baixado) ──────────────────────────────
+  `CREATE TABLE IF NOT EXISTS offline_tiles (
+    propriedadeId TEXT    NOT NULL,
+    z             INTEGER NOT NULL,
+    x             INTEGER NOT NULL,
+    y             INTEGER NOT NULL,
+    data          TEXT    NOT NULL,
+    PRIMARY KEY (propriedadeId, z, x, y)
+  )`,
+  `CREATE TABLE IF NOT EXISTS offline_tiles_meta (
+    propriedadeId TEXT    PRIMARY KEY,
+    downloadedAt  TEXT    NOT NULL,
+    zoomMin       INTEGER NOT NULL,
+    zoomMax       INTEGER NOT NULL,
+    totalTiles    INTEGER NOT NULL,
+    minLat        REAL    NOT NULL,
+    maxLat        REAL    NOT NULL,
+    minLng        REAL    NOT NULL,
+    maxLng        REAL    NOT NULL
+  )`,
+  // ── Dashboard produção mensal (cache do servidor) ──────────────────────────
+  `CREATE TABLE IF NOT EXISTS dashboard_producao_mensal (
+    propriedadeId   TEXT NOT NULL,
+    mes             TEXT NOT NULL,
+    total_litros    REAL NOT NULL DEFAULT 0,
+    qtd_bufalas     INTEGER NOT NULL DEFAULT 0,
+    media_diaria    REAL NOT NULL DEFAULT 0,
+    syncedAt        TEXT NOT NULL,
+    PRIMARY KEY (propriedadeId, mes)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_dash_prod_prop ON dashboard_producao_mensal(propriedadeId)`,
 ];

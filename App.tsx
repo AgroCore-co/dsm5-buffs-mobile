@@ -5,7 +5,7 @@ import { PortalProvider } from '@gorhom/portal';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 // App.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { runMigrations } from './src/database/migrations';
 import { createNotificationChannels } from './src/services/notificationService';
 import { SyncProvider } from './src/context/SyncContext';
@@ -209,12 +209,16 @@ function AppWithSync() {
 
 export default function App() {
   const isDarkMode = useColorScheme() === 'dark';
+  const [dbReady, setDbReady] = useState(false);
 
   useEffect(() => {
     runMigrations()
       .then(() => createNotificationChannels())
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setDbReady(true));
   }, []);
+
+  if (!dbReady) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

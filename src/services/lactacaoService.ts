@@ -53,7 +53,7 @@ export interface Industria {
 
 export interface LactacaoRegistroPayload {
   id_bufala: string;
-  id_propriedade: number;
+  id_propriedade: string | number; // UUIDs são string; aceita number por retrocompatibilidade
   id_ciclo_lactacao: string;
   qt_ordenha: number;
   periodo: string;
@@ -340,4 +340,105 @@ export const getProducaoDiariaHistorico = async (
       label: dia && mes ? `${dia}/${mes}` : "",
     };
   });
+};
+
+/* =========================
+   GET — PRODUÇÃO MENSAL (cache do servidor)
+   Retorna os últimos `limit` meses no mesmo shape ProducaoDiariaPoint
+   para compatibilidade com o gráfico do HomeScreen.
+========================= */
+
+export const getDashboardProducaoMensalHistorico = async (
+  propriedadeId: string,
+  limit = 12,
+): Promise<ProducaoDiariaPoint[]> => {
+  if (!propriedadeId) return [];
+
+  try {
+    const rows = await queryAll<{ mes: string; total_litros: number }>(
+      `SELECT mes, total_litros
+       FROM dashboard_producao_mensal
+       WHERE propriedadeId = ?
+       ORDER BY mes ASC
+       LIMIT ?`,
+      [propriedadeId, limit],
+    );
+
+    return rows.map((r) => {
+      // mes = "YYYY-MM" → label "MM/YY"
+      const [ano, mm] = (r.mes ?? "").split("-");
+      const label = mm && ano ? `${mm}/${ano.slice(2)}` : "";
+      return {
+        quantidade: r.total_litros ?? 0,
+        dtRegistro: r.mes ?? "",
+        label,
+      };
+    });
+  } catch {
+    // Tabela pode não existir na primeira execução após migração (race condition)
+    return [];
+  }
+};
+
+/* =========================
+   GET — RESUMO MÊS ATUAL (cache do servidor)
+========================= */
+
+export interface ProducaoMesAtualResumo {
+  mes_atual_litros: number;
+  mes_anterior_litros: number;
+  variacao_percentual: number;
+  bufalas_lactantes_atual: number;
+  syncedAt: string | null;
+}
+
+export const getProducaoMesAtual = async (
+  propriedadeId: string,
+): Promise<ProducaoMesAtualResumo> => {
+  const defaultResult: ProducaoMesAtualResumo = {
+    mes_atual_litros: 0,
+    mes_anterior_litros: 0,
+    variacao_percentual: 0,
+    bufalas_lactantes_atual: 0,
+    syncedAt: null,
+  };
+
+  if (!propriedadeId) return defaultResult;
+
+  const mesAtual = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  const [yearStr, monthStr] = mesAtual.split("-");
+  const prevMonth = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 2, 1);
+  const mesAnterior = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
+
+  let atual: { total_litros: number; qtd_bufalas: number; syncedAt: string } | null = null;
+  let anterior: { total_litros: number } | null = null;
+  try {
+    [atual, anterior] = await Promise.all([
+      queryFirst<{ total_litros: number; qtd_bufalas: number; syncedAt: string }>(
+        `SELECT total_litros, qtd_bufalas, syncedAt FROM dashboard_producao_mensal WHERE propriedadeId = ? AND mes = ?`,
+        [propriedadeId, mesAtual],
+      ),
+      queryFirst<{ total_litros: number }>(
+        `SELECT total_litros FROM dashboard_producao_mensal WHERE propriedadeId = ? AND mes = ?`,
+        [propriedadeId, mesAnterior],
+      ),
+    ]);
+  } catch {
+    // Tabela pode não existir na primeira execução após migração (race condition)
+    return defaultResult;
+  }
+
+  const mesAtualLitros = atual?.total_litros ?? 0;
+  const mesAnteriorLitros = anterior?.total_litros ?? 0;
+  const variacao = mesAnteriorLitros > 0
+    ? ((mesAtualLitros - mesAnteriorLitros) / mesAnteriorLitros) * 100
+    : 0;
+
+  return {
+    mes_atual_litros: mesAtualLitros,
+    mes_anterior_litros: mesAnteriorLitros,
+    variacao_percentual: Math.round(variacao * 10) / 10,
+    bufalas_lactantes_atual: atual?.qtd_bufalas ?? 0,
+    syncedAt: atual?.syncedAt ?? null,
+  };
 };

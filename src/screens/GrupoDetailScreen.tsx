@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import NetInfo from "@react-native-community/netinfo";
 import {
   View,
   Text,
@@ -16,9 +17,19 @@ import { CardBufalo } from "../components/CardBufaloRebanho";
 import { MapLeaflet } from "../components/Mapa";
 import { piqueteService, Piquete } from "../services/piqueteService";
 import { getBufalosDoGrupo } from "../services/bufaloService";
+import {
+  hasCachedTiles,
+  getTilesMeta,
+  getTileDataUri,
+  downloadTilesForProp,
+  estimateTileCount,
+} from "../services/tileDownloadService";
 import { usePropriedade } from "../context/PropriedadeContext";
 import { RootStackParamList } from "../../App";
 import ArrowLeftIcon from "../icons/arrowLeft";
+import Mov from "../icons/mov";
+import Plus from '../../assets/images/plus.svg';
+
 import { FloatingAction } from "react-native-floating-action";
 import RotateLeftIcon from "../icons/arrow";
 import { MovimentacaoSheet } from "../components/MovimentacaoSheet";
@@ -66,37 +77,102 @@ interface LoteMapSectionProps {
   lotes: Piquete[];
   grupoId: string;
   grupoColor: string;
+  isOnline: boolean;
+  hasTiles: boolean;
+  tilesDownloadDate: string | null;
+  isDownloadingTiles: boolean;
+  tileProgress: number;
+  tileCountEst: number | null;
+  onDownloadTiles: () => void;
+  getTile?: (z: number, x: number, y: number) => Promise<string | null>;
 }
 
-const LoteMapSection = ({ lotes, grupoId, grupoColor }: LoteMapSectionProps) => {
-  // Todos os lotes do grupo ordenados por updatedAt DESC — índice 0 = atual.
-  // No mapa: atual = cor do grupo, demais = cinza.
-  // Nos cards: apenas o lote atual (em uso) é exibido com todos os detalhes.
-  const lotesDoGrupo = lotes.filter((l) => l.idGrupo === grupoId);
+const LoteMapSection = ({
+  lotes,
+  grupoId,
+  grupoColor,
+  isOnline,
+  hasTiles,
+  tilesDownloadDate,
+  isDownloadingTiles,
+  tileProgress,
+  tileCountEst,
+  onDownloadTiles,
+  getTile,
+}: LoteMapSectionProps) => {
+  const lotesDoGrupo = useMemo(
+    () => lotes.filter((l) => l.idGrupo === grupoId),
+    [lotes, grupoId],
+  );
   const loteAtual = lotesDoGrupo[0] ?? null;
-  const algumTemGeometria = lotesDoGrupo.some((l) => l.coords && l.coords.length > 0);
+  const algumTemGeometria = useMemo(
+    () => lotesDoGrupo.some((l) => l.coords && l.coords.length > 0),
+    [lotesDoGrupo],
+  );
 
-  const lotesMapeados = lotesDoGrupo.map((l, i) => ({
-    ...l,
-    color:       i === 0 ? grupoColor : "#AAAAAA",
-    fillOpacity: i === 0 ? 0.12 : 0.06,
-    weight:      i === 0 ? 3    : 1.5,
-  }));
+  // Array estável: só recria quando os lotes ou a cor do grupo mudam,
+  // evitando que htmlContent do Mapa recalcule (e o WebView recarregue) a cada render.
+  const lotesMapeados = useMemo(
+    () => lotesDoGrupo.map((l, i) => ({
+      ...l,
+      color:       i === 0 ? grupoColor : "#AAAAAA",
+      fillOpacity: i === 0 ? 0.12 : 0.06,
+      weight:      i === 0 ? 3    : 1.5,
+    })),
+    [lotesDoGrupo, grupoColor],
+  );
+
+  // Mostra mapa se: (online) OU (offline + tiles salvos no SQLite)
+  const canShowMap = algumTemGeometria && (isOnline || hasTiles);
+
+  // Estimativa em MB: ~25 KB por tile, base64 overhead já considerado
+  const estMB = tileCountEst ? Math.round((tileCountEst * 25) / 1024) : null;
 
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>PIQUETE DO GRUPO</Text>
 
-      {algumTemGeometria ? (
+      {canShowMap ? (
         <View style={styles.mapContainer}>
-          <MapLeaflet piquetes={lotesMapeados} currentLocation={null} />
+          <MapLeaflet
+            piquetes={lotesMapeados}
+            currentLocation={null}
+            isOffline={!isOnline}
+            getTile={!isOnline && hasTiles ? getTile : undefined}
+          />
         </View>
       ) : (
         <View style={styles.mapPlaceholder}>
           <Text style={styles.mapPlaceholderText}>
-            {lotesDoGrupo.length > 0 ? "Piquete sem geometria definida" : "Grupo sem piquete associado"}
+            {!isOnline
+              ? "Mapa indisponível offline\nBaixe o mapa enquanto tiver conexão"
+              : lotesDoGrupo.length > 0
+              ? "Piquete sem geometria definida"
+              : "Grupo sem piquete associado"}
           </Text>
         </View>
+      )}
+
+      {/* Barra de salvar/status do mapa offline — só aparece se há geometria */}
+      {algumTemGeometria && isOnline && (
+        isDownloadingTiles ? (
+          <View style={styles.tileBar}>
+            <View style={styles.tileTrack}>
+              <View style={[styles.tileFill, { width: `${Math.round(tileProgress * 100)}%` as any }]} />
+            </View>
+            <Text style={styles.tileBarLabel}>
+              Salvando mapa offline… {Math.round(tileProgress * 100)}%
+            </Text>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.tileBar} onPress={onDownloadTiles} activeOpacity={0.7}>
+            <Text style={styles.tileBarLabel}>
+              {tilesDownloadDate
+                ? `🗺 Mapa salvo — Atualizar${estMB ? ` (~${estMB} MB)` : ''}`
+                : `⬇ Salvar mapa offline${estMB ? ` (~${estMB} MB)` : ''}`}
+            </Text>
+          </TouchableOpacity>
+        )
       )}
 
       {loteAtual ? (
@@ -166,12 +242,80 @@ export const GrupoDetailScreen = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [showMovSheet, setShowMovSheet] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // ── tiles offline ──
+  const [hasTiles, setHasTiles]                     = useState(false);
+  const [tilesDownloadDate, setTilesDownloadDate]   = useState<string | null>(null);
+  const [isDownloadingTiles, setIsDownloadingTiles] = useState(false);
+  const [tileProgress, setTileProgress]             = useState(0);
+  const [tileCountEst, setTileCountEst]             = useState<number | null>(null);
+  const tileAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setIsOnline(state.isConnected ?? true);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Carrega estado dos tiles ao montar + cancela download ao desmontar
+  useEffect(() => {
+    if (!propriedadeSelecionada) return;
+    const id = propriedadeSelecionada.toString();
+
+    hasCachedTiles(id).then((has) => {
+      setHasTiles(has);
+      if (has) {
+        getTilesMeta(id).then((m) => setTilesDownloadDate(m?.downloadedAt ?? null));
+      }
+    });
+
+    estimateTileCount(id).then((n) => setTileCountEst(n));
+
+    return () => {
+      tileAbortRef.current?.abort();
+    };
+  }, [propriedadeSelecionada]);
+
+  const getTile = useCallback(
+    async (z: number, x: number, y: number): Promise<string | null> => {
+      if (!propriedadeSelecionada) return null;
+      return getTileDataUri(propriedadeSelecionada.toString(), z, x, y);
+    },
+    [propriedadeSelecionada],
+  );
+
+  const handleDownloadTiles = useCallback(async () => {
+    if (!propriedadeSelecionada || isDownloadingTiles) return;
+    const id = propriedadeSelecionada.toString();
+    const ctrl = new AbortController();
+    tileAbortRef.current = ctrl;
+
+    setIsDownloadingTiles(true);
+    setTileProgress(0);
+
+    try {
+      await downloadTilesForProp(
+        id,
+        ({ downloaded, total }) => setTileProgress(downloaded / total),
+        ctrl.signal,
+      );
+      setHasTiles(true);
+      setTilesDownloadDate(new Date().toISOString());
+    } catch {
+      // abortado ou erro de rede — não mostra mensagem de erro, apenas encerra
+    } finally {
+      setIsDownloadingTiles(false);
+      setTileProgress(0);
+    }
+  }, [propriedadeSelecionada, isDownloadingTiles]);
 
   const LIMIT = 20;
 
-  const fetchData = useCallback(async (reset = false) => {
+  const fetchData = useCallback(async (reset = false, pageOverride?: number) => {
     if (!propriedadeSelecionada) return;
-    const currentPage = reset ? 1 : page;
+    const currentPage = reset ? 1 : (pageOverride ?? page);
     try {
       const [loteData, bufaloData] = await Promise.all([
         piqueteService.getAll(propriedadeSelecionada.toString()),
@@ -209,11 +353,10 @@ export const GrupoDetailScreen = () => {
 
   const onLoadMore = () => {
     if (loadingMore || !hasMore) return;
+    const nextPage = page + 1;
     setLoadingMore(true);
-    setPage((p) => {
-      fetchData(false);
-      return p + 1;
-    });
+    setPage(nextPage);
+    fetchData(false, nextPage);
   };
 
   // Lote ativo = primeiro do grupo (updatedAt DESC do getAll)
@@ -251,6 +394,14 @@ export const GrupoDetailScreen = () => {
         lotes={lotes}
         grupoId={grupoId}
         grupoColor={color}
+        isOnline={isOnline}
+        hasTiles={hasTiles}
+        tilesDownloadDate={tilesDownloadDate}
+        isDownloadingTiles={isDownloadingTiles}
+        tileProgress={tileProgress}
+        tileCountEst={tileCountEst}
+        onDownloadTiles={handleDownloadTiles}
+        getTile={getTile}
       />
 
       {/* Título da lista de animais */}
@@ -267,11 +418,13 @@ export const GrupoDetailScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ alignItems: 'center', flexDirection: 'row', alignContent: 'center', marginTop: 10, gap: 40 }}>
+        <View style={{ flex: 1, alignItems: 'center', flexDirection: 'row', alignContent: 'center', marginTop: 10, gap: 12 }}>
           <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
             <ArrowLeftIcon width={24} height={24} />
           </TouchableOpacity>
-          <Text style={styles.header1Text}>GRUPO: {nomeGrupo|| 'N/A'}</Text>
+          <Text style={[styles.header1Text, { flex: 1 }]} numberOfLines={1} ellipsizeMode="tail">
+            GRUPO: {nomeGrupo || 'N/A'}
+          </Text>
         </View>
       </View>
       <FlatList
@@ -318,7 +471,7 @@ export const GrupoDetailScreen = () => {
         actions={[
           {
             text: "Mover Grupo",
-            icon: <RotateLeftIcon width={20} height={20} color={colors.text.accent} />,
+            icon: <Mov width={20} height={20}/>,
             name: "mover_grupo",
             color: colors.brand.primary,
           },
@@ -326,7 +479,7 @@ export const GrupoDetailScreen = () => {
         onPressItem={() => setShowMovSheet(true)}
         buttonSize={60}
         color={colors.brand.primary}
-        floatingIcon={<RotateLeftIcon width={22} height={22} color={colors.text.accent} />}
+        floatingIcon={<Plus width={24} height={24} fill="black" />}
         position="right"
       />
 
@@ -576,6 +729,40 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.text.muted,
     fontWeight: "600",
+  },
+
+  // ── Tile bar (salvar mapa offline) ──
+  tileBar: {
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.bg.section,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    marginBottom: 10,
+    gap: 6,
+  },
+
+  tileBarLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text.muted,
+  },
+
+  tileTrack: {
+    height: 4,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+
+  tileFill: {
+    position: 'absolute' as const,
+    top: 0,
+    bottom: 0,
+    left: 0,
+    borderRadius: 3,
+    backgroundColor: colors.brand.primary,
   },
 
   // ── Lista ──
