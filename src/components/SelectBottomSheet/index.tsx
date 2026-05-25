@@ -79,15 +79,15 @@ return (
             enableDynamicSizing={false}
             backgroundStyle={{ backgroundColor: colors.bg.card }}>
             <Text style={styles.title}>{title}</Text>
-            <BottomSheetFlatList
+            <BottomSheetFlatList<Item>
               data={safeItems}
-              keyExtractor={(item) => item.value}
+              keyExtractor={(item: Item) => item.value}
               contentContainerStyle={styles.listContent}
               keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
                 <Text style={styles.emptyText}>Nenhuma opção disponível</Text>
               }
-              renderItem={({ item }) => {
+              renderItem={({ item }: { item: Item }) => {
                 const isSelected = item.value === value;
                 return (
                   <TouchableOpacity
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 16,
-    color: colors.text.primary,
+    color: colors.text.body,
   },
   itemSelected: {
     backgroundColor: colors.status.pendingBg,
