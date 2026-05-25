@@ -1,6 +1,15 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+
 import { colors } from "../../styles/colors";
+
+import IconBuffs from "../../icons/agroCore";
 
 export type CardBufaloProps = {
   nome: string;
@@ -8,66 +17,117 @@ export type CardBufaloProps = {
   status: boolean;
   sexo: "F" | "M";
   maturidade: string;
+  raca?: string;
   categoria?: string;
   onPress?: () => void;
 };
 
-export const CardBufalo: React.FC<CardBufaloProps> = ({
+export const CardBufalo: React.FC<
+  CardBufaloProps
+> = ({
   nome,
   brinco,
   status,
   sexo,
   maturidade,
+  raca,
   categoria,
   onPress,
 }) => {
   const isAtivo = status === true;
 
-  const maturidadeMap: Record<string, string> = {
+  const maturidadeMap: Record<
+    string,
+    string
+  > = {
     B: "Bezerro",
     N: "Novilha",
     T: "Touro",
     V: "Vaca",
   };
-  const maturidadeTexto = maturidadeMap[maturidade] || maturidade;
+
+  const maturidadeTexto =
+    maturidadeMap[maturidade] ||
+    maturidade;
+
+  const statusColor = isAtivo
+    ? {
+        bg: colors.status.success,
+        soft: colors.status.successBg,
+        text:
+          colors.status.successActive,
+      }
+    : {
+        bg: colors.status.error,
+        soft: colors.status.errorBg,
+        text: colors.status.errorFade,
+      };
 
   return (
-    <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
-      {/* Indicador de status lateral */}
-      <View
-        style={[
-          styles.statusBar,
-          { backgroundColor: isAtivo ? colors.green.active : colors.red.inactive },
-        ]}
-      />
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
+      <View style={styles.iconContainer}>
+        <View style={styles.iconWrapper}>
+          <IconBuffs
+            width={24}
+            height={24}
+            fill={statusColor.bg}
+          />
+        </View>
+      </View>
 
-      {/* Conteúdo principal */}
       <View style={styles.content}>
-        {/* Nome e Brinco */}
-        <View>
-          <Text style={styles.name}>{nome}</Text>
-          <Text style={styles.brinco}>Brinco: Nº {brinco}</Text>
+        <View style={styles.header}>
+          <View style={styles.info}>
+            <Text style={styles.title}>
+              {nome}
+            </Text>
+
+            <Text style={styles.subtitle}>
+              Brinco Nº {brinco}
+            </Text>
+          </View>
+
+          {categoria ? (
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>
+                {categoria}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
-        {/* Chips */}
-        <View style={styles.chipRow}>
-          {/* Sexo */}
-          <View style={styles.chip}>
-            <Text style={styles.chipIcon}>{sexo === "F" ? "♀ Fêmea" : "♂ Macho"}</Text>
-          </View>
+        <View style={styles.details}>
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>
+              Sexo:
+            </Text>
 
-          {/* Maturidade */}
-          <View style={styles.chip}>
-            <Text style={styles.chipIcon}>✔</Text>
-            <Text style={styles.chipText}>{maturidadeTexto}</Text>
-          </View>
+            <Text style={styles.detailValue}>
+              {sexo === "F"
+                ? "♀ Fêmea"
+                : "♂ Macho"}
+            </Text>
 
-          {/* Categoria */}
-          {categoria && (
-            <View style={[styles.chip, styles.categoryChip]}>
-              <Text style={styles.categoryText}>{categoria}</Text>
-            </View>
-          )}
+            <Text style={styles.detailLabel}>
+              | Maturidade:
+            </Text>
+
+            <Text style={styles.detailValue}>
+              {maturidadeTexto}
+            </Text>
+            
+            <Text style={styles.detailLabel}>
+              | Raça:
+            </Text>
+
+            <Text style={styles.detailValue}>
+              {raca ?? "—"}
+            </Text>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -75,79 +135,117 @@ export const CardBufalo: React.FC<CardBufaloProps> = ({
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
+  container: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: colors.bg.card,
+    borderRadius: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    paddingVertical: 14,
+    paddingRight: 14,
+
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 2,
-    position: "relative",
-    marginBottom: 10
+    elevation: 3,
   },
-  statusBar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 5,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+
+  iconContainer: {
+    width: 58,
+    justifyContent: "center",
+    alignItems: "center",
   },
+
+  iconWrapper: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   content: {
     flex: 1,
-    paddingLeft: 10,
   },
-  name: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1A1A1A",
-  },
-  brinco: {
-    fontSize: 13,
-    color: "#6B7280",
-  },
-  chipRow: {
+
+  header: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 6,
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+
+  info: {
+    flex: 1,
+  },
+
+  title: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.text.accent,
+  },
+
+  subtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    color: colors.text.secondary,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.text.accent,
+  },
+
+  details: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+    marginTop: 12,
     gap: 8,
   },
-  chip: {
+
+  detailItem: {
+    marginTop: 10,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F7F8FA",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    flexWrap: "wrap",
+    gap: 4,
   },
-  chipText: {
-    fontSize: 13,
-    color: "#374151",
-    marginLeft: 4,
+
+  detailLabel: {
+    fontSize: 12,
+    color: colors.text.secondary,
   },
-  chipIcon: {
-    fontSize: 14,
-    color: "#374151",
-  },
-  categoryChip: {
-    backgroundColor: colors.yellow.base,
-  },
-  categoryText: {
-    fontSize: 13,
+
+  detailValue: {
+    fontSize: 12,
     fontWeight: "600",
-    color: colors.brown.base,
+    color: colors.text.accent,
   },
-  moreButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+
+  categoryBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.brand.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
-  moreButtonText: {
-    fontSize: 20,
-    color: colors.gray.base,
+
+  categoryText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.text.accent,
   },
 });

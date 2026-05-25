@@ -19,18 +19,6 @@ import YellowButton from "../Button"; // Assumindo que o YellowButton é o compo
 import { formatarDataBR } from "../../utils/date";
 import SelectBottomSheet from "../SelectBottomSheet";
 
-// ==========================================================
-// --- CONFIGURAÇÃO DE CORES (Padrão Unificado) ---
-// ==========================================================
-const defaultColors = {
-    primary: { base: "#FAC638" },
-    gray: { base: "#6B7280", claro: "#F8F7F5", disabled: "#E5E7EB" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" },
-    red: { base: "#EF4444" }
-};
-const mergedColors = { ...defaultColors, ...colors };
 
 // ==========================================================
 // --- INTERFACES E DADOS ---
@@ -64,7 +52,7 @@ const initialFormData: ZootecnicoPayload = {
 
 export const ZootecnicoAddBottomSheet: React.FC<ZootecnicoAddBottomSheetProps> = ({ id_bufalo, onClose, onAddSave}) => {
     const sheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ["80%", "90%"], []);
+    const snapPoints = useMemo(() => ["50%", "70%"], []);
     
     const [formData, setFormData] = useState<ZootecnicoPayload>({ ...initialFormData });
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -129,6 +117,7 @@ return (
     ref={sheetRef}
     index={0}
     snapPoints={snapPoints}
+    enableDynamicSizing={false}
     onChange={handleSheetChange}
     backgroundStyle={styles.sheetBackground} 
     handleIndicatorStyle={styles.handleIndicator} 
@@ -260,13 +249,13 @@ return (
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
-    sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
-    handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
+    sheetBackground: { backgroundColor: colors.bg.subtle, borderRadius: 24 },
+    handleIndicator: { backgroundColor: colors.border.light, height: 4, width: 36 },
 
     // Container principal
     container: {
         paddingBottom: 32,
-        backgroundColor: mergedColors.gray.claro,
+        backgroundColor: colors.bg.subtle,
     },
     header: {
         flexDirection: "row",
@@ -279,37 +268,37 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 20,
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
     sectionTitle: {
         fontWeight: "600",
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
         paddingBottom: 4,
     },
     // Estilo base do input, usado pelo Floating Label
     inputBase: {
         width: "100%",
         borderWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         borderRadius: 8,
         paddingHorizontal: 12,
         marginTop: 5,
         marginBottom: 12,
         fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
+        color: colors.text.heading,
+        backgroundColor: colors.bg.card,
         minHeight: 50, // Adicionado para garantir altura mínima
     },
 
     // --- Estilos da Lista e Itens ---
     listContainer: {
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 16,
         padding: 16,
@@ -318,7 +307,7 @@ const styles = StyleSheet.create({
     },
     listLabel: {
         fontSize: 14, // Padrão 14 para labels
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         marginBottom: 4,
         flex: 1, // Permite que a data fique ao lado
@@ -336,12 +325,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.gray.claro,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.subtle,
     },
     dateDisplayValue: {
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontWeight: "600",
         // Removido marginRight 8, se for para não ter ícone
     },
@@ -353,7 +342,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
         justifyContent: "space-between",
         borderWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         borderRadius: 8,
     },
     radioItem: {
@@ -365,14 +354,14 @@ const styles = StyleSheet.create({
         gap: 4,
         // Adiciona divisória
         borderRightWidth: 1,
-        borderRightColor: mergedColors.border,
+        borderRightColor: colors.border.default,
     },
     radioCircle: {
         width: 20,
         height: 20,
         borderRadius: 10,
         borderWidth: 2,
-        borderColor: mergedColors.gray.base,
+        borderColor: colors.text.muted,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -380,11 +369,11 @@ const styles = StyleSheet.create({
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: mergedColors.primary.base,
+        backgroundColor: colors.brand.primary,
     },
     radioLabel: {
         fontSize: 14,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontWeight: "600",
     },
 
@@ -399,12 +388,12 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         padding: 16,
         borderTopWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         marginTop: 16,
     },
     label: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },

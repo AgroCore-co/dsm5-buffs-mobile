@@ -54,7 +54,7 @@ export default function TableLactation({ data, onVerMais }: Props) {
             <View
               style={[
                 styles.statusCircle,
-                { backgroundColor: item.status ? colors.green.active : colors.red.inactive },
+                { backgroundColor: item.status ? colors.status.successActive : colors.status.errorFade },
               ]}
             />
 
@@ -105,15 +105,15 @@ export default function TableLactation({ data, onVerMais }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 12,
     padding: 8,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
   },
   listHeader: {
     flexDirection: "row",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.bg.input,
     paddingVertical: 8,
     paddingHorizontal: 4,
     borderRadius: 8,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   listHeaderText: {
     fontWeight: "600",
-    color: "#374151",
+    color: colors.text.body,
     textAlign: "center",
   },
   itemRow: {
@@ -129,11 +129,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderColor: colors.gray.disabled,
+    borderColor: colors.border.default,
   },
   itemText: {
     textAlign: "center",
-    color: "#111827",
+    color: colors.text.heading,
   },
   statusCircle: {
     width: 12,
@@ -146,13 +146,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   linkText: {
-    color: "#2563EB",
+    color: colors.text.link,
     fontWeight: "600",
   },
   pageInfo: {
     marginHorizontal: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.text.body,
     textAlign: "center",
   },
   pagination: {

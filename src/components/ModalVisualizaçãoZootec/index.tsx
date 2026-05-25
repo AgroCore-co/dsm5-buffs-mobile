@@ -149,11 +149,11 @@ export const ZootecnicoDetailModal = ({ visible, onClose, item }: any) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: colors.overlay.modal,
     justifyContent: "center",
   },
   modal: {
-    backgroundColor: "#F8F7F5",
+    backgroundColor: colors.bg.sheet,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "95%",
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1A202C",
+    color: colors.text.heading,
   },
   backButton: {
     width: 36,
@@ -180,10 +180,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
@@ -191,17 +191,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   centerBlock: { alignItems: "center", marginBottom: 8 },
-  label: { fontSize: 12, color: "#6B7280" },
-  date: { fontSize: 22, fontWeight: "700", color: colors.yellow.dark },
+  label: { fontSize: 12, color: colors.text.muted },
+  date: { fontSize: 22, fontWeight: "700", color: colors.brand.dark },
   value: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: colors.text.title,
     borderBottomWidth: 0,
   },
   inputEditable: {
     borderBottomWidth: 1,
-    borderColor: colors.yellow.base,
+    borderColor: colors.brand.primary,
     paddingVertical: 2,
   },
   row: { flexDirection: "row", gap: 12, marginTop: 16 },
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.border.default,
     gap: 12,
   },
   button: {
@@ -221,21 +221,21 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   editButton: {
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
   },
   deleteButton: {
     borderWidth: 1,
-    borderColor: "#EF4444",
+    borderColor: colors.status.error,
   },
   editText: {
     fontWeight: "700",
     fontSize: 16,
-    color: colors.brown.base,
+    color: colors.text.accent,
     marginLeft: 6,
   },
   deleteText: {
     fontWeight: "700",
     fontSize: 16,
-    color: "#EF4444",
+    color: colors.status.error,
   },
 });

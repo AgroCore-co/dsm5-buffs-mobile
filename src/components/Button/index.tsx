@@ -19,7 +19,7 @@ export default function YellowButton({ title, onPress, disabled, loading }: Yell
       style={[styles.button, isDisabled && styles.disabled]}
     >
       {loading ? (
-        <ActivityIndicator color="#000" />
+        <ActivityIndicator color={colors.black} />
       ) : (
         <Text style={styles.text}>{title}</Text>
       )}
@@ -29,7 +29,7 @@ export default function YellowButton({ title, onPress, disabled, loading }: Yell
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -38,8 +38,9 @@ const styles = StyleSheet.create({
   text: {
     fontWeight: "600",
     textAlign: "center",
+    color: colors.black,
   },
   disabled: {
-    backgroundColor: colors.gray.disabled,
+    backgroundColor: colors.border.default,
   },
 });

@@ -7,6 +7,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 // App.tsx
 import React, { useEffect, useState } from 'react';
 import { runMigrations } from './src/database/migrations';
+import { createNotificationChannels } from './src/services/notificationService';
 import { SyncProvider } from './src/context/SyncContext';
 import { Platform, StatusBar, useColorScheme, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -39,8 +40,7 @@ import GlobeIcon from './src/icons/sex';
 import Fance from './src/icons/fance';
 import { NfcScannerScreen } from './src/screens/NfcScannerScreen';
 import BuffaloLoader from './src/components/BufaloLoader';
-import { InitialSyncScreen } from './src/screens/InitialSyncScreen';
-import { isFirstSync } from './src/database/db';
+import { GrupoDetailScreen } from './src/screens/GrupoDetailScreen';
 
 
 export type RootStackParamList = {
@@ -51,6 +51,7 @@ export type RootStackParamList = {
   CompleteProfile: undefined;
   NfcScannerScreen: undefined;
   Notificacoes: undefined;
+  GrupoDetailScreen: { grupoId: string; nomeGrupo: string; color: string };
 };
 
 const Tab = createBottomTabNavigator();
@@ -65,12 +66,12 @@ function MainTab() {
                 // --- CABEÇALHO (HEADER) ---
         headerStyle: {
           height: Platform.OS === "ios" ? 90 : 80,
-          backgroundColor: colors.yellow.base,
+          backgroundColor: colors.brand.primary,
         },
         headerTitleStyle: {
           fontSize: 24,
           fontWeight: "bold",
-          color: colors.brown.base,
+          color: colors.text.accent,
         },
         headerTitleAlign: "left",
 
@@ -89,8 +90,8 @@ function MainTab() {
         },
 
         // --- CORES ATIVAS / INATIVAS ---
-        tabBarActiveTintColor: colors.yellow.dark,
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: colors.brand.dark,
+        tabBarInactiveTintColor: colors.text.muted,
         tabBarHideOnKeyboard: true,
       }}>
       <Tab.Screen 
@@ -99,10 +100,10 @@ function MainTab() {
         options={{
           headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
-            <Home 
+            <Home
               width={focused ? 30 : 20}         // maior quando ativo
               height={focused ? 30 : 20}        // maior quando ativo
-              stroke={focused ? colors.yellow.dark : 'gray'} // muda cor
+              stroke={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           ),
           headerTitle: () => <BuffsLogo width={80} height={80} />,
@@ -114,10 +115,10 @@ function MainTab() {
         options={{
           headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
-            <Bufalo 
+            <Bufalo
               width={focused ? 35 : 25}         // maior quando ativo
               height={focused ? 35 : 25}        // maior quando ativo
-              fill={focused ? colors.yellow.dark : 'gray'} // muda cor
+              fill={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           )
         }}/>
@@ -127,10 +128,10 @@ function MainTab() {
         options={{
           headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
-            <Lactation 
+            <Lactation
               width={focused ? 35 : 25}         // maior quando ativo
               height={focused ? 35 : 25}        // maior quando ativo
-              fill={focused ? colors.yellow.dark : 'gray'} // muda cor
+              fill={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           )
         }} />
@@ -142,7 +143,7 @@ function MainTab() {
           tabBarIcon: ({ focused, color, size }) => (
             <GlobeIcon
               size={focused ? 25 : 22}         // maior quando ativo
-              fill={focused ? colors.yellow.dark : 'gray'} // muda cor
+              fill={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           )
         }}/>
@@ -154,7 +155,7 @@ function MainTab() {
           tabBarIcon: ({ focused, color, size }) => (
             <Fance
               size={focused ? 25 : 22}         // maior quando ativo
-              fill={focused ? colors.yellow.dark : 'gray'} // muda cor
+              fill={focused ? colors.brand.dark : colors.text.muted} // muda cor
             />
           )
         }}/>
@@ -164,18 +165,8 @@ function MainTab() {
 
 function AppContent() {
   const { userToken, loading } = useAuth();
-  const { propriedadeSelecionada } = usePropriedade();
-  const [needsInitialSync, setNeedsInitialSync] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (userToken && propriedadeSelecionada) {
-      isFirstSync(propriedadeSelecionada).then(setNeedsInitialSync);
-    } else {
-      setNeedsInitialSync(false);
-    }
-  }, [userToken, propriedadeSelecionada]);
-
-  if (loading || needsInitialSync === null) {
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <BuffaloLoader />
@@ -183,25 +174,17 @@ function AppContent() {
     );
   }
 
-  if (userToken && propriedadeSelecionada && needsInitialSync) {
-    return (
-      <InitialSyncScreen
-        propriedadeId={propriedadeSelecionada}
-        onSyncComplete={() => setNeedsInitialSync(false)}
-      />
-    );
-  }
-
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!userToken ? (
-          <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
       ) : (
         <>
-        <Stack.Screen name="MainTab" component={MainTab} />
-        <Stack.Screen name="AnimalDetail" component={AnimalDetailScreen} />
-        <Stack.Screen name="NfcScannerScreen" component={NfcScannerScreen} options={{ title: 'Scanner NFC' }} />
-        <Stack.Screen name="Notificacoes" component={NotificacoesScreen} options={{ title: 'Notificações' }} />
+          <Stack.Screen name="MainTab" component={MainTab} />
+          <Stack.Screen name="AnimalDetail" component={AnimalDetailScreen} />
+          <Stack.Screen name="NfcScannerScreen" component={NfcScannerScreen} options={{ title: 'Scanner NFC' }} />
+          <Stack.Screen name="Notificacoes" component={NotificacoesScreen} options={{ title: 'Notificações' }} />
+          <Stack.Screen name="GrupoDetailScreen" component={GrupoDetailScreen} />
         </>
       )}
     </Stack.Navigator>
@@ -226,10 +209,16 @@ function AppWithSync() {
 
 export default function App() {
   const isDarkMode = useColorScheme() === 'dark';
+  const [dbReady, setDbReady] = useState(false);
 
   useEffect(() => {
-    runMigrations().catch(console.error);
+    runMigrations()
+      .then(() => createNotificationChannels())
+      .catch(console.error)
+      .finally(() => setDbReady(true));
   }, []);
+
+  if (!dbReady) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

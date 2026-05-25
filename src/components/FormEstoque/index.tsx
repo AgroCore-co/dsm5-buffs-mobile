@@ -35,21 +35,12 @@ interface EstoqueAddBottomSheetProps {
   onClose: () => void;
   propriedadeId: string | number;
 }
-const defaultColors = {
-    primary: { base: "#FAC638" },
-    gray: { base: "#6B7280", claro: "#F8F7F5" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" }
-};
-
-const mergedColors = { ...defaultColors, ...colors };
 
 export const EstoqueAddBottomSheet: React.FC<
   EstoqueAddBottomSheetProps
 > = ({ onSuccess, onClose, propriedadeId }) => {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["50%", "75%"], []);
+  const snapPoints = useMemo(() => ["50%", "70%"], []);
   const { user } = useAuth();
   console.log("Objeto completo do Usuário:", user);
   const userId = user?.id_usuario || null;
@@ -126,6 +117,7 @@ export const EstoqueAddBottomSheet: React.FC<
       ref={sheetRef}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       onChange={handleSheetChange}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handleIndicator}
@@ -206,13 +198,13 @@ export const EstoqueAddBottomSheet: React.FC<
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
-    sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
-    handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
+    sheetBackground: { backgroundColor: colors.bg.subtle, borderRadius: 24 },
+    handleIndicator: { backgroundColor: colors.border.light, height: 4, width: 36 },
 
     // Container principal
     container: {
         paddingBottom: 32,
-        backgroundColor: mergedColors.gray.claro,
+        backgroundColor: colors.bg.subtle,
     },
     header: {
         flexDirection: "row",
@@ -225,34 +217,34 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 20,
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
     sectionTitle: {
         fontWeight: "600",
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
         paddingBottom: 4,
     },
     // Estilo base do input, usado pelo Floating Label
     inputBase: {
         width: "100%",
         borderWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         borderRadius: 8,
         paddingHorizontal: 12,
         fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
+        color: colors.text.heading,
+        backgroundColor: colors.bg.card,
     },
 
     // --- Estilos da Lista e Itens ---
     listContainer: {
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 16,
         padding: 16,
@@ -260,7 +252,7 @@ const styles = StyleSheet.create({
     },
     listLabel: {
         fontSize: 16,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         flex: 1,
     },
@@ -273,7 +265,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         marginBottom: 12,
         borderTopWidth: 1,
-        borderTopColor: mergedColors.border,
+        borderTopColor: colors.border.default,
     },
     dateDisplayButton: {
         flexDirection: "row",
@@ -282,12 +274,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.gray.claro,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.subtle,
     },
     dateDisplayValue: {
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontWeight: "600",
         marginRight: 8,
     },
@@ -303,7 +295,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         padding: 16,
         borderTopWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         marginTop: 16,
     },
     // Estilos do botão replicados do YellowButton (apenas para referência visual, 
@@ -317,16 +309,16 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     saveBtn: {
-        backgroundColor: mergedColors.primary.base,
+        backgroundColor: colors.brand.primary,
     },
     saveText: {
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontSize: 16,
     },
     label: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { View, FlatList, StyleSheet, RefreshControl, Text, ActivityIndicator } from "react-native";
 import Propriedades from "../components/SelectPropriedade";
 import DashPropriedade from "../components/DashPropriedade";
@@ -11,10 +11,13 @@ import BuffaloLoader from "../components/BufaloLoader";
 import { usePropriedade } from "../context/PropriedadeContext";
 import propriedadeService from "../services/propriedadeService";
 import { NotificacoesButton } from "../components/NotificacoesButton";
+import { getProducaoDiariaHistorico, ProducaoDiariaPoint } from "../services/lactacaoService";
+import { useSyncStatus } from "../context/SyncContext";
 
 
 export const HomeScreen = () => {
   const { propriedadeSelecionada } = usePropriedade();
+  const { lastSyncedAt } = useSyncStatus();
   const [propriedades, setPropriedades] = useState<any[]>([]); 
   const [dashboard, setDashboard] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,6 +25,7 @@ export const HomeScreen = () => {
   const [countsSex, setCountsSex] = useState({ machos: 0, femeas: 0 });
   const [countsMat, setCountsMat] = useState({ bezerros: 0, novilhas: 0, vacas: 0, touros: 0 });
   const [count, setCount] = useState({ bufalosAtivos: 0 });
+  const [historicoLeite, setHistoricoLeite] = useState<ProducaoDiariaPoint[]>([]);
 
   const fetchPropriedades = async () => {
     try {
@@ -45,10 +49,13 @@ export const HomeScreen = () => {
         touros: dashboard?.touros,
       });
       setCount({ bufalosAtivos: dashboard?.bufalosAtivos });
+
+      const historico = await getProducaoDiariaHistorico(propriedadeSelecionada, 14);
+      setHistoricoLeite(historico);
     } catch (err) {
       console.error("Erro ao buscar búfalos:", err);
     }
-  }; 
+  };
   
   const onRefresh = async () => {
     setRefreshing(true);
@@ -67,7 +74,11 @@ export const HomeScreen = () => {
     loadInitialData();
   }, [propriedadeSelecionada]);
 
-  
+  // Re-busca o dashboard quando um download/sync termina (lastSyncedAt muda)
+  useEffect(() => {
+    if (lastSyncedAt) fetchDashboard();
+  }, [lastSyncedAt]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -77,7 +88,7 @@ export const HomeScreen = () => {
           <View style={{position: 'absolute', right: 60, top: 10}}>
             <UserMenu />
           </View>
-          <View style={{position: 'absolute', left: 70, top: -20}}>
+          <View style={{position: 'absolute', left: 70, top: -18}}>
             <NotificacoesButton />
           </View>
       </View>
@@ -91,6 +102,7 @@ export const HomeScreen = () => {
           ListHeaderComponent={
             <>
               <Propriedades prop={propriedades} />
+
               {loading || !dashboard ? (
                 <View style={styles.loading}>
                   <BuffaloLoader />
@@ -104,6 +116,7 @@ export const HomeScreen = () => {
                   novilhas={countsMat.novilhas}
                   vacas={countsMat.vacas}
                   touros={countsMat.touros}
+                  historicoLeite={historicoLeite}
                 />
               )}
             </>
@@ -118,15 +131,24 @@ export const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#222'
+    backgroundColor: colors.text.heading
   },
   header: {
     height: 60,
-    backgroundColor: colors.yellow.base,
+    backgroundColor: colors.brand.primary,
     justifyContent: 'center',
     paddingLeft: 16,
     paddingTop: 20,
-    borderColor: colors.yellow.dark
+    borderColor: colors.brand.dark,
+    borderBottomWidth: 2.5,
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 6,
   },
   loadingContainer: { 
     flex: 1, 
@@ -134,12 +156,12 @@ const styles = StyleSheet.create({
     alignItems: "center" 
   },
   button: {
-    backgroundColor: colors.yellow.dark,
+    backgroundColor: colors.brand.dark,
     borderRadius: 50,
   },
   loading: {
     marginTop: 40,
     alignItems: "center",
     justifyContent: "center",
-  }
+  },
 });

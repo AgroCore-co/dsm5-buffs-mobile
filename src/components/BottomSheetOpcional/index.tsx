@@ -3,11 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { colors } from "../../styles/colors";
 
-const mergedColors = {
-    text: { primary: "#111827" },
-    border: "#E5E7EB",
-    ...colors
-};
 
 export interface Option {
     label: string;
@@ -24,23 +19,24 @@ interface GenericOptionsSheetProps {
 
 
 const GenericOptionsSheet: React.FC<GenericOptionsSheetProps> = ({ sheetRef, title, options, onSelect, onClose}) => {
-    const snapPoints = useMemo(() => ["40%", "60%"], []);
+    const snapPoints = useMemo(() => ["50%", "70%"], []);
 
     return (
         <BottomSheetModal
             ref={sheetRef}
             snapPoints={snapPoints}
+            enableDynamicSizing={false}
             enablePanDownToClose={true}
             stackBehavior="push"
             onDismiss={onClose} // 
-            backgroundStyle={{ backgroundColor: mergedColors.gray.claro, borderRadius: 24 }}
+            backgroundStyle={{ backgroundColor: colors.bg.sheet, borderRadius: 24 }}
             backdropComponent={(props) => (
                 <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} pressBehavior="close" />
             )}
         >
             <View style={{ padding: 16, flex: 1 }}>
                 <Text style={styles.title}>{title}</Text>
-                <BottomSheetScrollView>
+                <BottomSheetScrollView keyboardShouldPersistTaps="handled">
                     {options.map((opt) => (
                         <TouchableOpacity
                             key={String(opt.value)}
@@ -60,9 +56,9 @@ const GenericOptionsSheet: React.FC<GenericOptionsSheetProps> = ({ sheetRef, tit
 };
 
 const styles = StyleSheet.create({
-    title: { fontSize: 18, fontWeight: "700", color: mergedColors.text.primary, marginBottom: 16, textAlign: "center" },
-    item: { paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: mergedColors.border },
-    itemText: { fontSize: 16, color: mergedColors.text.primary }
+    title: { fontSize: 18, fontWeight: "700", color: colors.text.heading, marginBottom: 16, textAlign: "center" },
+    item: { paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: colors.border.default },
+    itemText: { fontSize: 16, color: colors.text.heading }
 });
 
 export default GenericOptionsSheet;

@@ -16,24 +16,24 @@ export const Loading: React.FC<LoadingScreenProps> = ({ size = 44, message}) => 
         <BuffsLogo width={300} height={300} />
       </View>
       <Text style={styles.text}>{message}</Text>
-      <ActivityIndicator size={size} color={colors.yellow.dark} />
+      <ActivityIndicator size={size} color={colors.brand.dark} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  logoWrapper: { 
-    alignItems: 'center', 
-    marginBottom: 20 
+  logoWrapper: {
+    alignItems: 'center',
+    marginBottom: 20
   },
-  text: { 
-    fontSize: 16, 
-    color: colors.brown.base, 
-    marginBottom: 20 
+  text: {
+    fontSize: 16,
+    color: colors.text.accent,
+    marginBottom: 20
   }
 });

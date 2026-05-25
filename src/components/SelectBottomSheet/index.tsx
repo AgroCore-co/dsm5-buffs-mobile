@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useCallback } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from "react-native";
-import { 
-  BottomSheetModal, 
-  BottomSheetView,
-  BottomSheetBackdrop 
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  BottomSheetModal,
+  BottomSheetFlatList,
+  BottomSheetBackdrop
 } from "@gorhom/bottom-sheet";
 import { colors } from "../../styles/colors";
 import ArrowBackIcon from "../../../assets/images/arrow-back.svg";
@@ -29,7 +29,7 @@ export default function SelectBottomSheet({
   placeholder = "Selecionar",
 }: Props) {
     const bottomSheetRef = useRef<BottomSheetModal>(null);
-    const snapPoints = useMemo(() => ["30%", "50%"], []);
+    const snapPoints = useMemo(() => ["45%"], []);
     const safeItems = items ?? [];
     const open = useCallback(() => {
       bottomSheetRef.current?.present();
@@ -76,39 +76,34 @@ return (
             snapPoints={snapPoints}
             backdropComponent={renderBackdrop}
             enablePanDownToClose={true}
-            backgroundStyle={{ backgroundColor: colors.white.base }}>
-            <BottomSheetView style={styles.sheetContainer}>
-                <Text style={styles.title}>{title}</Text>
-                <FlatList
-                  data={safeItems}
-                  keyExtractor={(item) => item.value}
-                  ListEmptyComponent={
-                    <Text style={{ textAlign: "center", marginTop: 20 }}>
-                      Nenhuma opção disponível
-                    </Text>
-                  }
-                    renderItem={({ item }) => {
-                      const isSelected = item.value === value;
-
-                      return (
-                        <TouchableOpacity
-                          style={[styles.item, isSelected && styles.itemSelected]}
-                          onPress={() => {
-                            onChange(item.value);
-                            close();
-                          }}
-                        >
-                          <Text style={[
-                            styles.itemText,
-                            isSelected && styles.itemTextSelected
-                          ]}>
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
+            enableDynamicSizing={false}
+            backgroundStyle={{ backgroundColor: colors.bg.card }}>
+            <Text style={styles.title}>{title}</Text>
+            <BottomSheetFlatList<Item>
+              data={safeItems}
+              keyExtractor={(item: Item) => item.value}
+              contentContainerStyle={styles.listContent}
+              keyboardShouldPersistTaps="handled"
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>Nenhuma opção disponível</Text>
+              }
+              renderItem={({ item }: { item: Item }) => {
+                const isSelected = item.value === value;
+                return (
+                  <TouchableOpacity
+                    style={[styles.item, isSelected && styles.itemSelected]}
+                    onPress={() => {
+                      onChange(item.value);
+                      close();
                     }}
-                />
-            </BottomSheetView>
+                  >
+                    <Text style={[styles.itemText, isSelected && styles.itemTextSelected]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
         </BottomSheetModal>
     </View>
 );
@@ -122,8 +117,8 @@ const styles = StyleSheet.create({
     alignItems: "center",          // 👈 centraliza vertical
     justifyContent: "space-between", // 👈 separa texto e ícone
     paddingHorizontal: 12,
-    backgroundColor: colors.white.base,
-    borderColor: colors.gray.disabled,
+    backgroundColor: colors.bg.card,
+    borderColor: colors.border.default,
   },
   icon: {
     transform: [{ rotate: "270deg" }], // vira dropdown
@@ -132,28 +127,37 @@ const styles = StyleSheet.create({
   inputText: {
     fontSize: 16,
   },
-  sheetContainer: {
-    flex: 1,
-    padding: 2,
-  },
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    margin: 12,
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    color: colors.text.accent,
+  },
+  listContent: {
+    paddingBottom: 24,
   },
   item: {
     padding: 16,
     borderBottomWidth: 1,
-    borderColor: "#eee",
+    borderColor: colors.bg.subtle,
   },
   itemText: {
     fontSize: 16,
+    color: colors.text.body,
   },
   itemSelected: {
-    backgroundColor: colors.yellow.warning,
+    backgroundColor: colors.status.pendingBg,
   },
   itemTextSelected: {
     fontWeight: "bold",
-    color: colors.brown.base,
+    color: colors.text.accent,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: colors.text.placeholder,
+    fontSize: 14,
   },
 });

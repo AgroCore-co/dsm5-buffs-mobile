@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal as RNModal, View, StyleSheet } from "react-native";
+import { colors } from "../../styles/colors";
 
 interface ModalProps {
   visible: boolean;
@@ -22,12 +23,12 @@ export function Modal({ visible, onClose, children }: ModalProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: colors.overlay.modal,
     justifyContent: "center", // mudar de "center" para "flex-end"
     alignItems: "center",
   },
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg.card,
     borderRadius: 12,
     padding: 16,
     width: "90%", // ocupar toda a largura da tela

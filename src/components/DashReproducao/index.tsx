@@ -1,7 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+
+import {
+  View,
+  Text,
+  StyleSheet,
+} from "react-native";
+
 import { colors } from "../../styles/colors";
+
 import TextTitle from "../TextTitle";
+
 interface DashReproductionProps {
   emProcesso: number;
   confirmadas: number;
@@ -18,89 +26,153 @@ export default function DashReproduction({
   ultimaData,
 }: DashReproductionProps) {
   return (
-    <View style={styles.container}>
-      {/* Cabeçalho */}
+    <View style={styles.card}>
       <View style={styles.header}>
-        <TextTitle>Resumo das Reprodução</TextTitle>
+        <View>
+          <TextTitle>
+            Resumo Reprodutivo
+          </TextTitle>
+
+          <Text style={styles.subtitle}>
+            Acompanhamento das coberturas e inseminações
+          </Text>
+        </View>
       </View>
 
-      {/* Linha de status */}
-      <View style={styles.row}>
-        <View style={styles.item}>
-          <Text style={styles.value}>{emProcesso}</Text>
-          <Text style={styles.label}>EM PROCESSO</Text>
+      <View style={styles.statsGrid}>
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>
+              Em processo
+            </Text>
+            <Text style={styles.statValue}>
+              {emProcesso}
+            </Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>
+              Confirmadas
+            </Text>
+            <Text style={styles.statValue}>
+              {confirmadas}
+            </Text>
+          </View>
         </View>
-        <View style={styles.item}>
-          <Text style={styles.value}>{confirmadas}</Text>
-          <Text style={styles.label}>CONFIRMADAS</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.value}>{concluidas}</Text>
-          <Text style={styles.label}>CONCLUÍDAS</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.value}>{falhas}</Text>
-          <Text style={styles.label}>FALHAS</Text>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>
+              Concluídas
+            </Text>
+            <Text style={styles.statValue}>
+              {concluidas}
+            </Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>
+              Falhas
+            </Text>
+            <Text style={styles.statValue}>
+              {falhas}
+            </Text>
+          </View>
         </View>
       </View>
-      
-      <Text style={styles.footerText}>Última atualização: {ultimaData}</Text>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          Atualizado em {ultimaData}
+        </Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 16, 
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    marginBottom: 12,
+  card: {
+    padding: 12,
+    backgroundColor: colors.bg.card,
+    borderRadius: 16,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: colors.gray.disabled,
-    shadowColor: colors.black.base,
-    shadowOpacity: 0.05,
-    shadowOffset: { 
-      width: 0, 
-      height: 2 
+    borderColor: colors.border.default,
+    shadowColor: colors.black,
+    shadowOpacity: 0.03,
+    shadowOffset: {
+      width: 0,
+      height: 2,
     },
-    shadowRadius: 4,
-    elevation: 2, 
-    zIndex: 1000
+    shadowRadius: 3,
+    elevation: 1,
   },
+
   header: {
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  subtitle: { 
-    fontSize: 14, 
-    color: colors.gray.base 
-  },
-  row: { 
-    flexDirection: "row", 
-    justifyContent: "space-around", 
-    marginBottom: 16,
-  },
-  item: { 
-    alignItems: "center", 
-    flex: 1,
-    borderRightWidth: 1,
-    borderLeftWidth: 1,
-    borderColor: colors.gray.disabled,
-  },
-  value: { 
-    fontSize: 20, 
-    fontWeight: "bold", 
-    marginBottom: 4 
-  },
-  label: { 
-    fontSize: 12, 
-    color: colors.gray.base,
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-  footerText: {
+
+  subtitle: {
     fontSize: 11,
-    color: colors.gray.base,
-    textAlign: "right",
+    color: colors.text.muted,
+    marginTop: 1,
+    lineHeight: 14,
+  },
+
+  statsGrid: {
+    borderRadius: 20,
+    backgroundColor: colors.bg.section,
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+  },
+
+  statCard: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+    marginBottom: 6,
+  },
+
+  divider: {
+    width: 1,
+    height: 28,
+    backgroundColor: colors.border.default,
+  },
+
+  statValue: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: colors.text.accent,
+    lineHeight: 24,
+  },
+
+  statLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.text.muted,
+    marginTop: 1,
+  },
+
+  footer: {
+    marginTop: 8,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+  },
+
+  footerText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: colors.text.muted,
+    textAlign: "center",
   },
 });

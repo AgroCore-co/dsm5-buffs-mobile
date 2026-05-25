@@ -19,24 +19,19 @@ import { DatePickerModal } from "../DatePickerModal";
 import dayjs from "dayjs";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import SelectBottomSheet from "../SelectBottomSheet";
+import { NfcTextInput } from "../NfcTextInput";
 
-const defaultColors = {
-    primary: { base: "#FAC638" },
-    gray: { base: "#6B7280", claro: "#F8F7F5" },
-    text: { primary: "#111827", secondary: "#4B5563" },
-    border: "#E5E7EB",
-    white: { base: "#FFF" }
-};
-const mergedColors = { ...defaultColors, ...colors };
+
 
 interface CadastrarBufaloFormProps {
     onClose: () => void;
+    onSuccess?: () => void;
 }
 
-export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClose }) => {
+export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClose, onSuccess }) => {
     const sheetRef = useRef<BottomSheet>(null);
     // Aumentado o snapPoints para acomodar mais campos
-    const snapPoints = useMemo(() => ["80%", "95%"], []); 
+    const snapPoints = useMemo(() => ["50%", "70%"], []); 
     const { propriedadeSelecionada } = usePropriedade();
 
     const [nome, setNome] = useState("");
@@ -166,6 +161,7 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
 
             await bufaloService.createBufalo(cleanedPayload);
             showToast("Búfalo cadastrado com sucesso!");
+            onSuccess?.();
             onClose();
         } catch (err) { 
             console.error("Erro ao salvar búfalo:", err);
@@ -180,6 +176,7 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
             ref={sheetRef}
             index={0}
             snapPoints={snapPoints}
+            enableDynamicSizing={false}
             onChange={handleSheetChange}
             backgroundStyle={styles.sheetBackground}
             handleIndicatorStyle={styles.handleIndicator}
@@ -223,11 +220,13 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                     </View>
                     <View>
                         <Text style={styles.label}>Microchip (Opcional)</Text>
-                        <TextInput
-                            style={styles.inputBase}
+                        <NfcTextInput
+                            mode="microchip"
+                            onResult={setMicrochip}
                             value={microchip}
                             onChangeText={setMicrochip}
-                            placeholder="Digite o microchip do animal"/>
+                            placeholder="Digite ou leia via RFID"
+                        />
                     </View>
                 </View>
 
@@ -306,20 +305,28 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
                     <View style={styles.row}>
                         <View style={styles.halfInput}>
                             <Text style={styles.label}>Brinco do Pai</Text>
-                            <TextInput
-                                style={styles.inputBase}
+                            <NfcTextInput
+                                mode="brinco"
+                                sexo="M"
+                                onResult={setBrincoPai}
+                                propriedadeId={propriedadeSelecionada ?? undefined}
                                 value={brincoPai}
                                 onChangeText={setBrincoPai}
-                                placeholder="Digite o brinco do Pai"/>
+                                placeholder="Brinco Pai"
+                            />
                         </View>
 
                         <View style={styles.halfInput}>
                             <Text style={styles.label}>Brinco da Mãe</Text>
-                            <TextInput
-                                style={styles.inputBase}
+                            <NfcTextInput
+                                mode="brinco"
+                                sexo="F"
+                                onResult={setBrincoMae}
+                                propriedadeId={propriedadeSelecionada ?? undefined}
                                 value={brincoMae}
                                 onChangeText={setBrincoMae}
-                                 placeholder="Digite o brinco da Mãe"/>
+                                placeholder="Brinco Mae"
+                            />
                         </View>
                     </View>
 
@@ -348,13 +355,13 @@ export const CadastrarBufaloForm: React.FC<CadastrarBufaloFormProps> = ({ onClos
 
 const styles = StyleSheet.create({
     // Estilos do BottomSheet
-    sheetBackground: { backgroundColor: mergedColors.gray.claro, borderRadius: 24 },
-    handleIndicator: { backgroundColor: "#D1D5DB", height: 4, width: 36 },
+    sheetBackground: { backgroundColor: colors.bg.sheet, borderRadius: 24 },
+    handleIndicator: { backgroundColor: colors.border.light, height: 4, width: 36 },
 
     // Container principal
     container: {
         paddingBottom: 32,
-        backgroundColor: mergedColors.gray.claro,
+        backgroundColor: colors.bg.sheet,
     },
     header: {
         flexDirection: "row",
@@ -367,35 +374,35 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 20,
         fontWeight: "700",
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
     },
     sectionTitle: {
         fontWeight: "600",
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
         paddingBottom: 4,
     },
     // Estilo base do input, usado pelo Floating Label
     inputBase: {
         width: "100%",
         borderWidth: 1,
-        borderColor: mergedColors.border,
+        borderColor: colors.border.default,
         borderRadius: 8,
         paddingHorizontal: 12,
         fontSize: 16,
-        color: mergedColors.text.primary,
-        backgroundColor: mergedColors.white.base,
+        color: colors.text.heading,
+        backgroundColor: colors.bg.card,
         minHeight: 50,
     },
 
     // --- Estilos de Layout ---
     listContainer: {
-        backgroundColor: mergedColors.white.base,
+        backgroundColor: colors.bg.card,
         borderRadius: 16,
         marginHorizontal: 10,
         padding: 16,
@@ -413,23 +420,30 @@ const styles = StyleSheet.create({
     halfInput: {
         flex: 1,
     },
-    
+
+    /** TextInput + NfcBrincoButton lado a lado */
+    inputRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+
     // --- Dropdown ---
     dropdownLabel: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },
     dropdownStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
         minHeight: 50,
         marginBottom: 12,
     },
     dropdownContainerStyle: {
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.white.base,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.card,
     },
 
     // --- Campo de Data Intuitivo ---
@@ -442,11 +456,11 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         marginTop: 8,
         borderBottomWidth: 1, // Adiciona uma linha sutil para separar
-        borderBottomColor: mergedColors.border,
+        borderBottomColor: colors.border.default,
     },
     listLabel: {
         fontSize: 16,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "500",
         flex: 1,
     },
@@ -457,18 +471,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: mergedColors.border,
-        backgroundColor: mergedColors.gray.claro,
+        borderColor: colors.border.default,
+        backgroundColor: colors.bg.sheet,
     },
     dateDisplayValue: {
         fontSize: 16,
-        color: mergedColors.text.primary,
+        color: colors.text.heading,
         fontWeight: "600",
     },
     parentescoTitle: {
         fontSize: 14,
         fontWeight: "600",
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         marginBottom: 4,
         marginTop: 4,
     },
@@ -482,7 +496,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        color: mergedColors.text.secondary,
+        color: colors.text.secondary,
         fontWeight: "600",
         marginBottom: 4,
     },

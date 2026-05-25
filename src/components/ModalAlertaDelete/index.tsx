@@ -53,7 +53,7 @@ export const ConfirmarExclusaoModal = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: colors.overlay.modalLight,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginBottom: 20,
-    color: "#333",
+    color: colors.text.heading,
   },
   modalActions: {
     flexDirection: "row",
@@ -85,21 +85,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.gray.base,
-    backgroundColor: colors.white.base,
+    borderColor: colors.text.muted,
+    backgroundColor: colors.bg.card,
   },
   btnConfirmar: {
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: colors.red.base, // Usar vermelho para exclusão
+    backgroundColor: colors.status.error,
   },
   btnTextCancelar: {
-    color: colors.gray.base,
+    color: colors.text.muted,
     fontWeight: "600",
   },
   btnTextConfirmar: {
-    color: colors.white.base, // Texto branco no botão vermelho
+    color: colors.bg.card,
     fontWeight: "600",
   },
 });

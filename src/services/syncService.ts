@@ -130,46 +130,12 @@ class SyncService {
     }
   }
 
-  private async pullMaterialGenetico(propriedadeId: string): Promise<void> {
-    const PAGE_SIZE = 200;
-    try {
-      let page = 1;
-      let totalPages = 1;
-      do {
-        const response: any = await apiFetch(
-          `/sync/${propriedadeId}/material-genetico?page=${page}&limit=${PAGE_SIZE}`
-        );
-        const records: any[] = Array.isArray(response) ? response : response.data ?? [];
-        totalPages = response?.meta?.totalPages ?? 1;
-        if (!records.length) break;
-        const now = new Date().toISOString();
-        const normalized = records.map((r: any) => ({
-          ...r,
-          id: r.id ?? r.idMaterial ?? null,
-          propriedadeId,
-          updatedAt: r.updatedAt ?? now,
-        }));
-        if (__DEV__) {
-          console.log(
-            `[sync] pullMaterialGenetico p${page}/${totalPages}: ${records.length} registros. ` +
-            `Sample: id="${normalized[0]?.id?.slice(0, 8)}", tipo="${normalized[0]?.tipo}", prop="${normalized[0]?.propriedadeId?.slice(0, 8)}"`
-          );
-        }
-        await upsertBatch('material_genetico', normalized);
-        page++;
-      } while (page <= totalPages);
-    } catch (err) {
-      console.warn('[sync] pullMaterialGenetico falhou:', err);
-    }
-  }
-
   private async pullEntity(entity: string, propriedadeId: string): Promise<void> {
     if (entity === 'industrias') {
       return this.pullIndustrias(propriedadeId);
     }
-    if (entity === 'material_genetico') {
-      return this.pullMaterialGenetico(propriedadeId);
-    }
+    // material_genetico usa o endpoint flat /sync/material-genetico (incremental, offline-first)
+    // — o caso especial paginado foi removido após a criação do endpoint flat no backend.
     try {
       const syncPropId = entity === 'racas' ? 'global' : propriedadeId;
       const meta = await queryFirst<{ lastSyncedAt: string | null }>(
@@ -207,9 +173,48 @@ class SyncService {
     }
   }
 
+  /**
+   * Busca os últimos N registros de produção diária do servidor e os mescla na
+   * tabela local. Chamado após o push para que registros recém-enviados offline
+   * apareçam corretamente (com o id definitivo do servidor).
+   */
+  private async pullProducaoDiaria(propriedadeId: string, limit = 10): Promise<void> {
+    try {
+      const response = await apiFetch(
+        `/producao-diaria/propriedade/${propriedadeId}?limit=${limit}&page=1`,
+      );
+      const records: any[] = response?.data ?? (Array.isArray(response) ? response : []);
+      if (!records.length) return;
+
+      for (const r of records) {
+        const id = r.id_estoque ?? r.id;
+        if (!id) continue;
+        const quantidade = parseFloat(r.quantidade ?? '0');
+        // dt_registro pode vir como "2026-05-25 03:00:00+00" — pega só YYYY-MM-DD
+        const dtRegistro = (r.dt_registro ?? r.dtRegistro ?? '').slice(0, 10);
+        const createdAt  = r.created_at ?? r.createdAt ?? new Date().toISOString();
+
+        await execute(
+          `INSERT INTO producao_diaria (id, propriedadeId, quantidade, dtRegistro, observacao, createdAt)
+           VALUES (?, ?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+             quantidade  = excluded.quantidade,
+             dtRegistro  = excluded.dtRegistro,
+             observacao  = excluded.observacao`,
+          [id, propriedadeId, quantidade, dtRegistro, r.observacao ?? null, createdAt],
+        );
+      }
+    } catch (err) {
+      console.warn('[sync] pullProducaoDiaria falhou:', err);
+    }
+  }
+
   private async pull(propriedadeId: string): Promise<void> {
     const entities = Object.keys(ENTITY_PK_MAP);
-    await Promise.allSettled(entities.map(e => this.pullEntity(e, propriedadeId)));
+    await Promise.allSettled([
+      ...entities.map(e => this.pullEntity(e, propriedadeId)),
+      this.pullProducaoDiaria(propriedadeId),
+    ]);
   }
 }
 
